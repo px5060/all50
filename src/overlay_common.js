@@ -112,7 +112,7 @@ window.UT = (function () {
         let cells = '', chips = [];
         models.forEach((m, k) => {
           const t = A.tag(k, i);
-          cells += t ? `<td class="mi" style="${t.css || ''}">${esc(t.t)}</td>` : (g ? '<td class="mi"></td>' : `<td class="mi" style="${NEU}">·</td>`);
+          cells += t ? `<td class="mi" style="${t.css || ''}">${esc(t.t)}</td>` : '<td class="mi"></td>';
           const ch = A.chip ? A.chip(k, i) : null;
           if (ch) chips.push(`<span class="gc" style="${ch.css || ''}">${esc(m.id)} ${esc(ch.t)}</span>`);
         });
@@ -124,7 +124,7 @@ window.UT = (function () {
       for (const i of rows) {
         const g = i >= N, c = A.cell(mi, i) || {};
         const stan = c.stan || (g ? { t: i === N ? 'następny kod' : 'przyszły kod', css: 'color:#8b93a7' } : { t: '—', css: NEU });
-        const gra = c.gra || (g ? null : { t: '—', css: NEU });   // wiersz bez zakładu — jasne pole, nie czarne
+        const gra = c.gra;
         const cr = !g && A.codeRole ? A.codeRole(mi, i) : null;
         x += `<tr data-i="${i}" class="${g ? 'ghost' : ''}${A.isNew && A.isNew(i) ? ' new' : ''}"><td class="nr">${i + 1}</td><td class="c" style="${cr ? CC[cr] : ''}">${g ? (i === N ? 'nast.' : '…') : A.code(i)}</td>${cellHtml('g', gra)}${cellHtml('s', stan)}</tr>`;
       }

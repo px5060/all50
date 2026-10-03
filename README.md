@@ -19,7 +19,8 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 - Każda zakładka ma ten sam układ co w T60 RAZEM: dolny pasek **GRA · TABELA · STATY**.
   - **TABELA**: Nr · Kod · GRA · Stan/Rola, przełącznik modeli (WSZ + każdy model), „tylko zdarzenia”, legenda,
     tapnięcie wiersza otwiera szczegóły. Wiersze bez zdarzeń mają jasne pole z opisem stanu
-    (np. „czekam na STEP”, „STEP otwarty · czekam na TRIGGER”, „SKIP · poza parą”), a nie puste czarne.
+    (np. „czekam na STEP”, „STEP otwarty · czekam na TRIGGER”, „SKIP · poza parą”); kolumna GRA
+    bez zakładu zostaje ciemna, jak w T60 RAZEM.
   - 2-SLOT: w kolumnie GRA zaznaczone są kroki gry (krok n/8, stawka, pudło / WIN) w oknie po START.
   - Silniki appek nie są zmieniane — nakładki tylko czytają ich wyniki.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
