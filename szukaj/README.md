@@ -7,7 +7,8 @@ Strona `../szukaj.html` (otwierasz ją obok appki RAZEM, np. `…/szukaj.html`).
 - **Silnik** = FSM 1:1 z silnikiem 1T z RAZEM: STEP (SERIA ×x albo UKŁAD) → TRIGGER → zakład na TRIGGER+offset,
   progresja trwała K8 (8, 8, 16, 32, 64, 128, 256, 512), kurs 3,0. Zgodność sprawdzona (`check.py`: 8 modeli 1T
   z wzorcem z appki, `xcheck.py`: silnik JS ze strony = engine.py).
-- **Kryteria** (domyślne, zmieniane na stronie): do 200 cykli max 5 BUST, do 300 max 9, do 400 max 11, min. 100 cykli.
+- **Kryteria** (domyślne, zmieniane na stronie): do 200 cykli max 5 BUST, do 300 max 9, do 400 max 11,
+  ponad 400 max 11 (te pokazywane zawsze najwyżej, ★), min. 100 cykli.
   Sprawdzane po każdym kodzie na całym ciągu (baza + dopisane).
 - **GRA** pokazuje modele spełniające kryteria, które są na kroku 5 / 6 / 7 (64 / 128 / 256 zł):
   GRA na następnym wierszu, zakład ustawiony, STEP otwarty (z kodami, które dadzą TRIGGER).
@@ -24,4 +25,6 @@ python3 build_szukaj.py t50          # T60: python3 build_szukaj.py t60   → ..
 ```
 
 `search.py` liczy kilka milionów konfiguracji na seedzie z `../index.html` (+ kody z `dopisane.txt`, jeśli jest)
-i zapisuje pulę warstwową: najlepsze wg BUST/cykl w przedziałach 100–200 / 201–300 / 301–400 cykli.
+i zapisuje pulę warstwową: najlepsze wg BUST/cykl w przedziałach 401+ / 100–200 / 201–300 / 301–400 cykli.
+Kolejne uruchomienia z innym ziarnem i `--dolacz` dokładają modele do istniejącej puli:
+`python3 search.py t50 x1x 6000000 21 --dolacz`.

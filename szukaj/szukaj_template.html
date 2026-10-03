@@ -38,6 +38,8 @@ main{padding:10px 12px 90px;max-width:760px;margin:0 auto}
 .mc .h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
 .mc .id{font-weight:800;font-size:15px;white-space:nowrap}
 .mc .stk{font-weight:800;white-space:nowrap}
+.mc .top{background:#ffd34d;color:#3a2a00;border-radius:5px;padding:1px 6px;font-size:11.5px;font-weight:800;vertical-align:2px}
+.mc.ktop{box-shadow:0 0 0 1.5px #ffd34d inset}
 .mc .rule{color:var(--mu);font-size:12px;margin-top:2px;word-break:break-word}
 .st{margin-top:5px;padding:6px 8px;border-radius:7px;font-weight:700;font-size:13px}
 .st .s{display:block;font-weight:500;font-size:11.5px;opacity:.85;margin-top:1px}
@@ -102,7 +104,7 @@ function hit(P, i) {
   for (let j = 0; j < P.L; j++) if (!P.t[j * A + X[i - P.L + 1 + j]]) return false;
   return true;
 }
-function limitFor(cyc, rules) { for (const [mc, mb] of rules) if (cyc <= mc) return mb; return null; }
+function limitFor(cyc, rules) { for (const [mc, mb] of rules) if (mc === null || cyc <= mc) return mb; return null; }
 function qual(cyc, bu, R) { if (cyc < R.minCyc) return false; const l = limitFor(cyc, R.rules); return l !== null && bu <= l; }
 // m = [typ, STEP, x, TRIGGER, off]; log(bet) wołane dla zakładów k5–k7 na wierszach >= from, gdy model spełniał kryteria
 function sim(m, R, from, log) {
@@ -165,7 +167,7 @@ onmessage = e => {
 const CFG = __CFG__;            // {app, seedKey, razem, targets:[...], defRules, minCyc}
 const MASTER_SEED = '__SEED__';
 const POOLS = __POOLS__;        // {x1x:{seedN,pool:[[typ,STEP,x,TRIG,off]...]}, ...}
-const APP_VER = '1.0.0';
+const APP_VER = '1.1.0';
 const SEED_N = MASTER_SEED.length / 3;
 const AL = CFG.alph, TPOS = { x1x: 1, xx1: 2, '1xx': 0 };
 const LSK = { found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
@@ -183,7 +185,9 @@ rebuildCodes();
 
 // ---- ustawienia ----
 let tgt = lsGet(LSK.tgt, CFG.targets[0]); if (!CFG.targets.includes(tgt)) tgt = CFG.targets[0];
-let R = (() => { try { const r = JSON.parse(lsGet(LSK.rules, '')); if (r && r.rules) return r; } catch (e) {} return { rules: CFG.defRules, minCyc: CFG.minCyc }; })();
+let R = (() => { try { const r = JSON.parse(lsGet(LSK.rules, '')); if (r && r.rules) {
+  if (!r.rules.some(x => x[0] === null)) r.rules.push(CFG.defRules.find(x => x[0] === null) || [null, 11]);   // progi z v1.0: dopisz „ponad 400”
+  return r; } } catch (e) {} return { rules: CFG.defRules, minCyc: CFG.minCyc }; })();
 let KS = (() => { try { const v = JSON.parse(lsGet(LSK.ks, '')); if (Array.isArray(v)) return v; } catch (e) {} return [5, 6, 7]; })();
 let view = 'gra', showWait = false, busy = false, searching = null;
 function foundKey() { return LSK.found + tgt; }
@@ -274,38 +278,48 @@ function card(k, m, r, kind) {
     const tc = trigNext(m);
     st = `<div class="st p3">STEP otwarty (w.${r.srow + 1}) — czekam na TRIGGER ${esc(m[3])}` +
       `<span class="s">${tc.length ? `jeśli w.${n + 1} = ${tc.join(', ')} → zakład ${stake} zł na w.${n + 1 + m[4]}` : 'następny wiersz nie da TRIGGERA'}</span></div>`;
+  } else if (kind === 'pre') {
+    const ph = r.ph === 2 ? `zakład k${step} na w.${r.wz + 1}` : r.ph === 1 ? `STEP otwarty, czekam na TRIGGER` : `czekam na STEP`;
+    st = `<div class="st p6">Krok ${step}/8 — jeszcze nie gram (gra od ${ST[Math.min(...KS) - 1]} zł, k${Math.min(...KS)})<span class="s">model: ${ph}</span></div>`;
   } else st = `<div class="st p6">Czekam na STEP${m[0] === 'S' ? ` (licznik ${r.cnt}/${m[2]})` : ''}</div>`;
   const k5t = r.k5 ? `z k5: ${r.k5} wejść → W ${r.k5w} · BUST ${r.k5b}` : 'z k5: brak wejść';
-  return `<div class="mc k${step}"><div class="h"><span class="id">${mid(k, m)}</span><span class="stk">krok ${step} · ${stake} zł</span></div>
+  return `<div class="mc k${step}${isTop(r) ? ' ktop' : ''}"><div class="h"><span class="id">${mid(k, m)}${isTop(r) ? ` <span class="top">★ ${topCyc()}+ cykli</span>` : ''}</span><span class="stk">krok ${step} · ${stake} zł</span></div>
     <div class="rule">${esc(ruleTxt(m))}</div>${st}
     <div class="meta"><span>cykle ${cyc} · BUST ${r.nbu}/${lim} · <span class="${r.pnl >= 0 ? 'pos' : 'neg'}">${r.pnl >= 0 ? '+' : ''}${r.pnl} zł</span></span><span>${k5t}</span></div></div>`;
 }
 const ST = [8, 8, 16, 32, 64, 128, 256, 512];
-function limitFor(cyc) { for (const [mc, mb] of R.rules) if (cyc <= mc) return mb; return null; }
+function limitFor(cyc) { for (const [mc, mb] of R.rules) if (mc === null || cyc <= mc) return mb; return null; }
+function topCyc() { return Math.max(0, ...R.rules.filter(r => r[0] !== null).map(r => r[0])); }   // ponad ten próg = najwyższa półka
+const isTop = r => R.rules.some(x => x[0] === null) && r.nw + r.nbu > topCyc();
 function qual(r) { const cyc = r.nw + r.nbu; if (cyc < R.minCyc) return false; const l = limitFor(cyc); return l !== null && r.nbu <= l; }
-function rankKey(r) { const c = r.nw + r.nbu; return r.nbu / c - c * 1e-6; }
+function rankKey(r) { const c = r.nw + r.nbu; return (isTop(r) ? 0 : 1) + r.nbu / c - c * 1e-6; }
 
 function renderGra() {
   const n = codes.length;
   if (!lastEval) return `<div class="ban idle">Liczę ${P.length.toLocaleString('pl')} modeli…</div>`;
-  const out = lastEval.out, groups = { gra: [], czeka: [], trig: [], wait: [] };
-  let qn = 0; const perK = { 5: 0, 6: 0, 7: 0 };
+  const out = lastEval.out, groups = { gra: [], czeka: [], trig: [], wait: [] }, tops = [];
+  const phase = r => r.ph === 2 ? (r.wz === n ? 'gra' : 'czeka') : r.ph === 1 ? 'trig' : 'wait';
+  const inPlay = r => KS.includes(r.bs + 1);
+  let qn = 0, qtop = 0; const perK = { 5: 0, 6: 0, 7: 0 };
   out.forEach((r, k) => {
-    if (!qual(r)) return; qn++;
+    if (!qual(r)) return; qn++; if (isTop(r)) qtop++;
     const step = r.bs + 1;
     if (step >= 5 && step <= 7) perK[step]++;
-    if (!KS.includes(step)) return;
-    const g = r.ph === 2 ? (r.wz === n ? 'gra' : 'czeka') : r.ph === 1 ? 'trig' : 'wait';
-    groups[g].push(k);
+    if (isTop(r)) { tops.push(k); return; }          // ponad 400 cykli: osobna sekcja na górze, każdy krok
+    if (!inPlay(r)) return;
+    groups[phase(r)].push(k);
   });
   for (const g in groups) groups[g].sort((a, b) => rankKey(out[a]) - rankKey(out[b]));
-  const sum = groups.gra.reduce((s, k) => s + ST[out[k].bs], 0);
-  let h = groups.gra.length
-    ? `<div class="ban bet"><div class="big">NASTĘPNY WIERSZ (w.${n + 1}) = GRA na ${tgt}</div><div class="sub">${groups.gra.length} model(i) · suma stawek ${sum} zł${busy ? ' · przeliczam…' : ''}</div></div>`
+  const PH = { gra: 0, czeka: 1, trig: 2, wait: 3 };
+  tops.sort((a, b) => (inPlay(out[b]) - inPlay(out[a])) || (PH[phase(out[a])] - PH[phase(out[b])]) || (out[b].bs - out[a].bs) || (rankKey(out[a]) - rankKey(out[b])));
+  const graAll = groups.gra.concat(tops.filter(k => inPlay(out[k]) && phase(out[k]) === 'gra'));
+  const sum = graAll.reduce((s, k) => s + ST[out[k].bs], 0);
+  let h = graAll.length
+    ? `<div class="ban bet"><div class="big">NASTĘPNY WIERSZ (w.${n + 1}) = GRA na ${tgt}</div><div class="sub">${graAll.length} model(i) · suma stawek ${sum} zł${busy ? ' · przeliczam…' : ''}</div></div>`
     : `<div class="ban idle">w.${n + 1}: brak zakładu na krokach ${KS.map(k => ST[k - 1]).join('/')} zł${busy ? ' · przeliczam…' : ''}</div>`;
   h += lastCodes();
   h += `<div class="tgt" style="margin:-4px 0 10px">${[5, 6, 7].map(k => `<button class="chip ${KS.includes(k) ? 'on' : ''}" data-k="${k}">${ST[k - 1]} zł · ${perK[k]}</button>`).join('')}</div>`;
-  h += `<div class="note">Modele spełniające kryteria teraz: <b>${qn.toLocaleString('pl')}</b> z ${P.length.toLocaleString('pl')} w puli. Pokazuję te na krokach ${KS.map(k => 'k' + k).join(', ')}.</div>`;
+  h += `<div class="note">Modele spełniające kryteria teraz: <b>${qn.toLocaleString('pl')}</b> z ${P.length.toLocaleString('pl')} w puli${R.rules.some(x => x[0] === null) ? `, w tym ponad ${topCyc()} cykli: <b>${qtop}</b> (★, sekcja na górze)` : ''}. Pokazuję te na krokach ${KS.map(k => 'k' + k).join(', ')}.</div>`;
   const sec = (title, sub, arr, kind, cap) => {
     let s = `<div class="sec"><div class="sh"><b>${title}</b><span class="m">${sub}</span></div>`;
     if (!arr.length) s += `<div class="empty">brak</div>`;
@@ -313,6 +327,12 @@ function renderGra() {
     if (arr.length > cap) s += `<div class="empty">… i ${arr.length - cap} więcej</div>`;
     return s + '</div>';
   };
+  if (R.rules.some(x => x[0] === null)) {
+    let t = `<div class="sec"><div class="sh"><b>★ Ponad ${topCyc()} cykli</b><span class="m">${tops.length} · wszystkie kroki, gra od k${Math.min(...KS)}</span></div>`;
+    if (!tops.length) t += `<div class="empty">brak modelu ponad ${topCyc()} cykli z najwyżej ${limitFor(topCyc() + 1)} BUST</div>`;
+    tops.forEach(k => { const r = out[k]; t += card(k, P[k], r, inPlay(r) ? phase(r) : 'pre'); });
+    h += t + '</div>';
+  }
   h += sec('GRA na następnym wierszu', `${groups.gra.length}`, groups.gra, 'gra', 60);
   h += sec('Zakład ustawiony', `${groups.czeka.length}`, groups.czeka, 'czeka', 40);
   h += sec('STEP otwarty → czekam na TRIGGER', `${groups.trig.length}`, groups.trig, 'trig', 40);
@@ -351,10 +371,10 @@ function renderUst() {
   const f = getFound().length;
   let h = `<div class="sec"><div class="sh"><b>Kryteria modelu</b><span class="m">sprawdzane po każdym kodzie</span></div><table class="rules">
     <tr><th>cykle do</th><th>max BUST</th></tr>` +
-    R.rules.map((r, i) => `<tr><td><input data-i="${i}" data-j="0" value="${r[0]}" inputmode="numeric"></td><td><input data-i="${i}" data-j="1" value="${r[1]}" inputmode="numeric"></td></tr>`).join('') +
+    R.rules.map((r, i) => `<tr><td>${r[0] === null ? `ponad ${topCyc()}` : `<input data-i="${i}" data-j="0" value="${r[0]}" inputmode="numeric">`}</td><td><input data-i="${i}" data-j="1" value="${r[1]}" inputmode="numeric"></td></tr>`).join('') +
     `<tr><td>min. cykli</td><td><input id="minC" value="${R.minCyc}" inputmode="numeric"></td></tr></table>
     <div style="display:flex;gap:6px;margin-top:8px"><button class="btn pri" id="saveR">Zapisz</button><button class="btn" id="defR">Domyślne</button></div>
-    <div class="hint">Domyślnie: do 200 cykli max 5 BUST, do 300 max 9, do 400 max 11; modele ponad 400 cykli nie są brane.</div></div>`;
+    <div class="hint">Domyślnie: do 200 cykli max 5 BUST, do 300 max 9, do 400 max 11, ponad 400 max 11 — te ostatnie pokazywane zawsze najwyżej (★).</div></div>`;
   h += `<div class="sec"><div class="sh"><b>Szukaj nowych modeli</b><span class="m">na całym ciągu (${codes.length.toLocaleString('pl')} kodów)</span></div>
     <div class="kv"><span>pula z chmury (baza do Nr ${POOLS[tgt].seedN})</span><b>${POOLS[tgt].pool.length.toLocaleString('pl')}</b><span>znalezione w appce</span><b>${f.toLocaleString('pl')}</b></div>
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
@@ -379,7 +399,7 @@ function render() {
     $('saveR').onclick = () => {
       const rules = R.rules.map(r => [...r]);
       el.querySelectorAll('.rules input[data-i]').forEach(i => { rules[+i.dataset.i][+i.dataset.j] = Math.max(0, parseInt(i.value, 10) || 0); });
-      rules.sort((a, b) => a[0] - b[0]);
+      rules.sort((a, b) => (a[0] === null) - (b[0] === null) || a[0] - b[0]);
       R = { rules, minCyc: Math.max(1, parseInt($('minC').value, 10) || 1) }; lsSet(LSK.rules, JSON.stringify(R)); toast('Zapisano kryteria'); recompute();
     };
     $('defR').onclick = () => { R = { rules: CFG.defRules, minCyc: CFG.minCyc }; lsSet(LSK.rules, ''); recompute(); };

@@ -90,6 +90,6 @@ def run_cfg(STAB, SL, TTAB, TL, cfg, X, y, N, OUT):
 def limit_for(cycles, rules):
     """rules = [(max_cykli, max_bust), ...] rosnąco; zwraca max_bust lub None (poza regułami)."""
     for mc, mb in rules:
-        if cycles <= mc:
+        if mc is None or cycles <= mc:
             return mb
     return None
