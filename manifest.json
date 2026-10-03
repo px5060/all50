@@ -1,8 +1,8 @@
 {
- "id": "t50-razem-v1",
+ "id": "t50-razem-v2",
  "name": "T50 RAZEM — wszystkie tabele Test50",
  "short_name": "T50 RAZEM",
- "start_url": "./?app=t50razem",
+ "start_url": "./?app=t50razem2",
  "scope": "./",
  "display": "standalone",
  "orientation": "portrait",
