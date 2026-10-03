@@ -25,7 +25,8 @@ def main():
     cfg = {k: a[k] for k in ('app', 'seedKey', 'razem', 'targets', 'alph', 'first', 'maxUnion', 'seedFix', 'razemUrl')}
     cfg.update(defRules=rules, minCyc=minc)
     html = (HERE / 'szukaj_template.html').read_text()
-    html = (html.replace('__TITLE__', a['title']).replace('__RAZEM__', a['razem']).replace('__SEED__', seed)
+    ver = re.search(r"const APP_VER = '([^']+)'", html).group(1)
+    html = (html.replace('__VER__', ver).replace('__TITLE__', a['title']).replace('__RAZEM__', a['razem']).replace('__SEED__', seed)
                 .replace('__CFG__', json.dumps(cfg, ensure_ascii=False))
                 .replace('__POOLS__', json.dumps(pools, ensure_ascii=False, separators=(',', ':'))))
     (HERE.parent / 'szukaj.html').write_text(html)
@@ -34,6 +35,15 @@ def main():
            'start_url': './szukaj.html', 'scope': './szukaj', 'display': 'standalone', 'orientation': 'portrait',
            'background_color': '#12151c', 'theme_color': '#1b1f2a',
            'icons': [{'src': f'szukaj-{n}.png', 'sizes': f'{n}x{n}', 'type': 'image/png', 'purpose': 'any'} for n in (192, 512)]}
+    # SW tylko dla zakresu ./szukaj (RAZEM nietknięta): strona zawsze z sieci, bez cache
+    (HERE.parent / 'szukaj-sw.js').write_text(
+        "// SZUKAJ: zakres ./szukaj — nawigacje zawsze z sieci (bez starej wersji z pamięci)\n"
+        "self.addEventListener('install', () => self.skipWaiting());\n"
+        "self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));\n"
+        "self.addEventListener('fetch', e => {\n"
+        "  if (e.request.mode !== 'navigate') return;\n"
+        "  e.respondWith(fetch(e.request.url, { cache: 'no-store' }).catch(() => fetch(e.request)));\n"
+        "});\n")
     (HERE.parent / 'szukaj.webmanifest').write_text(json.dumps(man, ensure_ascii=False, indent=1))
     print('zapisano ../szukaj.html', len(html) // 1024, 'KB;', {t: len(p['pool']) for t, p in pools.items()})
 
