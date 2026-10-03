@@ -212,10 +212,10 @@ onmessage = e => {
 const CFG = __CFG__;            // {app, seedKey, razem, targets:[...], defRules, minCyc}
 const MASTER_SEED = '__SEED__';
 const POOLS = __POOLS__;        // {x1x:{seedN,pool:[[typ,STEP,x,TRIG,off]...]}, ...}
-const APP_VER = '1.2.0';
+const APP_VER = '1.3.0';
 const SEED_N = MASTER_SEED.length / 3;
 const AL = CFG.alph, TPOS = { x1x: 1, xx1: 2, '1xx': 0 };
-const LSK = { found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
+const LSK = { imp: CFG.app + '_szukaj_v1_lastimp', found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
@@ -293,6 +293,28 @@ function undo() {
 }
 $('addBtn').onclick = addCode; $('undoBtn').onclick = undo;
 $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') addCode(); });
+// import: JSON z RAZEM / jej tabel ({codes:[...]} albo lista) lub tekst z kodami; pełny ciąg od Nr 1
+function importCodes(text, fname) {
+  let raw = null, kind = '';
+  try { const d = JSON.parse(text); raw = Array.isArray(d) ? d : d && d.codes; kind = d && !Array.isArray(d) ? (d.kind || d.app || d.source || '') : 'lista'; }
+  catch (e) { raw = (String(text).match(/\d{1,3}/g) || []); kind = 'tekst'; }
+  if (!Array.isArray(raw) || !raw.length) throw new Error('w pliku nie ma listy kodów (codes)');
+  const arr = raw.map(x => String(x == null ? '' : x).trim()).map(x => /^\d{1,3}(\.0+)?$/.test(x) ? String(parseInt(x, 10)).padStart(3, '0') : x);
+  const badI = arr.findIndex(c => !AL.includes(c));
+  if (badI >= 0) throw new Error(`niepoprawny kod „${arr[badI]}” w Nr ${badI + 1}`);
+  syncFromRazem();
+  const fix = CFG.seedFix || {};                       // znane różnice starych appek (Nr → kod w starej appce)
+  const n = Math.min(arr.length, codes.length);
+  for (let i = 0; i < n; i++) if (arr[i] !== codes[i] && fix[i + 1] !== arr[i])
+    throw new Error(`różnica w Nr ${i + 1}: plik ${arr[i]}, appka ${codes[i]}. Nic nie zmieniono.`);
+  if (arr.length <= codes.length) { alert(`Plik ${fname} (${arr.length} kodów${kind ? ', ' + kind : ''}) jest zgodny, ale nie ma nowych kodów.\nAppka ma ${codes.length}. Nic nie zmieniono.`); return; }
+  const gain = arr.length - codes.length;
+  if (!confirm(`Import ${fname}\n${kind ? 'rodzaj: ' + kind + ' · ' : ''}${arr.length} kodów\nzgodny z appką w Nr 1–${codes.length}\n\nDopisać ${gain} nowych kodów (Nr ${codes.length + 1}–${arr.length})?\nTrafią też do ${CFG.razem}.`)) return;
+  addedStr = readAdded() + arr.slice(codes.length).join('');
+  if (!lsSet(CFG.seedKey, addedStr)) { alert('BŁĄD zapisu pamięci telefonu!'); return; }
+  lsSet(LSK.imp, `${fname} · ${new Date().toLocaleString('pl-PL')} · n=${arr.length} · +${gain}`);
+  rebuildCodes(); recompute(); toast(`Zaimportowano +${gain} kodów, teraz Nr ${codes.length}`);
+}
 function syncFromRazem() { const s = readAdded(); if (s !== addedStr) { addedStr = s; rebuildCodes(); recompute(); } }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) syncFromRazem(); });
 window.addEventListener('focus', syncFromRazem);
@@ -489,6 +511,12 @@ function renderUst() {
     <button class="btn" id="clrF" ${searching || !f ? 'disabled' : ''}>Usuń znalezione</button></div>`;
   if (searching) h += `<div class="bar"><i style="width:${(100 * searching.k / searching.n).toFixed(0)}%"></i></div><div class="hint">${searching.k.toLocaleString('pl')} / ${searching.n.toLocaleString('pl')} · nowych: ${searching.f}</div>`;
   h += `<div class="hint">Losuje modele STEP (SERIA / UKŁAD) × TRIGGER × offset 1–7 i dodaje te, które spełniają kryteria. Dziennik liczy je dopiero od wiersza, na którym zostały znalezione.</div></div>`;
+  h += `<div class="sec"><div class="sh"><b>Import kodów</b><span class="m">teraz ${codes.length.toLocaleString('pl')} kodów</span></div>
+    <div class="hint" style="margin:0 0 8px">Plik eksportu z ${CFG.razem} albo z jej tabel (.json z listą <b>codes</b>, pełny ciąg od Nr 1) albo plik tekstowy z kodami.
+    Kody muszą zgadzać się z ciągiem w appce — dopisywane są tylko nowe. Trafiają też do ${CFG.razem} (wspólna pamięć).</div>
+    <button class="btn pri" id="impBtn">Wybierz plik i importuj</button>
+    <input type="file" id="impIn" accept=".json,.txt,application/json,text/plain" style="display:none">
+    ${lsGet(LSK.imp, '') ? `<div class="hint">Ostatni import: ${esc(lsGet(LSK.imp, ''))}</div>` : ''}</div>`;
   h += `<div class="note">Szukaj ${APP_VER} · ${CFG.razem}: klucz kodów <b>${CFG.seedKey}</b>. Większe przeszukanie (miliony modeli) robi skrypt <b>szukaj/search.py</b> w repo.</div>`;
   return h;
 }
@@ -526,6 +554,13 @@ function render() {
       const sp = stepSpace(), have = P.map(m => m.slice(0, 5).join('|'));
       searching = { k: 0, n: 20000, f: 0 }; render();
       W.postMessage({ type: 'search', n: 20000, step: sp.step, trig: sp.trig, R, have });
+    };
+    $('impBtn').onclick = () => $('impIn').click();
+    $('impIn').onchange = e => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => { try { importCodes(rd.result, f.name); } catch (err) { alert('Import przerwany, nic nie zmieniono:\n' + err.message); } };
+      rd.readAsText(f);
     };
     $('clrF').onclick = () => { if (confirm('Usunąć modele znalezione w appce?')) { lsSet(foundKey(), '[]'); recompute(); } };
   }
