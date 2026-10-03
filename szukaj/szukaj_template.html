@@ -43,6 +43,15 @@ main{padding:10px 12px 90px;max-width:760px;margin:0 auto}
 .flt{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin:0 0 8px}.flt span{color:var(--mu);font-size:12px;width:44px}
 .flt .chip{padding:4px 10px;font-size:12.5px}
 .sec.star{border-color:#ffd34d}
+.sec.mine{border-color:var(--or);box-shadow:0 0 0 1px var(--or) inset}
+.myh{color:var(--or2);font-size:12px;font-weight:700;margin-top:2px}
+.mc.mwin{border-left-color:#5fd38a}.mc.mbust{border-left-color:#ff6666}
+.st.pw{background:#C6EFCE;color:#006100}.st.pb{background:#FF6666;color:#fff}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:13px;margin-top:8px}
+.stats .k{color:var(--mu)}.stats .v{font-weight:700;text-align:right}.stats .v .n{font-weight:500;color:var(--mu);font-size:12px;display:block}.stats b.bad{color:var(--rd)}.stats b.ok{color:var(--gr)}
+.seq{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}.seq i{font-style:normal;font-size:11.5px;font-weight:700;border-radius:4px;padding:1px 5px;background:#C6EFCE;color:#006100}.seq i.b{background:#FF6666;color:#fff}
+.btn.play{display:block;width:100%;margin-top:8px;background:var(--or);border-color:var(--or);color:#fff;font-size:15px}
+.btn.playing{display:block;width:100%;margin-top:8px;background:#2b3245}
 .mini{background:var(--card);border-radius:7px;padding:6px 9px;margin-bottom:4px;font-size:12.5px;color:#c9cfdc;cursor:pointer}
 .ver{color:var(--mu);font-size:11px;margin-left:6px}
 .upd{background:#2e75b6;color:#fff;border-radius:10px;padding:9px 12px;margin-bottom:8px;font-weight:700;cursor:pointer}
@@ -141,7 +150,7 @@ function qual(cyc, bu, R) { if (cyc < R.minCyc) return false; const l = limitFor
 // m = [typ, STEP, x, TRIGGER, off]; log(bet) wołane dla zakładów k5–k7 na wierszach >= from, gdy model spełniał kryteria
 function sim(m, R, from, log) {
   const S = tab(m[1]), T = tab(m[3]), x = m[2], off = m[4];
-  let st = 0, cnt = 0, bs = 0, i = 0, pnl = 0, nb = 0, nw = 0, nbu = 0, k5 = 0, k5w = 0, k5b = 0, srow = -1, wz = -1, ph = 0;
+  let st = 0, cnt = 0, bs = 0, i = 0, pnl = 0, nb = 0, nw = 0, nbu = 0, k5 = 0, k5w = 0, k5b = 0, srow = -1, wz = -1, ph = 0, le = -1, lt = 0, lk = 0;
   while (i < N) {
     if (st === 0) {
       if (hit(S, i)) { cnt++; if (cnt >= x) { st = 1; srow = i; } } else cnt = 0;
@@ -152,14 +161,14 @@ function sim(m, R, from, log) {
       const w = Y[X[bp]] === 1;
       if (log && bp >= from && bs >= 4 && bs <= 6 && qual(nw + nbu, nbu, R)) log(bp, bs, w);
       nb++; if (bs === 4) k5++;
-      if (w) { pnl += ST[bs] * 3 - CUM[bs]; nw++; if (bs >= 4) k5w++; bs = 0; }
-      else if (bs === 7) { pnl -= CUM[7]; nbu++; k5b++; bs = 0; }
+      if (w) { pnl += ST[bs] * 3 - CUM[bs]; nw++; if (bs >= 4) k5w++; le = bp; lt = 1; lk = bs + 1; bs = 0; }
+      else if (bs === 7) { pnl -= CUM[7]; nbu++; k5b++; le = bp; lt = 2; lk = 8; bs = 0; }
       else bs++;
       st = 0; cnt = 0; i = bp + 1;
     } else i++;
   }
   if (ph === 0 && st === 1) ph = 1;
-  return { nb, nw, nbu, pnl, k5, k5w, k5b, bs, ph, srow, wz, cnt };
+  return { nb, nw, nbu, pnl, k5, k5w, k5b, bs, ph, srow, wz, cnt, le, lt, lk };
 }
 // etykiety wierszy dla jednego modelu (TABELA): K = rodzaj, A = licznik/krok, B = wiersz zakładu / zysk, Q = model spełniał kryteria
 // K: 0 czekam na STEP · 1 czekam na TRIGGER · 2 step n/x · 3 STEP · 4 TRIGGER · 5 przed grą · 6 WIN · 7 przegrana · 8 BUST · 9 licznik → 0
@@ -226,10 +235,10 @@ onmessage = e => {
 const CFG = __CFG__;            // {app, seedKey, razem, targets:[...], defRules, minCyc}
 const MASTER_SEED = '__SEED__';
 const POOLS = __POOLS__;        // {x1x:{seedN,pool:[[typ,STEP,x,TRIG,off]...]}, ...}
-const APP_VER = '1.5.0';
+const APP_VER = '1.6.0';
 const SEED_N = MASTER_SEED.length / 3;
 const AL = CFG.alph, TPOS = { x1x: 1, xx1: 2, '1xx': 0 };
-const LSK = { bands: CFG.app + '_szukaj_v1_bands', imp: CFG.app + '_szukaj_v1_lastimp', found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
+const LSK = { my: CFG.app + '_szukaj_v1_moje_', bands: CFG.app + '_szukaj_v1_bands', imp: CFG.app + '_szukaj_v1_lastimp', found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
@@ -252,9 +261,28 @@ let view = 'gra', busy = false, searching = null, bandCap = {}, showPre = false;
 let BANDS = (() => { try { const v = JSON.parse(lsGet(LSK.bands, '')); if (Array.isArray(v)) return v; } catch (e) {} return R.rules.map((_, i) => i); })();
 function foundKey() { return LSK.found + tgt; }
 function getFound() { try { const v = JSON.parse(lsGet(foundKey(), '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-function pool() {   // pula z chmury (znaleziona na bazie do Nr seedN) + znalezione w appce (m[5] = Nr, od którego liczy dziennik)
-  const base = POOLS[tgt].pool.map(m => [m[0], m[1], m[2], m[3], m[4], POOLS[tgt].seedN]);
-  return base.concat(getFound());
+function pool() {   // pula z chmury (znaleziona na bazie do Nr seedN) + znalezione w appce (m[5] = Nr, od którego liczy dziennik) + MOJE GRY spoza puli
+  const base = POOLS[tgt].pool.map(m => [m[0], m[1], m[2], m[3], m[4], POOLS[tgt].seedN]).concat(getFound());
+  const have = new Set(base.map(specKey));
+  getMy().forEach(g => { if (!have.has(specKey(g.m))) { base.push([...g.m, g.start]); have.add(specKey(g.m)); } });
+  return base;
+}
+// ---- MOJE GRY: modele, które gram — śledzone do WIN albo BUST (krok 8), niezależnie od kryteriów i filtrów ----
+const specKey = m => m.slice(0, 5).join('|');
+function getMy() { try { const v = JSON.parse(lsGet(LSK.my + tgt, '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+function setMy(a) { lsSet(LSK.my + tgt, JSON.stringify(a)); }
+function myIndex(g) { return P.findIndex(m => specKey(m) === specKey(g.m)); }
+function isMine(k) { return k >= 0 && k < P.length && getMy().some(g => specKey(g.m) === specKey(P[k])); }
+function startMy(k) {
+  const r = lastEval.out[k], a = getMy().filter(g => specKey(g.m) !== specKey(P[k]));
+  a.push({ m: P[k].slice(0, 5), id: mid(k, P[k]), start: codes.length, s0: r.bs + 1, t: Date.now() });
+  setMy(a); toast(`Gram ${mid(k, P[k])} od kroku ${r.bs + 1} (${ST[r.bs]} zł) — w MOJE GRY do WIN / BUST`); render();
+}
+function stopMy(key) { setMy(getMy().filter(g => specKey(g.m) !== key)); render(); }
+function myResult(g, r) {   // null = gra trwa; inaczej wynik od wejścia (stawki gracza od kroku s0)
+  if (!r || r.le < g.start) return null;
+  const paid = k => ST.slice(g.s0 - 1, k).reduce((a, b) => a + b, 0);
+  return r.lt === 1 ? { win: true, k: r.lk, row: r.le, pnl: 3 * ST[r.lk - 1] - paid(r.lk) } : { win: false, k: 8, row: r.le, pnl: -paid(8) };
 }
 function ruleTxt(m) {
   const typ = m[0] === 'S' ? 'SERIA' : 'UKŁAD';
@@ -392,8 +420,9 @@ const PHASE_TXT = { gra: 'GRA na następnym', czeka: 'zakład ustawiony', trig: 
 function bandOrder() { return R.rules.map((_, i) => i).reverse(); }
 function playLists() {   // modele w kryteriach na krokach KS, w grupach; ★ dodatkowo poniżej kroku gry
   const out = lastEval.out, B = R.rules.map(() => []), pre = [];
+  const mine = new Set(getMy().map(myIndex).filter(k => k >= 0));
   out.forEach((r, k) => {
-    if (!qual(r)) return;
+    if (!qual(r) || mine.has(k)) return;
     const b = bandOf(r);
     if (KS.includes(r.bs + 1)) B[b].push(k); else if (isTop(r)) pre.push(k);
   });
@@ -407,7 +436,10 @@ function renderGra() {
   const out = lastEval.out, { B, pre } = playLists();
   const perK = { 5: 0, 6: 0, 7: 0 }; let qn = 0;
   out.forEach(r => { if (qual(r)) { qn++; const s = r.bs + 1; if (s >= 5 && s <= 7) perK[s]++; } });
-  const graAll = [].concat(...B.filter((_, i) => BANDS.includes(i))).filter(k => phaseOf(out[k]) === 'gra');
+  const my = getMy().map(g => ({ g, k: myIndex(g) })).filter(x => x.k >= 0);
+  const myOn = my.filter(x => !myResult(x.g, out[x.k]));
+  const graAll = [].concat(...B.filter((_, i) => BANDS.includes(i))).filter(k => phaseOf(out[k]) === 'gra')
+    .concat(myOn.filter(x => phaseOf(out[x.k]) === 'gra').map(x => x.k));
   const sum = graAll.reduce((s, k) => s + ST[out[k].bs], 0);
   let h = graAll.length
     ? `<div class="ban bet"><div class="big">NASTĘPNY WIERSZ (w.${n + 1}) = GRA na ${tgt}</div><div class="sub">${graAll.length} model(i) · suma stawek ${sum} zł${busy ? ' · przeliczam…' : ''}</div></div>`
@@ -416,6 +448,19 @@ function renderGra() {
   h += `<div class="flt"><span>krok:</span>${[5, 6, 7].map(k => `<button class="chip ${KS.includes(k) ? 'on' : ''}" data-k="${k}">${ST[k - 1]} zł · ${perK[k]}</button>`).join('')}</div>`;
   h += `<div class="flt"><span>cykle:</span>${bandOrder().map(i => `<button class="chip ${BANDS.includes(i) ? 'on' : ''}" data-b="${i}">${bandShort(i)} · ${B[i].length}</button>`).join('')}</div>`;
   h += `<div class="note">W kryteriach teraz: <b>${qn.toLocaleString('pl')}</b> z ${P.length.toLocaleString('pl')} modeli w puli. Niżej grupy wg liczby cykli — w każdej modele na krokach ${KS.map(k => ST[k - 1]).join('/')} zł, najpierw te z GRĄ na następnym wierszu. Dotknij karty → TABELA.</div>`;
+  if (my.length) {
+    let s = `<div class="sec mine"><div class="sh"><b>▶ MOJE GRY</b><span class="m">${myOn.length} w grze · do WIN albo kroku 8</span></div>`;
+    my.forEach(({ g, k }) => {
+      const r = out[k], res = myResult(g, r), key = specKey(g.m);
+      const head = `<div class="myh">od w.${g.start + 1} · wejście k${g.s0} ${ST[g.s0 - 1]} zł</div>`;
+      if (res) s += `<div class="mc ${res.win ? 'mwin' : 'mbust'}" data-mk="${k}"><div class="h"><span class="id">${mid(k, P[k])}</span><span class="stk">${res.win ? 'WIN' : 'BUST'}</span></div>${head}
+        <div class="st ${res.win ? 'pw' : 'pb'}">${res.win ? `WIN na kroku ${res.k} (${ST[res.k - 1]} zł) w w.${res.row + 1}` : `BUST na kroku 8 w w.${res.row + 1}`}<span class="s">Twój wynik od wejścia: ${res.pnl >= 0 ? '+' : ''}${res.pnl} zł</span></div>
+        <button class="btn more" data-stop="${esc(key)}">Zakończ — usuń z MOJE GRY</button></div>`;
+      else s += card(k, P[k], r, phaseOf(r)).replace('<div class="rule">', head + '<div class="rule">') +
+        `<button class="btn more" data-stop="${esc(key)}" style="margin:-2px 0 8px">Przestań śledzić ${mid(k, P[k])}</button>`;
+    });
+    h += s + '</div>';
+  }
   for (const i of bandOrder()) {
     if (!BANDS.includes(i)) continue;
     const L = B[i], cap = bandCap[i] || 15, isStar = R.rules[i][0] === null;
@@ -456,6 +501,42 @@ function labCell(i) {
     default: return ['L9', 'licznik → 0'];
   }
 }
+function modelStats() {   // z etykiet wybranego modelu (całe dzieje)
+  const K = lab.K, A = lab.A, n = codes.length, ends = [];
+  let bets = 0; const wk = new Array(9).fill(0);
+  for (let i = 0; i < n; i++) {
+    const t = K[i];
+    if (t === 6) { bets++; ends.push([1, i, A[i]]); wk[A[i]]++; } else if (t === 7) bets++; else if (t === 8) { bets++; ends.push([2, i, 8]); }
+  }
+  const cyc = ends.length, bi = []; ends.forEach((e, j) => { if (e[0] === 2) bi.push(j); });
+  let run = 0, maxRun = 0, twoRow = []; ends.forEach(e => { if (e[0] === 2) { run++; maxRun = Math.max(maxRun, run); if (run === 2) twoRow.push(e[1]); } else run = 0; });
+  let minGap = null; for (let j = 1; j < bi.length; j++) { const g = bi[j] - bi[j - 1]; if (minGap === null || g < minGap) minGap = g; }
+  const lastB = bi.length ? bi[bi.length - 1] : -1;
+  return { bets, cyc, w: cyc - bi.length, b: bi.length, wk, maxRun, twoRow, minGap,
+    lastBRow: lastB >= 0 ? ends[lastB][1] : null, sinceB: lastB >= 0 ? cyc - 1 - lastB : null,
+    k5: ends.filter(e => e[2] >= 5).length, k5w: ends.filter(e => e[0] === 1 && e[2] >= 5).length, last: ends.slice(-16) };
+}
+function statsHtml(r) {
+  if (!lab) return '';
+  const S = modelStats(), n = codes.length;
+  const lb = S.lastBRow === null ? '<b class="ok">nie było BUST</b>' : `<b>${S.sinceB} cykli temu</b><span class="n">w.${S.lastBRow + 1} · ${n - 1 - S.lastBRow} kodów temu</span>`;
+  const two = S.twoRow.length ? `<b class="bad">TAK — ${S.twoRow.length}× (ostatnio w.${S.twoRow[S.twoRow.length - 1] + 1})</b>` : '<b class="ok">NIE</b>';
+  const row = (k, v) => `<span class="k">${k}</span><div class="v">${v}</div>`;
+  return `<div class="stats">
+    ${row('cykle (gry do WIN / BUST)', `<b>${S.cyc}</b>`)}
+    ${row('zakłady (wszystkie kroki)', `<b>${S.bets}</b>`)}
+    ${row('WIN', `<b class="ok">${S.w}</b>`)}
+    ${row('BUST (przegrany krok 8)', `<b class="${S.b ? 'bad' : 'ok'}">${S.b}</b>`)}
+    ${row('ostatni BUST', `${lb}`)}
+    ${row('2 BUST-y pod rząd (cykl po cyklu)', `${two}`)}
+    ${row('najdłuższa seria BUST pod rząd', `<b>${S.maxRun}</b>`)}
+    ${row('najbliższe 2 BUST-y', `<b>${S.minGap === null ? '—' : 'co ' + S.minGap + ' cykli'}</b>`)}
+    ${row('cykle, które doszły do k5 (64 zł)', `<b>${S.k5} → WIN ${S.k5w} · BUST ${S.b}${r && r.k5 > S.k5 ? ` · +1 w toku (teraz k${r.bs + 1})` : ''}</b>`)}
+    ${row('WIN na krokach k1…k8', `<b>${S.wk.slice(1).join(' · ')}</b>`)}
+    ${row('bilans modelu (K8 od k1)', `<b class="${r && r.pnl >= 0 ? 'ok' : 'bad'}">${r ? (r.pnl >= 0 ? '+' : '') + r.pnl + ' zł' : ''}</b>`)}
+  </div><div class="hint" style="margin-top:6px">Ostatnie ${S.last.length} cykli (najnowszy z prawej):</div>
+  <div class="seq">${S.last.map(e => e[0] === 1 ? `<i>W${e[2]}</i>` : '<i class="b">BUST</i>').join('')}</div>`;
+}
 function renderTab() {
   const n = codes.length;
   const pl = lastEval ? playLists() : { B: R.rules.map(() => []), pre: [] };
@@ -470,6 +551,10 @@ function renderTab() {
   const m = P[selK], r = lastEval ? lastEval.out[selK] : null;
   let h = `<div class="sec"><div class="sh"><b>Model ${mid(selK, m)}</b><span class="m">${r ? `cykle ${r.nw + r.nbu} · BUST ${r.nbu} · ${r.pnl >= 0 ? '+' : ''}${r.pnl} zł · ${qual(r) ? 'w kryteriach' : 'POZA kryteriami'}` : ''}</span></div>
     <div style="color:#c9cfdc;font-size:12.5px">${esc(ruleTxt(m))}</div>
+    ${statsHtml(r)}
+    ${!r ? '' : isMine(selK) ? (() => { const g = getMy().find(x => specKey(x.m) === specKey(m)), res = myResult(g, r);
+        return `<button class="btn playing" data-stop="${esc(specKey(m))}">${res ? (res.win ? '✔ WIN' : '✖ BUST') + ` — zakończona (${res.pnl >= 0 ? '+' : ''}${res.pnl} zł). Usuń z MOJE GRY` : `■ Gram od w.${g.start + 1} (wejście k${g.s0}) — przestań śledzić`}</button>`; })()
+      : `<button class="btn play" id="playBtn">▶ Gram ten model — śledź do WIN / kroku 8 (teraz krok ${r.bs + 1}, ${ST[r.bs]} zł)</button>`}
     <div class="selrow"><input id="selIn" placeholder="numer modelu, np. P3406" autocomplete="off"><button class="btn" id="selBtn">Pokaż</button></div>
     <div class="hint" style="margin-top:8px">Wybierz model z listy (grupy wg cykli, modele na krokach ${KS.map(k => ST[k - 1]).join('/')} zł):</div>${sel}
     <div class="leg">${[['L3', 'STEP'], ['L4', 'TRIGGER'], ['L5', 'przed grą'], ['L6', 'WIN'], ['L7', 'przegrana'], ['L8', 'BUST'], ['L9', 'licznik → 0']].map(([c, t]) => `<span class="lab ${c}">${t}</span>`).join('')}
@@ -555,6 +640,8 @@ function render() {
   const el = $('main');
   el.innerHTML = view === 'gra' ? renderGra() : view === 'tab' ? renderTab() : view === 'dz' ? renderDz() : renderUst();
   if (view === 'tab') {
+    const pb2 = $('playBtn'); if (pb2) pb2.onclick = () => startMy(selK);
+    el.querySelectorAll('[data-stop]').forEach(b => b.onclick = () => { if (confirm('Usunąć z MOJE GRY?')) stopMy(b.dataset.stop); });
     const ms = $('mSel'); if (ms) ms.onchange = () => { selK = +ms.value; tabN = 150; render(); };
     const go = () => {
       const v = $('selIn').value.trim().toUpperCase(), mm = /^([PN])(\d+)$/.exec(v), nb = POOLS[tgt].pool.length;
@@ -572,6 +659,7 @@ function render() {
     el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => {
       const i = +b.dataset.b; BANDS = BANDS.includes(i) ? BANDS.filter(x => x !== i) : [...BANDS, i]; lsSet(LSK.bands, JSON.stringify(BANDS)); render();
     });
+    el.querySelectorAll('[data-stop]').forEach(b => b.onclick = e => { e.stopPropagation(); if (confirm('Usunąć z MOJE GRY?')) stopMy(b.dataset.stop); });
     const pb = $('preBtn'); if (pb) pb.onclick = () => { showPre = true; render(); };
     el.querySelectorAll('[data-more]').forEach(b => b.onclick = () => { const i = +b.dataset.more; bandCap[i] = (bandCap[i] || 15) + 30; render(); });
     el.querySelectorAll('[data-mk]').forEach(c => c.onclick = () => openTab(+c.dataset.mk));
