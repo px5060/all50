@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1f2a">
+<title>__TITLE__</title>
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#12151c;--pan:#1b1f2a;--card:#242a38;--bd:#323a4d;--tx:#e8ebf2;--mu:#8b93a7;--or:#ff6600;--or2:#ff9a4d;--gr:#5fd38a;--rd:#ff8a8a;--bl:#9fc4ff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:10;background:var(--pan);border-bottom:1px solid var(--bd);padding:8px 12px 8px}
+header .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+header h1{font-size:15px;margin:0}
+header .n{color:var(--mu);font-size:12px}
+.erow{display:flex;gap:6px;margin-top:7px}
+.erow input{flex:1;min-width:0;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:9px 10px;font-size:17px;letter-spacing:2px}
+.btn{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:600}
+.btn.pri{background:var(--or);border-color:var(--or);color:#fff}
+.btn:disabled{opacity:.5}
+.hint{color:var(--mu);font-size:11.5px;margin-top:5px}
+.tgt{display:flex;gap:6px;margin-top:7px}
+.chip{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:16px;padding:5px 11px;font-size:13px;font-weight:600}
+.chip.on{background:var(--or);border-color:var(--or);color:#fff}
+main{padding:10px 12px 90px;max-width:760px;margin:0 auto}
+.ban{border-radius:10px;padding:9px 12px;margin-bottom:8px;font-weight:700}
+.ban.bet{background:var(--or);color:#fff}.ban.idle{background:var(--card);font-weight:500}
+.ban .big{font-size:16px}.ban .sub{font-weight:500;font-size:12px;margin-top:3px;opacity:.95}
+.last{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 10px;color:var(--mu);font-size:12px;align-items:center}
+.last b{color:var(--tx);background:var(--card);border-radius:5px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.last b.h{background:#2b4a37}
+.sec{background:var(--pan);border:1px solid var(--bd);border-radius:10px;padding:8px;margin-bottom:10px}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 6px;font-size:13px;gap:8px}
+.sh b{font-size:14px}.sh .m{color:var(--mu);font-size:12px}
+.mc{border-left:5px solid var(--bd);background:var(--card);border-radius:8px;padding:7px 9px;margin-bottom:6px}
+.mc.k5{border-left-color:#2e75b6}.mc.k6{border-left-color:#7030a0}.mc.k7{border-left-color:var(--or)}
+.mc .h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.mc .id{font-weight:800;font-size:15px;white-space:nowrap}
+.mc .stk{font-weight:800;white-space:nowrap}
+.mc .rule{color:var(--mu);font-size:12px;margin-top:2px;word-break:break-word}
+.st{margin-top:5px;padding:6px 8px;border-radius:7px;font-weight:700;font-size:13px}
+.st .s{display:block;font-weight:500;font-size:11.5px;opacity:.85;margin-top:1px}
+.st.p1{background:var(--or);color:#fff;box-shadow:0 0 0 2px #fff inset;font-size:14px}
+.st.p2{background:rgba(255,102,0,.18);color:#ffcfa8;border:1.5px dashed var(--or)}
+.st.p3{background:#DEEBF7;color:#1F4E78}
+.st.p6{background:var(--pan);color:var(--mu);font-weight:500}
+.meta{margin-top:5px;color:var(--mu);font-size:12px;display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.pos{color:var(--gr);font-weight:700}.neg{color:var(--rd);font-weight:700}
+.empty{color:var(--mu);font-size:13px;padding:6px 4px}
+.more{display:block;width:100%;margin-top:4px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--pan);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;color:var(--mu);padding:12px 0;font-size:14px;font-weight:700}
+nav button.on{color:var(--or2)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:5px 4px;border-bottom:1px solid var(--bd);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mu);font-weight:600}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px}
+.kv span:nth-child(odd){color:var(--mu)}
+.note{background:var(--pan);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:#c9cfdc}
+.note b{color:var(--tx)}
+.rules input{width:64px;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:5px;font-size:14px}
+.rules td,.rules th{text-align:left}
+.bar{height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--or);width:0}
+.busy{color:var(--or2);font-size:12px;margin-left:6px}
+</style>
+</head>
+<body>
+<header>
+  <div class="t"><h1>__TITLE__</h1><span class="n" id="hdrN"></span></div>
+  <div class="erow">
+    <input id="codeIn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="kod, np. 010">
+    <button class="btn pri" id="addBtn">Dodaj</button><button class="btn" id="undoBtn">⟲</button>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div class="tgt" id="tgt"></div>
+</header>
+<main id="main"></main>
+<nav>
+  <button data-v="gra" class="on">GRA</button>
+  <button data-v="dz">DZIENNIK</button>
+  <button data-v="ust">SZUKAJ</button>
+</nav>
+<script id="wsrc" type="text/js-worker">
+"use strict";
+// ===== SILNIK — FSM 1:1 z appek RAZEM (silnik 1T) i szukaj/engine.py =====
+const ST = [8, 8, 16, 32, 64, 128, 256, 512], CUM = [8, 16, 32, 64, 128, 256, 512, 1024];
+let AL = [], X = null, N = 0, Y = null;
+const m1 = (p, c) => p.split('∪').some(q => q.length === 3 && [...q].every((x, i) => x === 'x' || x === c[i]));
+function table(pred) {
+  const parts = pred.split(' → '), t = new Uint8Array(3 * AL.length);
+  parts.forEach((p, j) => AL.forEach((c, k) => { t[j * AL.length + k] = m1(p, c) ? 1 : 0; }));
+  return { t, L: parts.length };
+}
+const _tc = new Map();
+function tab(pred) { let v = _tc.get(pred); if (!v) { v = table(pred); _tc.set(pred, v); } return v; }
+function hit(P, i) {
+  if (i < P.L - 1) return false;
+  const A = AL.length;
+  for (let j = 0; j < P.L; j++) if (!P.t[j * A + X[i - P.L + 1 + j]]) return false;
+  return true;
+}
+function limitFor(cyc, rules) { for (const [mc, mb] of rules) if (cyc <= mc) return mb; return null; }
+function qual(cyc, bu, R) { if (cyc < R.minCyc) return false; const l = limitFor(cyc, R.rules); return l !== null && bu <= l; }
+// m = [typ, STEP, x, TRIGGER, off]; log(bet) wołane dla zakładów k5–k7 na wierszach >= from, gdy model spełniał kryteria
+function sim(m, R, from, log) {
+  const S = tab(m[1]), T = tab(m[3]), x = m[2], off = m[4];
+  let st = 0, cnt = 0, bs = 0, i = 0, pnl = 0, nb = 0, nw = 0, nbu = 0, k5 = 0, k5w = 0, k5b = 0, srow = -1, wz = -1, ph = 0;
+  while (i < N) {
+    if (st === 0) {
+      if (hit(S, i)) { cnt++; if (cnt >= x) { st = 1; srow = i; } } else cnt = 0;
+      i++;
+    } else if (hit(T, i)) {
+      const bp = i + off;
+      if (bp >= N) { ph = 2; wz = bp; break; }
+      const w = Y[X[bp]] === 1;
+      if (log && bp >= from && bs >= 4 && bs <= 6 && qual(nw + nbu, nbu, R)) log(bp, bs, w);
+      nb++; if (bs === 4) k5++;
+      if (w) { pnl += ST[bs] * 3 - CUM[bs]; nw++; if (bs >= 4) k5w++; bs = 0; }
+      else if (bs === 7) { pnl -= CUM[7]; nbu++; k5b++; bs = 0; }
+      else bs++;
+      st = 0; cnt = 0; i = bp + 1;
+    } else i++;
+  }
+  if (ph === 0 && st === 1) ph = 1;
+  return { nb, nw, nbu, pnl, k5, k5w, k5b, bs, ph, srow, wz, cnt };
+}
+function setData(d) { AL = d.AL; X = Int8Array.from(d.X); N = X.length; Y = Uint8Array.from(d.Y); _tc.clear(); }
+function evalAll(d) {
+  const out = [], logs = [];
+  d.pool.forEach((m, k) => {
+    const r = sim(m, d.R, Math.max(d.seedN, m[5] || 0), (row, bs, w) => logs.push([row, k, bs, w ? 1 : 0]));
+    out.push(r);
+  });
+  logs.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return { out, logs };
+}
+function rnd(n) { return Math.floor(Math.random() * n); }
+function search(d) {
+  const { step, trig, R, have } = d, seen = new Set(have), found = [];
+  const t0 = Date.now();
+  for (let k = 0; k < d.n; k++) {
+    const s = step[rnd(step.length)], tr = trig[rnd(trig.length)];
+    const m = [s[0], s[1], s[0] === 'S' ? 1 + rnd(5) : 1, tr, 1 + rnd(7)];
+    const key = m.join('|');
+    if (seen.has(key)) continue;
+    const r = sim(m, R);
+    const cyc = r.nw + r.nbu;
+    if (qual(cyc, r.nbu, R)) { seen.add(key); found.push(m); }
+    if (k % 500 === 499) postMessage({ type: 'prog', k: k + 1, n: d.n, f: found.length, ms: Date.now() - t0 });
+  }
+  return found;
+}
+onmessage = e => {
+  const d = e.data;
+  if (d.type === 'data') { setData(d); return; }
+  if (d.type === 'eval') { const r = evalAll(d); postMessage({ type: 'eval', id: d.id, ...r }); }
+  if (d.type === 'search') { const f = search(d); postMessage({ type: 'search', found: f }); }
+};
+</script>
+<script>
+"use strict";
+const CFG = __CFG__;            // {app, seedKey, razem, targets:[...], defRules, minCyc}
+const MASTER_SEED = '__SEED__';
+const POOLS = __POOLS__;        // {x1x:{seedN,pool:[[typ,STEP,x,TRIG,off]...]}, ...}
+const APP_VER = '1.0.0';
+const SEED_N = MASTER_SEED.length / 3;
+const AL = CFG.alph, TPOS = { x1x: 1, xx1: 2, '1xx': 0 };
+const LSK = { found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
+const $ = id => document.getElementById(id);
+
+// ---- kody: seed + wspólne z RAZEM (ten sam klucz pamięci) ----
+function readAdded() { const s = lsGet(CFG.seedKey, ''); return /^(\d{3})*$/.test(s) ? s : ''; }
+let addedStr = readAdded();
+let codes = [];
+function rebuildCodes() { const s = MASTER_SEED + addedStr; codes = []; for (let i = 0; i < s.length; i += 3) codes.push(s.substr(i, 3)); }
+rebuildCodes();
+
+// ---- ustawienia ----
+let tgt = lsGet(LSK.tgt, CFG.targets[0]); if (!CFG.targets.includes(tgt)) tgt = CFG.targets[0];
+let R = (() => { try { const r = JSON.parse(lsGet(LSK.rules, '')); if (r && r.rules) return r; } catch (e) {} return { rules: CFG.defRules, minCyc: CFG.minCyc }; })();
+let KS = (() => { try { const v = JSON.parse(lsGet(LSK.ks, '')); if (Array.isArray(v)) return v; } catch (e) {} return [5, 6, 7]; })();
+let view = 'gra', showWait = false, busy = false, searching = null;
+function foundKey() { return LSK.found + tgt; }
+function getFound() { try { const v = JSON.parse(lsGet(foundKey(), '[]')); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+function pool() {   // pula z chmury (znaleziona na bazie do Nr seedN) + znalezione w appce (m[5] = Nr, od którego liczy dziennik)
+  const base = POOLS[tgt].pool.map(m => [m[0], m[1], m[2], m[3], m[4], POOLS[tgt].seedN]);
+  return base.concat(getFound());
+}
+function ruleTxt(m) {
+  const typ = m[0] === 'S' ? 'SERIA' : 'UKŁAD';
+  return `STEP ${typ} ${m[1]}${m[0] === 'S' ? ' ×' + m[2] : ''} → TRIGGER ${m[3]} → zakład +${m[4]}`;
+}
+function mid(k, m) { return (k < POOLS[tgt].pool.length ? 'P' : 'N') + (k < POOLS[tgt].pool.length ? k + 1 : k - POOLS[tgt].pool.length + 1); }
+
+// ---- worker ----
+const W = new Worker(URL.createObjectURL(new Blob([$('wsrc').textContent], { type: 'text/javascript' })));
+let lastEval = null, evalId = 0, P = [];
+W.onmessage = e => {
+  const d = e.data;
+  if (d.type === 'eval') { if (d.id !== evalId) return; lastEval = d; busy = false; render(); }
+  if (d.type === 'prog') { searching = d; if (view === 'ust') render(); }
+  if (d.type === 'search') {
+    const f = getFound(), n = codes.length;
+    d.found.forEach(m => f.push([m[0], m[1], m[2], m[3], m[4], n]));
+    lsSet(foundKey(), JSON.stringify(f.slice(-2000)));
+    toast(`Znaleziono ${d.found.length} nowych modeli`);
+    searching = null; recompute();
+  }
+};
+function recompute() {
+  busy = true; P = pool(); evalId++;
+  const pos = TPOS[tgt];
+  W.postMessage({ type: 'data', AL, X: codes.map(c => AL.indexOf(c)), Y: AL.map(c => c[pos] === '1' ? 1 : 0) });
+  W.postMessage({ type: 'eval', id: evalId, pool: P, R, seedN: SEED_N });
+  render();
+}
+
+// ---- wpis kodów ----
+function toast(t) { $('hint').textContent = t; clearTimeout(toast._t); toast._t = setTimeout(hint, 3500); }
+function hint() { $('hint').textContent = `Kody wspólne z ${CFG.razem} (baza ${SEED_N.toLocaleString('pl')} + dopisane ${addedStr.length / 3}). Wpisz kod tu albo w ${CFG.razem}.`; }
+function addCode() {
+  const v = $('codeIn').value.trim();
+  if (!/^\d{1,3}$/.test(v)) return toast('Kod: 3 cyfry');
+  const c = v.padStart(3, '0');
+  if (!AL.includes(c)) return toast(`Kod ${c} nie występuje w tym ciągu`);
+  addedStr = readAdded() + c;             // czytaj-zmień-zapisz: nie gubi kodów wpisanych w RAZEM
+  if (!lsSet(CFG.seedKey, addedStr)) alert('BŁĄD zapisu pamięci telefonu!');
+  $('codeIn').value = ''; rebuildCodes(); recompute(); toast(`Dodano ${c} jako Nr ${codes.length}`);
+}
+function undo() {
+  addedStr = readAdded();
+  if (!addedStr.length) return toast('Brak dopisanych kodów do cofnięcia');
+  const c = addedStr.slice(-3);
+  if (!confirm(`Cofnąć ostatni kod ${c} (Nr ${codes.length})? Zniknie też z ${CFG.razem}.`)) return;
+  addedStr = addedStr.slice(0, -3); lsSet(CFG.seedKey, addedStr); rebuildCodes(); recompute();
+}
+$('addBtn').onclick = addCode; $('undoBtn').onclick = undo;
+$('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') addCode(); });
+function syncFromRazem() { const s = readAdded(); if (s !== addedStr) { addedStr = s; rebuildCodes(); recompute(); } }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncFromRazem(); });
+window.addEventListener('focus', syncFromRazem);
+window.addEventListener('storage', e => { if (e.key === CFG.seedKey) syncFromRazem(); });
+
+// ---- widoki ----
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  view = b.dataset.v; document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b)); render(); scrollTo(0, 0);
+});
+function renderTgt() {
+  $('tgt').innerHTML = CFG.targets.length < 2 ? '' : CFG.targets.map(t => `<button class="chip ${t === tgt ? 'on' : ''}" data-t="${t}">BET ${t}</button>`).join('');
+  $('tgt').querySelectorAll('button').forEach(b => b.onclick = () => { tgt = b.dataset.t; lsSet(LSK.tgt, tgt); lastEval = null; renderTgt(); recompute(); });
+}
+function isHit(c) { return c[TPOS[tgt]] === '1'; }
+function lastCodes() {
+  return `<div class="last">ostatnie: ${codes.slice(-10).map((c, i) => `<b class="${isHit(c) ? 'h' : ''}">${c}</b>`).join('')}</div>`;
+}
+function trigNext(m) {   // które kody na w. N+1 dadzą TRIGGER (gdy STEP otwarty)
+  const parts = m[3].split(' → '), L = parts.length;
+  const m1 = (p, c) => p.split('∪').some(q => [...q].every((x, i) => x === 'x' || x === c[i]));
+  for (let j = 0; j < L - 1; j++) if (!m1(parts[j], codes[codes.length - (L - 1) + j] || 'XXX')) return [];
+  return AL.filter(c => m1(parts[L - 1], c));
+}
+function card(k, m, r, kind) {
+  const n = codes.length, step = r.bs + 1, stake = ST[r.bs], cyc = r.nw + r.nbu, lim = limitFor(cyc);
+  let st = '';
+  if (kind === 'gra') st = `<div class="st p1">GRAJ w.${n + 1}: ${stake} zł na ${tgt} (krok ${step}/8, kurs 3,0)<span class="s">TRIGGER w.${r.wz - m[4] + 1} + ${m[4]}</span></div>`;
+  else if (kind === 'czeka') st = `<div class="st p2">Zakład ustawiony: ${stake} zł na w.${r.wz + 1} (za ${r.wz + 1 - n} w.)<span class="s">nic nie rób do tego wiersza</span></div>`;
+  else if (kind === 'trig') {
+    const tc = trigNext(m);
+    st = `<div class="st p3">STEP otwarty (w.${r.srow + 1}) — czekam na TRIGGER ${esc(m[3])}` +
+      `<span class="s">${tc.length ? `jeśli w.${n + 1} = ${tc.join(', ')} → zakład ${stake} zł na w.${n + 1 + m[4]}` : 'następny wiersz nie da TRIGGERA'}</span></div>`;
+  } else st = `<div class="st p6">Czekam na STEP${m[0] === 'S' ? ` (licznik ${r.cnt}/${m[2]})` : ''}</div>`;
+  const k5t = r.k5 ? `z k5: ${r.k5} wejść → W ${r.k5w} · BUST ${r.k5b}` : 'z k5: brak wejść';
+  return `<div class="mc k${step}"><div class="h"><span class="id">${mid(k, m)}</span><span class="stk">krok ${step} · ${stake} zł</span></div>
+    <div class="rule">${esc(ruleTxt(m))}</div>${st}
+    <div class="meta"><span>cykle ${cyc} · BUST ${r.nbu}/${lim} · <span class="${r.pnl >= 0 ? 'pos' : 'neg'}">${r.pnl >= 0 ? '+' : ''}${r.pnl} zł</span></span><span>${k5t}</span></div></div>`;
+}
+const ST = [8, 8, 16, 32, 64, 128, 256, 512];
+function limitFor(cyc) { for (const [mc, mb] of R.rules) if (cyc <= mc) return mb; return null; }
+function qual(r) { const cyc = r.nw + r.nbu; if (cyc < R.minCyc) return false; const l = limitFor(cyc); return l !== null && r.nbu <= l; }
+function rankKey(r) { const c = r.nw + r.nbu; return r.nbu / c - c * 1e-6; }
+
+function renderGra() {
+  const n = codes.length;
+  if (!lastEval) return `<div class="ban idle">Liczę ${P.length.toLocaleString('pl')} modeli…</div>`;
+  const out = lastEval.out, groups = { gra: [], czeka: [], trig: [], wait: [] };
+  let qn = 0; const perK = { 5: 0, 6: 0, 7: 0 };
+  out.forEach((r, k) => {
+    if (!qual(r)) return; qn++;
+    const step = r.bs + 1;
+    if (step >= 5 && step <= 7) perK[step]++;
+    if (!KS.includes(step)) return;
+    const g = r.ph === 2 ? (r.wz === n ? 'gra' : 'czeka') : r.ph === 1 ? 'trig' : 'wait';
+    groups[g].push(k);
+  });
+  for (const g in groups) groups[g].sort((a, b) => rankKey(out[a]) - rankKey(out[b]));
+  const sum = groups.gra.reduce((s, k) => s + ST[out[k].bs], 0);
+  let h = groups.gra.length
+    ? `<div class="ban bet"><div class="big">NASTĘPNY WIERSZ (w.${n + 1}) = GRA na ${tgt}</div><div class="sub">${groups.gra.length} model(i) · suma stawek ${sum} zł${busy ? ' · przeliczam…' : ''}</div></div>`
+    : `<div class="ban idle">w.${n + 1}: brak zakładu na krokach ${KS.map(k => ST[k - 1]).join('/')} zł${busy ? ' · przeliczam…' : ''}</div>`;
+  h += lastCodes();
+  h += `<div class="tgt" style="margin:-4px 0 10px">${[5, 6, 7].map(k => `<button class="chip ${KS.includes(k) ? 'on' : ''}" data-k="${k}">${ST[k - 1]} zł · ${perK[k]}</button>`).join('')}</div>`;
+  h += `<div class="note">Modele spełniające kryteria teraz: <b>${qn.toLocaleString('pl')}</b> z ${P.length.toLocaleString('pl')} w puli. Pokazuję te na krokach ${KS.map(k => 'k' + k).join(', ')}.</div>`;
+  const sec = (title, sub, arr, kind, cap) => {
+    let s = `<div class="sec"><div class="sh"><b>${title}</b><span class="m">${sub}</span></div>`;
+    if (!arr.length) s += `<div class="empty">brak</div>`;
+    arr.slice(0, cap).forEach(k => s += card(k, P[k], out[k], kind));
+    if (arr.length > cap) s += `<div class="empty">… i ${arr.length - cap} więcej</div>`;
+    return s + '</div>';
+  };
+  h += sec('GRA na następnym wierszu', `${groups.gra.length}`, groups.gra, 'gra', 60);
+  h += sec('Zakład ustawiony', `${groups.czeka.length}`, groups.czeka, 'czeka', 40);
+  h += sec('STEP otwarty → czekam na TRIGGER', `${groups.trig.length}`, groups.trig, 'trig', 40);
+  if (showWait) h += sec('Czekam na STEP', `${groups.wait.length}`, groups.wait, 'wait', 40);
+  else h += `<button class="btn more" id="wBtn">Pokaż „czekam na STEP” (${groups.wait.length})</button>`;
+  return h;
+}
+function renderDz() {
+  if (!lastEval) return `<div class="ban idle">Liczę…</div>`;
+  const L = lastEval.logs, n = codes.length;
+  let h = `<div class="note"><b>Dziennik</b> = każdy zakład k5–k7 (64/128/256 zł) modelu, który w tej chwili spełniał kryteria, rozliczony na <b>nowych kodach</b> (od Nr ${SEED_N + 1}; modele znalezione w appce — od wiersza znalezienia). Zakład liczony osobno: WIN = +2 × stawka, pudło = −stawka (kurs 3,0). Opłacalność od trafności <b>33,3%</b>.</div>`;
+  if (!L.length) return h + `<div class="ban idle">Brak zakładów na nowych kodach (dopisanych: ${n - SEED_N}).</div>`;
+  const agg = { 5: [0, 0, 0], 6: [0, 0, 0], 7: [0, 0, 0] };
+  L.forEach(([row, k, bs, w]) => { const a = agg[bs + 1], s = ST[bs]; a[0]++; a[1] += w; a[2] += w ? 2 * s : -s; });
+  const tot = [0, 0, 0]; for (const k in agg) for (let j = 0; j < 3; j++) tot[j] += agg[k][j];
+  const row = (lbl, a) => `<tr><td>${lbl}</td><td>${a[0]}</td><td>${a[1]}</td><td>${a[0] ? (100 * a[1] / a[0]).toFixed(1) + '%' : '—'}</td><td class="${a[2] >= 0 ? 'pos' : 'neg'}">${a[2] >= 0 ? '+' : ''}${a[2]}</td></tr>`;
+  h += `<div class="sec"><table><tr><th>krok</th><th>zakł.</th><th>WIN</th><th>trafność</th><th>bilans zł</th></tr>` +
+    [5, 6, 7].map(k => row(`k${k} · ${ST[k - 1]} zł`, agg[k])).join('') + row('<b>RAZEM</b>', tot) + `</table></div>`;
+  const rows = {}; L.forEach(x => { (rows[x[0]] = rows[x[0]] || []).push(x); });
+  h += `<div class="sec"><div class="sh"><b>Ostatnie wiersze z zakładami</b><span class="m">${Object.keys(rows).length} wierszy</span></div><table><tr><th>Nr · kod</th><th>zakł.</th><th>WIN</th><th>stawki zł</th><th>wynik zł</th></tr>`;
+  Object.keys(rows).map(Number).sort((a, b) => b - a).slice(0, 80).forEach(r => {
+    const a = rows[r], w = a.filter(x => x[3]).length, st = a.reduce((s, x) => s + ST[x[2]], 0), res = a.reduce((s, x) => s + (x[3] ? 2 * ST[x[2]] : -ST[x[2]]), 0);
+    h += `<tr><td>${r + 1} · ${codes[r]}</td><td>${a.length}</td><td>${w}</td><td>${st}</td><td class="${res >= 0 ? 'pos' : 'neg'}">${res >= 0 ? '+' : ''}${res}</td></tr>`;
+  });
+  return h + `</table></div>`;
+}
+function stepSpace() {   // ta sama przestrzeń co szukaj/search.py
+  const pats = []; for (const a of CFG.first) for (const b of '01x') for (const c of '01x') if (a + b + c !== 'xxx') pats.push(a + b + c);
+  const step = [], trig = [...pats];
+  const comb = (arr, r, st = 0, cur = []) => { if (cur.length === r) { step.push(['S', cur.join('∪')]); return; } for (let i = st; i < arr.length; i++) comb(arr, r, i + 1, [...cur, arr[i]]); };
+  for (let r = 1; r <= CFG.maxUnion; r++) comb(AL, r);
+  for (const p of pats) for (const q of pats) { step.push(['U', p + ' → ' + q]); trig.push(p + ' → ' + q); }
+  return { step, trig };
+}
+function renderUst() {
+  const f = getFound().length;
+  let h = `<div class="sec"><div class="sh"><b>Kryteria modelu</b><span class="m">sprawdzane po każdym kodzie</span></div><table class="rules">
+    <tr><th>cykle do</th><th>max BUST</th></tr>` +
+    R.rules.map((r, i) => `<tr><td><input data-i="${i}" data-j="0" value="${r[0]}" inputmode="numeric"></td><td><input data-i="${i}" data-j="1" value="${r[1]}" inputmode="numeric"></td></tr>`).join('') +
+    `<tr><td>min. cykli</td><td><input id="minC" value="${R.minCyc}" inputmode="numeric"></td></tr></table>
+    <div style="display:flex;gap:6px;margin-top:8px"><button class="btn pri" id="saveR">Zapisz</button><button class="btn" id="defR">Domyślne</button></div>
+    <div class="hint">Domyślnie: do 200 cykli max 5 BUST, do 300 max 9, do 400 max 11; modele ponad 400 cykli nie są brane.</div></div>`;
+  h += `<div class="sec"><div class="sh"><b>Szukaj nowych modeli</b><span class="m">na całym ciągu (${codes.length.toLocaleString('pl')} kodów)</span></div>
+    <div class="kv"><span>pula z chmury (baza do Nr ${POOLS[tgt].seedN})</span><b>${POOLS[tgt].pool.length.toLocaleString('pl')}</b><span>znalezione w appce</span><b>${f.toLocaleString('pl')}</b></div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+    <button class="btn pri" id="srch" ${searching ? 'disabled' : ''}>Szukaj 20 000 konfiguracji</button>
+    <button class="btn" id="clrF" ${searching || !f ? 'disabled' : ''}>Usuń znalezione</button></div>`;
+  if (searching) h += `<div class="bar"><i style="width:${(100 * searching.k / searching.n).toFixed(0)}%"></i></div><div class="hint">${searching.k.toLocaleString('pl')} / ${searching.n.toLocaleString('pl')} · nowych: ${searching.f}</div>`;
+  h += `<div class="hint">Losuje modele STEP (SERIA / UKŁAD) × TRIGGER × offset 1–7 i dodaje te, które spełniają kryteria. Dziennik liczy je dopiero od wiersza, na którym zostały znalezione.</div></div>`;
+  h += `<div class="note">Szukaj ${APP_VER} · ${CFG.razem}: klucz kodów <b>${CFG.seedKey}</b>. Większe przeszukanie (miliony modeli) robi skrypt <b>szukaj/search.py</b> w repo.</div>`;
+  return h;
+}
+function render() {
+  $('hdrN').textContent = `Nr ${codes.length.toLocaleString('pl')} · BET ${tgt}`;
+  const el = $('main');
+  el.innerHTML = view === 'gra' ? renderGra() : view === 'dz' ? renderDz() : renderUst();
+  if (view === 'gra') {
+    el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+      const k = +b.dataset.k; KS = KS.includes(k) ? KS.filter(x => x !== k) : [...KS, k].sort(); lsSet(LSK.ks, JSON.stringify(KS)); render();
+    });
+    const wb = $('wBtn'); if (wb) wb.onclick = () => { showWait = true; render(); };
+  }
+  if (view === 'ust') {
+    $('saveR').onclick = () => {
+      const rules = R.rules.map(r => [...r]);
+      el.querySelectorAll('.rules input[data-i]').forEach(i => { rules[+i.dataset.i][+i.dataset.j] = Math.max(0, parseInt(i.value, 10) || 0); });
+      rules.sort((a, b) => a[0] - b[0]);
+      R = { rules, minCyc: Math.max(1, parseInt($('minC').value, 10) || 1) }; lsSet(LSK.rules, JSON.stringify(R)); toast('Zapisano kryteria'); recompute();
+    };
+    $('defR').onclick = () => { R = { rules: CFG.defRules, minCyc: CFG.minCyc }; lsSet(LSK.rules, ''); recompute(); };
+    $('srch').onclick = () => {
+      const sp = stepSpace(), have = P.map(m => m.slice(0, 5).join('|'));
+      searching = { k: 0, n: 20000, f: 0 }; render();
+      W.postMessage({ type: 'search', n: 20000, step: sp.step, trig: sp.trig, R, have });
+    };
+    $('clrF').onclick = () => { if (confirm('Usunąć modele znalezione w appce?')) { lsSet(foundKey(), '[]'); recompute(); } };
+  }
+}
+hint(); renderTgt(); recompute();
+</script>
+</body>
+</html>
