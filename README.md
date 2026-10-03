@@ -16,7 +16,12 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 - Kod wpisujesz raz, u góry. Trafia do wszystkich tabel naraz. ⟲ cofa go we wszystkich tabelach.
 - **GRA**: baner „NASTĘPNY WIERSZ = GRA” z sumą stawek i karta dla każdego modelu.
   Tapnięcie karty otwiera tabelę modelu, a przytrzymanie pokazuje wszystkie etykiety.
-- Zakładki **1T / 200 / 2T / TRÓJKA / 2-SLOT** pokazują oryginalne widoki appek. Silniki nie są zmieniane.
+- Każda zakładka ma ten sam układ co w T60 RAZEM: dolny pasek **GRA · TABELA · STATY**.
+  - **TABELA**: Nr · Kod · GRA · Stan/Rola, przełącznik modeli (WSZ + każdy model), „tylko zdarzenia”, legenda,
+    tapnięcie wiersza otwiera szczegóły. Wiersze bez zdarzeń mają jasne pole z opisem stanu
+    (np. „czekam na STEP”, „STEP otwarty · czekam na TRIGGER”, „SKIP · poza parą”), a nie puste czarne.
+  - 2-SLOT: w kolumnie GRA zaznaczone są kroki gry (krok n/8, stawka, pudło / WIN) w oknie po START.
+  - Silniki appek nie są zmieniane — nakładki tylko czytają ich wyniki.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM

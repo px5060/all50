@@ -95,6 +95,7 @@ const APP_VER = '1.9.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 const MASTER_SEED = '/*__MASTER_SEED__*/';   // najdłuższy wspólny ciąg Test50 (T50 x1x 1T+200+2T, od Nr 1)
 const SEED_N = MASTER_SEED.length / 3;
+window.T50_MASTER_N = SEED_N;   // wiersze ≥ seed = dopisane w RAZEM (znacznik w tabelach)
 const APPS = /*__APPS__*/;
 // ===== UG — wspólny ekran GRA (wzór T60 RAZEM / PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
 // cfg = { N, top?, bindTop?, note?, idleSub?, sections:[{name?, cards:[{id, rule, lines:[{p,txt,sub,er?}], meta:[l,r], go(er?)}]}], last:[kody] }
