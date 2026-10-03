@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1b1f2a">
 <title>__TITLE__</title>
-<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="szukaj.webmanifest">
+<link rel="icon" href="szukaj-192.png">
+<link rel="apple-touch-icon" href="szukaj-192.png">
+<meta name="apple-mobile-web-app-title" content="__TITLE__">
 <style>
 :root{--bg:#12151c;--pan:#1b1f2a;--card:#242a38;--bd:#323a4d;--tx:#e8ebf2;--mu:#8b93a7;--or:#ff6600;--or2:#ff9a4d;--gr:#5fd38a;--rd:#ff8a8a;--bl:#9fc4ff}
 *{box-sizing:border-box}
@@ -14,6 +17,7 @@ header{position:sticky;top:0;z-index:10;background:var(--pan);border-bottom:1px 
 header .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 header h1{font-size:15px;margin:0}
 header .n{color:var(--mu);font-size:12px}
+.btn.back{display:block;width:100%;margin-top:7px;padding:7px 10px;font-size:13px;background:#2b3245;border-color:#3d4760;text-align:left}
 .erow{display:flex;gap:6px;margin-top:7px}
 .erow input{flex:1;min-width:0;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:9px 10px;font-size:17px;letter-spacing:2px}
 .btn{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:600}
@@ -89,6 +93,7 @@ th{color:var(--mu);font-weight:600}
 <body>
 <header>
   <div class="t"><h1>__TITLE__</h1><span class="n" id="hdrN"></span></div>
+  <button class="btn back" id="backBtn">← __RAZEM__</button>
   <div class="erow">
     <input id="codeIn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="kod, np. 010">
     <button class="btn pri" id="addBtn">Dodaj</button><button class="btn" id="undoBtn">⟲</button>
@@ -212,7 +217,7 @@ onmessage = e => {
 const CFG = __CFG__;            // {app, seedKey, razem, targets:[...], defRules, minCyc}
 const MASTER_SEED = '__SEED__';
 const POOLS = __POOLS__;        // {x1x:{seedN,pool:[[typ,STEP,x,TRIG,off]...]}, ...}
-const APP_VER = '1.3.0';
+const APP_VER = '1.4.0';
 const SEED_N = MASTER_SEED.length / 3;
 const AL = CFG.alph, TPOS = { x1x: 1, xx1: 2, '1xx': 0 };
 const LSK = { imp: CFG.app + '_szukaj_v1_lastimp', found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
@@ -291,6 +296,7 @@ function undo() {
   if (!confirm(`Cofnąć ostatni kod ${c} (Nr ${codes.length})? Zniknie też z ${CFG.razem}.`)) return;
   addedStr = addedStr.slice(0, -3); lsSet(CFG.seedKey, addedStr); rebuildCodes(); recompute();
 }
+$('backBtn').onclick = () => location.replace(CFG.razemUrl);
 $('addBtn').onclick = addCode; $('undoBtn').onclick = undo;
 $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') addCode(); });
 // import: JSON z RAZEM / jej tabel ({codes:[...]} albo lista) lub tekst z kodami; pełny ciąg od Nr 1
