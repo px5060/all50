@@ -1,8 +1,8 @@
 {
  "id": "t50-szukaj-v1",
- "name": "T50 SZUKAJ — modele STEP→TRIGGER",
+ "name": "T50 SZUKAJ (nowy adres: /szukaj50/)",
  "short_name": "T50 SZUKAJ",
- "start_url": "./szukaj.html",
+ "start_url": "/szukaj50/",
  "scope": "./szukaj",
  "display": "standalone",
  "orientation": "portrait",
