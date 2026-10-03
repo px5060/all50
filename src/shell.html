@@ -93,7 +93,7 @@ input[type=file]{display:none}
 "use strict";
 const APP_VER = '1.9.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
-const MASTER_SEED = '/*__MASTER_SEED__*/';   // najdłuższy wspólny ciąg Test50 (T50 1T / T50 200, od Nr 1)
+const MASTER_SEED = '/*__MASTER_SEED__*/';   // najdłuższy wspólny ciąg Test50 (T50 x1x 1T+200+2T, od Nr 1)
 const SEED_N = MASTER_SEED.length / 3;
 const APPS = /*__APPS__*/;
 // ===== UG — wspólny ekran GRA (wzór T60 RAZEM / PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
@@ -322,7 +322,7 @@ function lineHtml(ak, x) {
 }
 function renderHint(L) {
   const m = new Map();
-  L.forEach(({ a, r }) => (r.trig || []).forEach(([c, ids]) => { if (!m.has(c)) m.set(c, []); m.get(c).push(`${a.short}:${ids.join(',')}`); }));
+  L.forEach(({ a, r }) => (r.trig || []).forEach(([c, ids]) => { if (!m.has(c)) m.set(c, []); m.get(c).push(a.hintPrefix === false ? ids.join(',') : `${a.short}:${ids.join(',')}`); }));
   $('hint').innerHTML = m.size ? 'TRIGGER da: ' + [...m].map(([c, l]) => `<b>${c}</b> → ${esc(l.join(' '))}`).join(' · ') : 'Żaden kod w następnym wierszu nie da teraz triggera.';
 }
 function renderGraHome() {
@@ -331,7 +331,7 @@ function renderGraHome() {
   APPS.forEach(a => {
     let secs = [];
     try { secs = W(a.k).cards((id, er) => goModel(a.k, id, er)); } catch (e) { console.error(e); }
-    secs.forEach(sc => sections.push({ name: sc.name && sc.name !== a.name ? `${a.short} · ${sc.name}` : a.name, cards: sc.cards }));
+    secs.forEach(sc => sections.push({ name: sc.full ? sc.name : sc.name && sc.name !== a.name ? `${a.short} · ${sc.name}` : a.name, cards: sc.cards }));
     if (a.k === 'trojka') { try { note = '<b>TRÓJKA</b> · ' + W(a.k).note(); } catch (e) {} }
   });
   UG.render($('home'), { N: allCodes().length, sections, note, last: allCodes().slice(-8), idleSub: 'Żadna tabela nie gra na następnym wierszu.' });
@@ -397,7 +397,7 @@ function stamp() { const d = new Date(), p = n => String(n).padStart(2, '0'); re
 function exportJSON(auto) {
   const codes = allCodes();
   const name = `v13_${stamp()}_${codes.length}kod.json`;
-  // format TRÓJKI (app: v13_troika) — czytają go T50 1T, T50 200 i skrypty PC (apka_trojka_do_wszystkich_50)
+  // format TRÓJKI (app: v13_troika) — czyta go T50 x1x (import z TRÓJKI) i skrypty PC (apka_trojka_do_wszystkich_50)
   const payload = { app: 'v13_troika', source: 'T50 RAZEM', version: APP_VER,
     saved: new Date().toISOString(), n: codes.length, codes };
   const a = document.createElement('a');
@@ -445,7 +445,7 @@ function renderDane() {
     <div class="row"><button class="btn pri" id="exp">⬇ Eksport JSON (TRÓJKA)</button><button class="btn" id="imp">⬆ Import JSON</button></div>
     <label class="sw"><input type="checkbox" id="auto" ${auto ? 'checked' : ''}> Auto-kopia co 10 kodów</label>
     <div class="small">Eksport ma format TRÓJKI: plik <b>v13_RRRRMMDD_HHMM_NNNNNkod.json</b>, <b>app: v13_troika</b>, pełny ciąg od Nr 1. Na PC jak dotąd: <b>apka_trojka_do_wszystkich_50</b>.<br>
-    Import przyjmuje JSON z każdej starej aplikacji Test50 (TRÓJKA, T50 1T, T50 200, x1x 2-slot). Jeśli ciąg różni się choć w jednym wierszu, import się zatrzymuje i nic nie zmienia.</div></div>
+    Import przyjmuje JSON z każdej aplikacji Test50 (TRÓJKA, T50 x1x 1T/200/2T, x1x 2-slot). Jeśli ciąg różni się choć w jednym wierszu, import się zatrzymuje i nic nie zmienia.</div></div>
   <div class="card"><h2>Test zgodności silników</h2><div class="row"><button class="btn" id="tst">Uruchom test (seed)</button></div><div id="tout">${testOut}</div></div>
   <div class="card"><h2>Tabele w aplikacji</h2><table class="stt"><tbody>${APPS.map(a => `<tr><td>${a.name}</td><td>${a.ver}</td></tr>`).join('')}</tbody></table>
     <div class="row"><button class="btn warn" id="rst">Usuń dopisane kody</button></div></div>`;

@@ -16,12 +16,8 @@ SRC = ROOT / 'src'
 
 # kolejność = kolejność zakładek w RAZEM
 APPS = [
-    dict(k='t1t', short='1T', name='T50 1T · x1x · 8 modeli · K8', src='t1t50.html', overlay='overlay_fsm.js',
-         store='added', key='t50_1t_v1_added', extra=[['t50_1t_v1_autobk', '0']],
-         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
-             'nav button[data-v=dane]{display:none!important}.toast{display:none!important}'),
-    dict(k='p200', short='200', name='T50 200 · x1x · 5 modeli (1T/2T) · K8', src='test200.html', overlay='overlay_fsm.js',
-         store='added', key='t50_200_v1_added', extra=[['t50_200_v1_autobk', '0']],
+    dict(k='t50', short='1T·200·2T', name='T50 x1x · 1T + 200 + 2T · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
+         store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
          css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
              'nav button[data-v=dane]{display:none!important}.toast{display:none!important}'),
     dict(k='trojka', short='TRÓJKA', name='TRÓJKA V1.3 · x1x · T1/T2 off +7 · K8', src='trojka.html', overlay='overlay_trojka.js',
@@ -34,9 +30,9 @@ APPS = [
              '#miExp,#miImp,#miClear,.sw{display:none!important}'),
 ]
 
-VER = {'t1t50.html': r"const APP_VER = '([^']+)'", 'test200.html': r"const APP_VER = '([^']+)'",
+VER = {'t50x1x.html': r"const APP_VER = '([^']+)'",
        'trojka.html': r"const APP_VER='([^']+)'", 'px50x1x.html': r"const APP_VER='([^']+)'"}
-SEEDS = {'t1t50.html': r"const SEED = '(\d+)'", 'test200.html': r"const SEED = '(\d+)'",
+SEEDS = {'t50x1x.html': r"const SEED = '(\d+)'",
          'trojka.html': r'const SEED="(\d+)"', 'px50x1x.html': r'const SEED_STR="(\d+)"'}
 
 # wzorce selfTest (policzone silnikami oryginalnych appek na ich własnym seedzie)
@@ -62,7 +58,7 @@ def main():
         i = html.rindex('</body>')
         html = html[:i] + tail + html[i + len('</body>'):]
         out.append(dict(k=a['k'], short=a['short'], name=a['name'], ver=re.search(VER[a['src']], html).group(1),
-                        store=a['store'], key=a['key'], extra=a['extra'], seedN=len(seed) // 3, html=html))
+                        store=a['store'], key=a['key'], extra=a['extra'], hintPrefix=a.get('hintPrefix', True), seedN=len(seed) // 3, html=html))
 
     master = max(seeds.values(), key=len)
     for a in out:
