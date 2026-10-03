@@ -12,6 +12,8 @@ Strona `../szukaj.html` (otwierasz ją obok appki RAZEM, np. `…/szukaj.html`).
   Sprawdzane po każdym kodzie na całym ciągu (baza + dopisane).
 - **GRA** pokazuje modele spełniające kryteria, które są na kroku 5 / 6 / 7 (64 / 128 / 256 zł):
   GRA na następnym wierszu, zakład ustawiony, STEP otwarty (z kodami, które dadzą TRIGGER).
+- **TABELA**: wybierz model (albo dotknij karty na GRA) — na ciąg kodów nanoszone są jego etykiety
+  (STEP, TRIGGER, przed grą, krok i stawka, WIN / przegrana / BUST), najnowsze u góry.
 - **DZIENNIK** rozlicza każdy pokazany zakład k5–k7 na nowych kodach (od końca bazy), żeby było widać
   rzeczywistą trafność podpowiedzi wobec progu 33,3%.
 - **SZUKAJ** losuje kolejne 20 000 konfiguracji w telefonie i dopisuje te, które spełniają kryteria.

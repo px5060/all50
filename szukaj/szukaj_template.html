@@ -35,6 +35,7 @@ main{padding:10px 12px 90px;max-width:760px;margin:0 auto}
 .sh b{font-size:14px}.sh .m{color:var(--mu);font-size:12px}
 .mc{border-left:5px solid var(--bd);background:var(--card);border-radius:8px;padding:7px 9px;margin-bottom:6px}
 .mc.k5{border-left-color:#2e75b6}.mc.k6{border-left-color:#7030a0}.mc.k7{border-left-color:var(--or)}
+.mc{cursor:pointer}.mc .tapt{color:var(--or2);font-size:11px;font-weight:700;margin-top:3px}
 .mc .h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
 .mc .id{font-weight:800;font-size:15px;white-space:nowrap}
 .mc .stk{font-weight:800;white-space:nowrap}
@@ -66,6 +67,22 @@ th{color:var(--mu);font-weight:600}
 .rules td,.rules th{text-align:left}
 .bar{height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;background:var(--or);width:0}
+.tbl td,.tbl th{text-align:left;vertical-align:top}
+.tbl td.nr{color:var(--mu);white-space:nowrap;width:1%}.tbl td.kd{font-weight:700;width:1%}
+.tbl td.kd.h{color:var(--gr)}
+.tbl td.g{white-space:nowrap;width:1%;font-weight:700}
+.tbl td.g.my{background:var(--or);color:#fff;border-radius:4px}
+.tbl td.g.dim{color:var(--mu);font-weight:500}
+.tbl tr.nw td.nr::after{content:' •';color:var(--or2)}
+.lab{display:inline-block;border-radius:4px;padding:1px 6px;font-size:12px}
+.L0,.L1{color:#8b93a7}.L2,.L3{background:#FFF2CC;color:#7F6000}.L3{font-weight:700}
+.L4{background:#F4B183;color:#000;font-weight:700}.L5{background:#F2F2F2;color:#595959}
+.L6{background:#C6EFCE;color:#006100;font-weight:700}.L7{background:#FCE4E4;color:#9C0006}
+.L8{background:#FF6666;color:#fff;font-weight:700}.L9{background:#E7E6E6;color:#C00000}
+.Lnext{background:#7030A0;color:#fff;font-weight:700}
+.leg{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.selrow{display:flex;gap:6px;margin-top:6px}.selrow input{flex:1;min-width:0;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:7px 9px;font-size:15px}
+.mchips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.mchips .chip{padding:3px 9px;font-size:12px}
 .busy{color:var(--or2);font-size:12px;margin-left:6px}
 </style>
 </head>
@@ -82,6 +99,7 @@ th{color:var(--mu);font-weight:600}
 <main id="main"></main>
 <nav>
   <button data-v="gra" class="on">GRA</button>
+  <button data-v="tab">TABELA</button>
   <button data-v="dz">DZIENNIK</button>
   <button data-v="ust">SZUKAJ</button>
 </nav>
@@ -129,6 +147,32 @@ function sim(m, R, from, log) {
   if (ph === 0 && st === 1) ph = 1;
   return { nb, nw, nbu, pnl, k5, k5w, k5b, bs, ph, srow, wz, cnt };
 }
+// etykiety wierszy dla jednego modelu (TABELA): K = rodzaj, A = licznik/krok, B = wiersz zakładu / zysk, Q = model spełniał kryteria
+// K: 0 czekam na STEP · 1 czekam na TRIGGER · 2 step n/x · 3 STEP · 4 TRIGGER · 5 przed grą · 6 WIN · 7 przegrana · 8 BUST · 9 licznik → 0
+function labels(m, R) {
+  const S = tab(m[1]), T = tab(m[3]), x = m[2], off = m[4];
+  const K = new Int8Array(N), A = new Int16Array(N), B = new Int32Array(N), Q = new Int8Array(N);
+  let st = 0, cnt = 0, bs = 0, i = 0, nw = 0, nbu = 0;
+  while (i < N) {
+    if (st === 0) {
+      if (hit(S, i)) { cnt++; if (cnt >= x) { st = 1; K[i] = 3; } else { K[i] = 2; } A[i] = cnt; }
+      else { K[i] = cnt > 0 ? 9 : 0; cnt = 0; }
+      i++;
+    } else if (hit(T, i)) {
+      const bp = i + off;
+      K[i] = 4; A[i] = bs + 1; B[i] = bp; Q[i] = qual(nw + nbu, nbu, R) ? 1 : 0;
+      for (let j = i + 1; j < Math.min(bp, N); j++) { K[j] = 5; A[j] = bs + 1; B[j] = bp; Q[j] = Q[i]; }
+      if (bp >= N) break;
+      const w = Y[X[bp]] === 1;
+      A[bp] = bs + 1; Q[bp] = Q[i];
+      if (w) { K[bp] = 6; B[bp] = ST[bs] * 3 - CUM[bs]; nw++; bs = 0; }
+      else if (bs === 7) { K[bp] = 8; B[bp] = -CUM[7]; nbu++; bs = 0; }
+      else { K[bp] = 7; bs++; }
+      st = 0; cnt = 0; i = bp + 1;
+    } else { K[i] = 1; i++; }
+  }
+  return { K, A, B, Q };
+}
 function setData(d) { AL = d.AL; X = Int8Array.from(d.X); N = X.length; Y = Uint8Array.from(d.Y); _tc.clear(); }
 function evalAll(d) {
   const out = [], logs = [];
@@ -159,6 +203,7 @@ onmessage = e => {
   const d = e.data;
   if (d.type === 'data') { setData(d); return; }
   if (d.type === 'eval') { const r = evalAll(d); postMessage({ type: 'eval', id: d.id, ...r }); }
+  if (d.type === 'label') { const r = labels(d.m, d.R); postMessage({ type: 'label', id: d.id, ...r }, [r.K.buffer, r.A.buffer, r.B.buffer, r.Q.buffer]); }
   if (d.type === 'search') { const f = search(d); postMessage({ type: 'search', found: f }); }
 };
 </script>
@@ -167,7 +212,7 @@ onmessage = e => {
 const CFG = __CFG__;            // {app, seedKey, razem, targets:[...], defRules, minCyc}
 const MASTER_SEED = '__SEED__';
 const POOLS = __POOLS__;        // {x1x:{seedN,pool:[[typ,STEP,x,TRIG,off]...]}, ...}
-const APP_VER = '1.1.0';
+const APP_VER = '1.2.0';
 const SEED_N = MASTER_SEED.length / 3;
 const AL = CFG.alph, TPOS = { x1x: 1, xx1: 2, '1xx': 0 };
 const LSK = { found: CFG.app + '_szukaj_v1_found_', rules: CFG.app + '_szukaj_v1_rules', tgt: CFG.app + '_szukaj_v1_tgt', ks: CFG.app + '_szukaj_v1_ks' };
@@ -205,9 +250,11 @@ function mid(k, m) { return (k < POOLS[tgt].pool.length ? 'P' : 'N') + (k < POOL
 // ---- worker ----
 const W = new Worker(URL.createObjectURL(new Blob([$('wsrc').textContent], { type: 'text/javascript' })));
 let lastEval = null, evalId = 0, P = [];
+let selK = null, lab = null, labId = 0, labFor = '', tabN = 150, tabEv = false;   // TABELA: wybrany model + jego etykiety
 W.onmessage = e => {
   const d = e.data;
   if (d.type === 'eval') { if (d.id !== evalId) return; lastEval = d; busy = false; render(); }
+  if (d.type === 'label') { if (d.id !== labId) return; lab = d; if (view === 'tab') render(); }
   if (d.type === 'prog') { searching = d; if (view === 'ust') render(); }
   if (d.type === 'search') {
     const f = getFound(), n = codes.length;
@@ -257,7 +304,7 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
 });
 function renderTgt() {
   $('tgt').innerHTML = CFG.targets.length < 2 ? '' : CFG.targets.map(t => `<button class="chip ${t === tgt ? 'on' : ''}" data-t="${t}">BET ${t}</button>`).join('');
-  $('tgt').querySelectorAll('button').forEach(b => b.onclick = () => { tgt = b.dataset.t; lsSet(LSK.tgt, tgt); lastEval = null; renderTgt(); recompute(); });
+  $('tgt').querySelectorAll('button').forEach(b => b.onclick = () => { tgt = b.dataset.t; lsSet(LSK.tgt, tgt); lastEval = null; selK = null; labFor = ''; renderTgt(); recompute(); });
 }
 function isHit(c) { return c[TPOS[tgt]] === '1'; }
 function lastCodes() {
@@ -283,9 +330,9 @@ function card(k, m, r, kind) {
     st = `<div class="st p6">Krok ${step}/8 — jeszcze nie gram (gra od ${ST[Math.min(...KS) - 1]} zł, k${Math.min(...KS)})<span class="s">model: ${ph}</span></div>`;
   } else st = `<div class="st p6">Czekam na STEP${m[0] === 'S' ? ` (licznik ${r.cnt}/${m[2]})` : ''}</div>`;
   const k5t = r.k5 ? `z k5: ${r.k5} wejść → W ${r.k5w} · BUST ${r.k5b}` : 'z k5: brak wejść';
-  return `<div class="mc k${step}${isTop(r) ? ' ktop' : ''}"><div class="h"><span class="id">${mid(k, m)}${isTop(r) ? ` <span class="top">★ ${topCyc()}+ cykli</span>` : ''}</span><span class="stk">krok ${step} · ${stake} zł</span></div>
+  return `<div class="mc k${step}${isTop(r) ? ' ktop' : ''}" data-mk="${k}"><div class="h"><span class="id">${mid(k, m)}${isTop(r) ? ` <span class="top">★ ${topCyc()}+ cykli</span>` : ''}</span><span class="stk">krok ${step} · ${stake} zł</span></div>
     <div class="rule">${esc(ruleTxt(m))}</div>${st}
-    <div class="meta"><span>cykle ${cyc} · BUST ${r.nbu}/${lim} · <span class="${r.pnl >= 0 ? 'pos' : 'neg'}">${r.pnl >= 0 ? '+' : ''}${r.pnl} zł</span></span><span>${k5t}</span></div></div>`;
+    <div class="meta"><span>cykle ${cyc} · BUST ${r.nbu}/${lim === null ? '—' : lim} · <span class="${r.pnl >= 0 ? 'pos' : 'neg'}">${r.pnl >= 0 ? '+' : ''}${r.pnl} zł</span></span><span>${k5t}</span></div><div class="tapt">dotknij → TABELA z etykietami tego modelu</div></div>`;
 }
 const ST = [8, 8, 16, 32, 64, 128, 256, 512];
 function limitFor(cyc) { for (const [mc, mb] of R.rules) if (mc === null || cyc <= mc) return mb; return null; }
@@ -340,6 +387,66 @@ function renderGra() {
   else h += `<button class="btn more" id="wBtn">Pokaż „czekam na STEP” (${groups.wait.length})</button>`;
   return h;
 }
+function openTab(k) { selK = k; tabN = 150; view = 'tab'; document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x.dataset.v === 'tab')); scrollTo(0, 0); render(); }
+function needLabels() {
+  if (selK === null || selK >= P.length) return;
+  const key = selK + '|' + codes.length + '|' + tgt + '|' + JSON.stringify(R) + '|' + P.length;
+  if (key === labFor) return;
+  labFor = key; lab = null; labId++;
+  W.postMessage({ type: 'label', id: labId, m: P[selK], R });
+}
+function labCell(i) {
+  const K = lab.K[i], a = lab.A[i], b = lab.B[i], m = P[selK];
+  switch (K) {
+    case 0: return ['L0', 'czekam na STEP'];
+    case 1: return ['L1', 'STEP otwarty · czekam na TRIGGER'];
+    case 2: return ['L2', `step ${a}/${m[2]}`];
+    case 3: return ['L3', m[0] === 'S' && m[2] > 1 ? `STEP ${a}/${m[2]} — otwarty` : 'STEP — otwarty'];
+    case 4: return ['L4', `TRIGGER → k${a} ${ST[a - 1]} zł na w.${b + 1}`];
+    case 5: return ['L5', b - i === 1 ? `GRA NA NASTĘPNYM WIERSZU: k${a} ${ST[a - 1]} zł` : `przed grą ${b - i}`];
+    case 6: return ['L6', `k${a} ${ST[a - 1]} zł WIN +${b}`];
+    case 7: return ['L7', `k${a} ${ST[a - 1]} zł przegrana`];
+    case 8: return ['L8', `k8 512 zł BUST ${b}`];
+    default: return ['L9', 'licznik → 0'];
+  }
+}
+function renderTab() {
+  const n = codes.length, tops = [], gra = [];
+  if (lastEval) lastEval.out.forEach((r, k) => { if (!qual(r)) return; if (isTop(r)) tops.push(k); else if (KS.includes(r.bs + 1) && r.ph === 2 && r.wz === n) gra.push(k); });
+  if (selK === null || selK >= P.length) selK = tops.length ? tops[0] : gra.length ? gra[0] : 0;
+  needLabels();
+  const m = P[selK], r = lastEval ? lastEval.out[selK] : null;
+  let h = `<div class="sec"><div class="sh"><b>Model ${mid(selK, m)}</b><span class="m">${r ? `cykle ${r.nw + r.nbu} · BUST ${r.nbu} · ${r.pnl >= 0 ? '+' : ''}${r.pnl} zł · ${qual(r) ? 'w kryteriach' : 'POZA kryteriami'}` : ''}</span></div>
+    <div style="color:#c9cfdc;font-size:12.5px">${esc(ruleTxt(m))}</div>
+    <div class="selrow"><input id="selIn" placeholder="numer modelu, np. P3406" autocomplete="off"><button class="btn" id="selBtn">Pokaż</button></div>
+    <div class="mchips">${tops.map(k => `<button class="chip ${k === selK ? 'on' : ''}" data-sk="${k}">★ ${mid(k, P[k])}</button>`).join('')}${gra.slice(0, 12).map(k => `<button class="chip ${k === selK ? 'on' : ''}" data-sk="${k}">GRA ${mid(k, P[k])}</button>`).join('')}</div>
+    <div class="leg">${[['L3', 'STEP'], ['L4', 'TRIGGER'], ['L5', 'przed grą'], ['L6', 'WIN'], ['L7', 'przegrana'], ['L8', 'BUST'], ['L9', 'licznik → 0']].map(([c, t]) => `<span class="lab ${c}">${t}</span>`).join('')}
+    <span class="lab" style="background:var(--or);color:#fff;font-weight:700">GRA = Twój zakład (k${KS.join('/k')}, model w kryteriach)</span></div>
+    <label class="hint" style="display:block;margin-top:6px"><input type="checkbox" id="evChk" ${tabEv ? 'checked' : ''}> tylko zdarzenia (bez „czekam…”)</label></div>`;
+  if (!lab) return h + `<div class="ban idle">Nanoszę etykiety…</div>`;
+  let next = '';
+  if (r) {
+    if (r.ph === 2) next = r.wz === n ? `GRAJ k${r.bs + 1} ${ST[r.bs]} zł na ${tgt}` : `zakład k${r.bs + 1} ${ST[r.bs]} zł na w.${r.wz + 1}`;
+    else if (r.ph === 1) { const tc = trigNext(m); next = tc.length ? `TRIGGER jeśli wpadnie ${tc.join(', ')} → k${r.bs + 1} ${ST[r.bs]} zł na w.${n + 1 + m[4]}` : 'czekam na TRIGGER'; }
+    else next = 'czekam na STEP';
+  }
+  const myNext = r && r.ph === 2 && r.wz === n && KS.includes(r.bs + 1) && qual(r);
+  let rows = `<tr><td class="nr">${n + 1}</td><td class="kd">?</td><td class="g ${myNext ? 'my' : 'dim'}">${myNext ? 'GRA ' + ST[r.bs] : ''}</td><td><span class="lab Lnext">następny: ${esc(next)}</span></td></tr>`;
+  let shown = 0, i = n - 1;
+  for (; i >= 0 && shown < tabN; i--) {
+    const K = lab.K[i];
+    if (tabEv && (K === 0 || K === 1)) continue;
+    const c = labCell(i), a = lab.A[i];
+    let g = '', gc = 'dim';
+    if (K >= 6 && K <= 8) { const my = KS.includes(a) && lab.Q[i]; g = (my ? 'GRA ' : 'k' + a + ' ') + ST[a - 1]; gc = my ? 'my' : 'dim'; }
+    rows += `<tr class="${i >= SEED_N ? 'nw' : ''}"><td class="nr">${i + 1}</td><td class="kd ${isHit(codes[i]) ? 'h' : ''}">${codes[i]}</td><td class="g ${gc}">${g}</td><td><span class="lab ${c[0]}">${c[1]}</span></td></tr>`;
+    shown++;
+  }
+  h += `<div class="sec"><table class="tbl"><tr><th>Nr</th><th>Kod</th><th>GRA</th><th>Stan / rola</th></tr>${rows}</table>`;
+  if (i >= 0) h += `<button class="btn more" id="moreBtn">Pokaż starsze (+150)</button>`;
+  h += `<div class="hint">Najnowsze u góry. Zielony kod = trafienie ${tgt}. • = kod dopisany po bazie.</div></div>`;
+  return h;
+}
 function renderDz() {
   if (!lastEval) return `<div class="ban idle">Liczę…</div>`;
   const L = lastEval.logs, n = codes.length;
@@ -388,12 +495,24 @@ function renderUst() {
 function render() {
   $('hdrN').textContent = `Nr ${codes.length.toLocaleString('pl')} · BET ${tgt}`;
   const el = $('main');
-  el.innerHTML = view === 'gra' ? renderGra() : view === 'dz' ? renderDz() : renderUst();
+  el.innerHTML = view === 'gra' ? renderGra() : view === 'tab' ? renderTab() : view === 'dz' ? renderDz() : renderUst();
+  if (view === 'tab') {
+    el.querySelectorAll('[data-sk]').forEach(b => b.onclick = () => { selK = +b.dataset.sk; tabN = 150; render(); });
+    const go = () => {
+      const v = $('selIn').value.trim().toUpperCase(), mm = /^([PN])(\d+)$/.exec(v), nb = POOLS[tgt].pool.length;
+      const k = mm ? (mm[1] === 'P' ? +mm[2] - 1 : nb + +mm[2] - 1) : -1;
+      if (mm && k >= 0 && k < P.length && (mm[1] === 'P' ? k < nb : true)) { selK = k; tabN = 150; render(); } else toast('Nie ma modelu ' + v);
+    };
+    $('selBtn').onclick = go; $('selIn').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    $('evChk').onchange = e => { tabEv = e.target.checked; render(); };
+    const mb = $('moreBtn'); if (mb) mb.onclick = () => { tabN += 150; render(); };
+  }
   if (view === 'gra') {
     el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
       const k = +b.dataset.k; KS = KS.includes(k) ? KS.filter(x => x !== k) : [...KS, k].sort(); lsSet(LSK.ks, JSON.stringify(KS)); render();
     });
     const wb = $('wBtn'); if (wb) wb.onclick = () => { showWait = true; render(); };
+    el.querySelectorAll('[data-mk]').forEach(c => c.onclick = () => openTab(+c.dataset.mk));
   }
   if (view === 'ust') {
     $('saveR').onclick = () => {
