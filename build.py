@@ -18,15 +18,15 @@ SRC = ROOT / 'src'
 APPS = [
     dict(k='t1', eng='t1', short='1T', name='T50 1T · x1x · 8 modeli · pojedynczy trigger · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
          store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
-         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
+         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}main{max-width:none!important}'
              'nav button[data-v=dane]{display:none!important}.toast{display:none!important}.chips button.tb{display:none!important}'),
     dict(k='t200', eng='t200', short='200', name='T50 200 · x1x · 5 modeli 1T/2T · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
          store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
-         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
+         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}main{max-width:none!important}'
              'nav button[data-v=dane]{display:none!important}.toast{display:none!important}.chips button.tb{display:none!important}'),
     dict(k='t2t', eng='t2t', short='2T', name='T50 2T · x1x · 6 modeli · podwójny trigger · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
          store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
-         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
+         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}main{max-width:none!important}'
              'nav button[data-v=dane]{display:none!important}.toast{display:none!important}.chips button.tb{display:none!important}'),
     dict(k='trojka', short='TRÓJKA', name='TRÓJKA V1.3 · x1x · T1/T2 off +7 · K8', src='trojka.html', overlay='overlay_trojka.js',
          store='csv', key='v13_troika_codes_v1', extra=[['v13_troika_autobak', '0']],

@@ -329,7 +329,7 @@ body>*:not(.t5f):not(.ut-pop):not(.ug-pop){display:none!important}
 .t5f-h{position:sticky;top:0;z-index:5;background:#1b1f2a;border-bottom:1px solid #323a4d;padding:5px 12px;display:flex;align-items:center;gap:8px}
 .t5f-h h1{font-size:14px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t5f-h .n{color:#8b93a7;font-size:12px;white-space:nowrap}
-.t5f-m{padding:10px 10px 80px;max-width:720px;margin:0 auto}
+.t5f-m{padding:10px 10px 80px}
 .t5f-nav{position:fixed;bottom:0;left:0;right:0;z-index:5;display:flex;background:#1b1f2a;border-top:1px solid #323a4d}
 .t5f-nav button{flex:1;background:none;border:0;color:#8b93a7;padding:10px 0 12px;font-size:13px;font-weight:600}
 .t5f-nav button.on{color:#ff6600}
