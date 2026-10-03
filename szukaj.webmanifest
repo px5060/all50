@@ -1,0 +1,25 @@
+{
+ "id": "t50-szukaj-v1",
+ "name": "T50 SZUKAJ — modele STEP→TRIGGER",
+ "short_name": "T50 SZUKAJ",
+ "start_url": "./szukaj.html",
+ "scope": "./szukaj",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#12151c",
+ "theme_color": "#1b1f2a",
+ "icons": [
+  {
+   "src": "szukaj-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "szukaj-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  }
+ ]
+}
