@@ -16,10 +16,18 @@ SRC = ROOT / 'src'
 
 # kolejność = kolejność zakładek w RAZEM
 APPS = [
-    dict(k='t50', short='1T·200·2T', name='T50 x1x · 1T + 200 + 2T · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
+    dict(k='t1', eng='t1', short='1T', name='T50 1T · x1x · 8 modeli · pojedynczy trigger · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
          store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
          css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
-             'nav button[data-v=dane]{display:none!important}.toast{display:none!important}'),
+             'nav button[data-v=dane]{display:none!important}.toast{display:none!important}.chips button.tb{display:none!important}'),
+    dict(k='t200', eng='t200', short='200', name='T50 200 · x1x · 5 modeli 1T/2T · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
+         store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
+         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
+             'nav button[data-v=dane]{display:none!important}.toast{display:none!important}.chips button.tb{display:none!important}'),
+    dict(k='t2t', eng='t2t', short='2T', name='T50 2T · x1x · 6 modeli · podwójny trigger · K8', src='t50x1x.html', overlay='overlay_t50x1x.js',
+         store='added', key='t50_2t_v1_added', extra=[['t50_2t_v1_autobk', '0']], hintPrefix=False,
+         css='header{padding:5px 12px!important}header h1{font-size:14px!important}#entry{display:none!important}'
+             'nav button[data-v=dane]{display:none!important}.toast{display:none!important}.chips button.tb{display:none!important}'),
     dict(k='trojka', short='TRÓJKA', name='TRÓJKA V1.3 · x1x · T1/T2 off +7 · K8', src='trojka.html', overlay='overlay_trojka.js',
          store='csv', key='v13_troika_codes_v1', extra=[['v13_troika_autobak', '0']],
          css='.pad{display:none!important}footer .frow{margin-bottom:0!important}#bak,#toast{display:none!important}'
@@ -35,6 +43,9 @@ VER = {'t50x1x.html': r"const APP_VER = '([^']+)'",
 SEEDS = {'t50x1x.html': r"const SEED = '(\d+)'",
          'trojka.html': r'const SEED="(\d+)"', 'px50x1x.html': r'const SEED_STR="(\d+)"'}
 
+# poprawki seedów starych appek (Nr → kod), żeby wszystkie tabele liczyły ten sam ciąg
+SEED_FIX = {'px50x1x.html': {14676: '001'}}
+
 # wzorce selfTest (policzone silnikami oryginalnych appek na ich własnym seedzie)
 REFS = {
     '__TROJKA_REF__': 'T1: 68 gier, 67 W, PnL 4712 · T2: 48 gier, 48 W, PnL 3584',
@@ -47,9 +58,15 @@ def main():
     seeds, out = {}, []
     for a in APPS:
         html = (SRC / 'apps' / a['src']).read_text()
-        seed = re.search(SEEDS[a['src']], html).group(1)
+        m = re.search(SEEDS[a['src']], html)
+        seed = m.group(1)
+        for nr, c in SEED_FIX.get(a['src'], {}).items():
+            seed = seed[:3 * (nr - 1)] + c + seed[3 * nr:]
+        html = html[:m.start(1)] + seed + html[m.end(1):]
         seeds[a['src']] = seed
         ov = (SRC / a['overlay']).read_text()
+        if a.get('eng'):
+            ov = f"window.__T50_ENG = '{a['eng']}';\n" + ov
         for k, v in REFS.items():
             ov = ov.replace(k, v)
         html = re.sub(r'<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\n?', '', html)

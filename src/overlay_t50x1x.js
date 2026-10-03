@@ -2,6 +2,14 @@
 (function () {
   const esc = window.__t50esc;
 
+  // zakładka RAZEM = jeden silnik: zostawiamy w KEYS tylko go i liczymy od nowa
+  const ENGK = window.__T50_ENG;
+  if (ENGK) {
+    KEYS.splice(0, KEYS.length, ENGK);
+    useEng(ENGK); recompute(); render();
+    document.querySelector('header h1').textContent = `T50 ${LBL[ENGK]} · ${OPIS[ENGK]}`;
+  }
+
   function sync() {
     added = [];
     const s = lsGet(LS_ADDED, '');
@@ -47,9 +55,9 @@
     render: () => render(),
     selfTest: () => {
       const errs = [].concat(...eachEng(k => selfTest(seedArr.slice(0, TABLE.nCodesRef)).map(e => `${LBL[k]}: ${e}`)));
-      const n = eachEng(() => MODELS.length);
+      const n = eachEng(k => `${LBL[k]}: ${MODELS.length}`);
       return { ok: !errs.length, txt: errs.length ? errs.slice(0, 3).map(esc).join('; ')
-        : `statystyki ${n.reduce((a, b) => a + b, 0)} modeli (1T: ${n[0]}, 200: ${n[1]}, 2T: ${n[2]}) = arkusze STATYSTYKI` };
+        : `statystyki modeli (${n.join(', ')}) na ${TABLE.nCodesRef} kodach = arkusz STATYSTYKI` };
     },
   };
 })();
