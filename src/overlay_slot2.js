@@ -61,6 +61,7 @@
   const TAG = { trigger: 'T', start: '★', win: 'W', loss: 'L', ignored: '⊘' };
   const pm = mi => ML()[mi];
   const A = {
+    win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => codes.length, code: i => codes[i], isNew: i => i >= SEED_STR.length / 3,
     models: () => ML().map(x => ({ id: x.id })),
     defSel: () => 'C·' + MODELS.C[0].name,

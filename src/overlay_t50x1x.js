@@ -62,6 +62,7 @@
   const betAt = (mi, i) => { const r = results[mi]; if (!BY.has(r)) BY.set(r, new Map(r.d.map(x => [x.w_ZAKLAD - 1, x]))); return BY.get(r).get(i); };
   const pending = r => r.st.faza === 'CZEKA NA MECZ ZAKŁADU';
   const A = {
+    win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => codes.length, code: i => codes[i], isNew: i => i >= SEED_N,
     models: () => MODELS.map(m => ({ id: m.m })),
     desc: mi => { const m = MODELS[mi]; return esc(`${m.m} · ${m.id}: ${defin(m)} · K8`); },

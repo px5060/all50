@@ -33,6 +33,7 @@ window.UT = (function () {
 .ut-tool button{padding:5px 9px;border-radius:12px;border:1px solid #323a4d;background:#1b1f2a;color:#c9cfdc;font-size:12px;font-weight:600}
 .ut-tool button.on{background:#2e75b6;border-color:#2e75b6;color:#fff}
 .ut-desc{color:#8b93a7;font-size:12px;margin:0 0 6px}
+.ut-win{display:inline-block;background:#00B050;color:#fff;font-weight:800;border-radius:6px;padding:1px 7px;margin-right:6px}
 .ut-tw{overflow:auto;border:1px solid #323a4d;border-radius:8px;background:#12151c;-webkit-overflow-scrolling:touch}
 .ut table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px}
 .ut th,.ut td{padding:4px 5px;border-bottom:1px solid #2a3142;text-align:left;vertical-align:top}
@@ -102,7 +103,8 @@ window.UT = (function () {
     x += `<div class="ut-ch">${['ALL', ...models.map(m => m.id)].map(id => `<button data-m="${esc(id)}" class="${S.sel === id ? 'on' : ''}">${id === 'ALL' ? 'WSZ' : esc(id)}</button>`).join('')}</div>`;
     x += `<div class="ut-tool"><button id="utEv" class="${S.onlyEv ? 'on' : ''}">tylko zdarzenia</button>${A.tools ? A.tools() : ''}<button id="utEnd">↓ koniec</button><button id="utLeg" class="${S.leg ? 'on' : ''}">legenda ${S.leg ? '▴' : '▾'}</button></div>`;
     if (S.leg) x += `<div class="ut-leg">${A.legend()}<br><b>Kod</b> (widok modelu): <span style="${CC.step}">STEP</span><span style="${CC.trig}">TRIGGER</span><span style="${CC.win}">WIN</span> — kod, który w tym modelu tworzy step, trigger albo wygrany zakład. Tapnij wiersz → pełny opis.</div>`;
-    if (!isAll && A.desc) x += `<div class="ut-desc">${A.desc(mi)}</div>`;
+    if (A.win) x += `<div class="ut-desc"><span class="ut-win">WIN = ${esc(A.win(isAll ? 0 : mi))}</span>${!isAll && A.desc ? A.desc(mi) : ''}</div>`;
+    else if (!isAll && A.desc) x += `<div class="ut-desc">${A.desc(mi)}</div>`;
     x += `<div class="ut-tw" id="utTw">`;
     if (from > 0) x += `<button class="ut-more" id="utMore">▲ Pokaż +200 wcześniejszych (ukrytych ${from})</button>`;
     if (isAll) {

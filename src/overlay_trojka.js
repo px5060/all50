@@ -44,6 +44,7 @@
   const EVN = { trigger: 'TRIGGER', krok: 'przygotowanie', start: '★ START', gra: 'krok gry', win: 'WIN', loss: 'LOSS (BUST)' };
   const SUBR = { SKIP: 'poza parą — szukam 1. trafienia x1x', para: '1. trafienie pary', 'SPRAWDŹ': '2. trafienie — następny x1x = WIN', miss: 'brak 3. trafienia → K+1', WIN: 'koniec cyklu (WIN-cykl)' };
   const A = {
+    win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => model.N, code: i => model.codes[i], isNew: i => i >= SEED.length / 3,
     models: () => MODELS.map(m => ({ id: m.name })),
     desc: mi => { const m = MODELS[mi]; return `${m.name}: TRIGGER = WIN-cykl M=${[...m.trig][0]} · przygotowanie ${START_STEP - 1} cykli · ★ START · gra w cyklu T+${OFFSET} · K${K_LIMIT}`; },
