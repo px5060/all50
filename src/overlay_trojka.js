@@ -63,14 +63,14 @@
       const ws = openWindows(MODELS[mi]).filter(w => w.done >= START_STEP);
       if (!ws.length) return [];
       const b = model.baseState, K = b.K, tn = 'trig#' + ws.map(w => w.tn).join(',');
-      if (K > K_LIMIT) return [{ t: `K=${K} > ${K_LIMIT} — bez zakładu, BUST przy zamknięciu cyklu`, sub: tn, css: FC_LOSS, tag: 'B' }];
+      if (K > K_LIMIT) return [{ t: `K=${K} > ${K_LIMIT} — bez zakładu, BUST przy zamknięciu cyklu`, sub: tn, wait: true, css: FC_LOSS, tag: 'B' }];
       const st = k => 8 * Math.pow(2, k - 1);
-      const seek = [{ t: 'x1x → 1. trafienie pary', sub: `inny kod = czekam dalej · ${tn}`, css: FC_COND, tag: '1' },
+      const seek = [{ t: 'x1x → 1. trafienie pary', sub: `inny kod = czekam dalej · ${tn}`, css: FC_COND, tag: '1', wait: true },
         { t: `x1x → SPRAWDŹ (para K${K})`, sub: 'inny kod = para przepada, szukam od nowa', css: FC_COND, tag: '2' }];
       const bet = { t: `GRA krok ${K} · ${st(K)} zł: x1x = ✓ WIN ${window.__t50zl(profit(K))}`, sub: K + 1 > K_LIMIT ? 'inny kod = miss → K>8 = BUST −2040 zł' : `inny kod = miss → krok ${K + 1} (${st(K + 1)} zł), znów szukam pary`, css: FC_BET, tag: 'G' };
       if (b.state === 'SPRAWDZ') return [bet];
       if (b.state === 'PENDING1') return [seek[1], bet];
-      if (b.state === 'IGNORE') return [{ t: 'kod ≠ x1x kończy przerwę po WIN', sub: 'x1x = nadal przerwa', css: FC_COND, tag: '·' }, ...seek, bet];
+      if (b.state === 'IGNORE') return [{ t: 'kod ≠ x1x kończy przerwę po WIN', sub: 'x1x = nadal przerwa', css: FC_COND, tag: '·', wait: true }, ...seek, bet];
       return [...seek, bet];
     },
     N: () => model.N, code: i => model.codes[i], isNew: i => i >= SEED.length / 3,

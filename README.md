@@ -25,9 +25,9 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
     tapnięcie wiersza otwiera szczegóły. Wiersze bez zdarzeń mają jasne pole z opisem stanu
     (np. „czekam na STEP”, „STEP otwarty · czekam na TRIGGER”, „SKIP · poza parą”); kolumna GRA
     bez zakładu zostaje ciemna, jak w T60 RAZEM.
-  - **Prognoza po START** (wiersze przerywane „nast.” / „…” na końcu tabeli modelu): 1T/200/2T — odliczanie do zakładu;
-    TRÓJKA i 2-SLOT — najkrótsza droga do gry: jaki kod musi paść w kolejnych wierszach (para → SPRAWDŹ → GRA,
-    BUILDUP → slot 1 → slot 2), stawka kroku i co się stanie, gdy padnie inny kod.
+  - **Prognoza po START** (wiersze przerywane „nast.” / „…” na końcu tabeli modelu) tylko tam, gdzie wiersz jest pewny:
+    1T/200/2T — odliczanie do zakładu; 2-SLOT — sloty 1 i 2 po BUILDUP; TRÓJKA — wiersz decyzji po SPRAWDŹ (i SPRAWDŹ po 1. trafieniu).
+    Gdy trzeba czekać na kod (szukanie pary, BUILDUP), w opisie ostatniego wiersza (Stan/Rola) jest „DALEJ: …” — co musi się wydarzyć.
   - 2-SLOT: w kolumnie GRA zaznaczone są kroki gry (krok n/8, stawka, pudło / WIN) w oknie po START.
   - **Dotknięcie wiersza zakładu** (albo wiersza TRIGGER / czekania) w widoku modelu podświetla cały łańcuch, jak w SZUKAJ / BUST:
     STEP (żółty), TRIGGER (niebieski), czekanie (przerywany), następny / START (pomarańczowy), kroki gry (przerywany pomarańczowy),

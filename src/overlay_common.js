@@ -130,7 +130,9 @@ window.UT = (function () {
     const isAll = S.sel === 'ALL';
     const mi = isAll ? -1 : models.findIndex(m => m.id === S.sel);
     let last = N - 1;
-    const FC = k => { try { return A.fc ? A.fc(k) || [] : []; } catch (e) { return []; } };   // prognoza po START (adapter)
+    // prognoza po START (adapter): wiersze tylko dopóki ich położenie jest pewne; od kroku „czekam na kod” (wait) → opis ostatniego wiersza
+    const FCall = k => { try { return A.fc ? A.fc(k) || [] : []; } catch (e) { return []; } };
+    const FC = k => { const a = FCall(k), j = a.findIndex(r => r.wait); return j < 0 ? a : a.slice(0, j); };
     if (isAll) models.forEach((m, k) => { last = Math.max(last, A.last(k), N - 1 + FC(k).length); }); else last = Math.max(last, A.last(mi), N - 1 + FC(mi).length);
     let { from, rows } = rowsRange(N, last);
     if (S.onlyEv) rows = rows.filter(i => i >= N || (isAll ? models.some((m, k) => A.ev(k, i)) : A.ev(mi, i)));
@@ -165,6 +167,10 @@ window.UT = (function () {
       for (const i of rows) {
         const g = i >= N, f = g ? FC(mi)[i - N] : null;
         const c = f ? { gra: { t: f.t, css: f.css, sub: f.sub || '' }, stan: { t: f.stan || (i === N ? 'prognoza · następny kod' : 'prognoza · najkrótsza droga'), css: 'color:#8b93a7' } } : (g && A.last(mi) < i ? {} : A.cell(mi, i) || {});
+        if (!g && i === N - 1) {   // bieżący stan: co dalej musi się wydarzyć (gdy nie da się tego przypisać do konkretnych wierszy)
+          const all = FCall(mi), rest = all.slice(FC(mi).length);
+          if (rest.length) { const s0 = c.stan || { t: '—', css: NEU }; c.stan = Object.assign({}, s0, { sub: (s0.sub ? s0.sub + ' · ' : '') + 'DALEJ: ' + rest.map(r => r.t).join(' → ') + (rest[0].sub ? ` (${rest[0].sub})` : '') }); }
+        }
         const stan = c.stan || (g ? { t: i === N ? 'następny kod' : 'przyszły kod', css: 'color:#8b93a7' } : { t: '—', css: NEU });
         const gra = c.gra;
         const cr = !g && A.codeRole ? A.codeRole(mi, i) : null;

@@ -89,12 +89,12 @@
       const { s, m } = pm(mi), E = both()[s], ws = E.models[m.name].windows.filter(w => w.started);
       if (!ws.length) return [];
       const two = E.two, tn = 'trig#' + ws.map(w => w.tn).join(',');
-      const slot = (j, k) => k > MAX_KROKI ? { t: `krok ${k} > ${MAX_KROKI} — bez zakładu, LOSS przy najbliższym WIN bazy`, sub: tn, css: FC_LOSS, tag: 'L' }
+      const slot = (j, k) => k > MAX_KROKI ? { t: `krok ${k} > ${MAX_KROKI} — bez zakładu, LOSS przy najbliższym WIN bazy`, sub: tn, wait: true, css: FC_LOSS, tag: 'L' }
         : { t: `slot ${j} · GRA x1x · krok ${k}/${MAX_KROKI} · ${STAWKI[k]} zł`, sub: j === 1 ? 'x1x = ✓ WIN · inny → slot 2' : `x1x = ✓ WIN · inny → K+2, czekam na x1x`, css: FC_BET, tag: String(k) };
       const K = two.K;
       if (two.phase === 'SLOT2') return [slot(2, K + 2)];
       if (two.phase === 'SLOT1') return [slot(1, K + 1), slot(2, K + 2)];
-      return [{ t: 'x1x → BUILDUP (następne 2 wiersze to sloty)', sub: `inny kod = czekam dalej · ${tn}`, css: FC_COND, tag: 'B' }, slot(1, K + 1), slot(2, K + 2)];
+      return [{ t: 'x1x → BUILDUP (następne 2 wiersze to sloty)', sub: `inny kod = czekam dalej · ${tn}`, css: FC_COND, tag: 'B', wait: true }, slot(1, K + 1), slot(2, K + 2)];
     },
     N: () => codes.length, code: i => codes[i], isNew: i => i >= SEED_STR.length / 3,
     models: () => ML().map(x => ({ id: x.id })),
