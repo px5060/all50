@@ -95,7 +95,7 @@
   // ---- GRA (UG) ----
   function playLine(w) {
     const b = model.baseState, K = b.K;
-    if (K > K_LIMIT) return { p: 5, txt: `trig#${w.tn} · GRA w bieżącym cyklu · K=${K} > ${K_LIMIT} → BUST przy zamknięciu`, sub: '', er: w.eventEr };
+    if (K > K_LIMIT) return { p: 5, act: true, txt: `trig#${w.tn} · GRA w bieżącym cyklu · K=${K} > ${K_LIMIT} → BUST przy zamknięciu`, sub: '', er: w.eventEr };
     const sub = {
       SEEK: `czeka na x1x (1. trafienie pary) · krok gry ${K}`,
       PENDING1: `następny wiersz: x1x = para → krok gry ${K}`,

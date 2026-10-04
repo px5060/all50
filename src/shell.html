@@ -194,9 +194,9 @@ window.UG = (function () {
       : `<div class="ug-ban idle"><div><b>Bez gry na Nr ${fmt(NX)}<\/b>${cond ? ` · gra w toku: ${cond}` : ''}<\/div>${cfg.idleSub ? `<div class="sub">${esc(cfg.idleSub)}<\/div>` : ''}<\/div>`;
     if (cfg.note) h += `<div class="ug-note">${cfg.note}<\/div>`;
     h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → statystyki modelu<\/div>`;
-    // tylko modele z triggerem: gra na następnym wierszu (p1), gra w toku (p2/p4), okno po triggerze (p5 z trig#);
-    // modele bez triggera (czekają na STEP / trigger) → zwinięta lista „Modele oczekujące” pod spodem
-    const act = c => c.lines.some(l => l.p === 1 || l.p === 2 || l.p === 4 || l.act || (l.p === 5 && /trig#\d|\[T:\d|TRIGGER #\d/.test(`${l.txt} ${l.sub || ''}`)));
+    // tylko okna po START: gra na następnym wierszu (p1), gra w toku (p2, p4 bez „START”, BUST czeka na zamknięcie, act);
+    // modele bez triggera i okna przed START (przygotowanie, ★ START za 1) → zwinięta lista „Modele oczekujące” pod spodem
+    const act = c => c.lines.some(l => l.p === 1 || l.p === 2 || l.act || (l.p === 4 && !/START/.test(l.txt)) || (l.p === 5 && /^BUST (#|trig#)/.test(l.txt)));
     let ci = 0; const idx = [];
     const card = c => {
       const top = Math.min(...c.lines.map(l => l.p));
@@ -216,17 +216,17 @@ window.UG = (function () {
       }
       if (wt.length) {
         nWait += wt.length;
-        waitH += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : 'Modele'}<\/b><span class="m">${wt.length} bez triggera<\/span><\/div>${wt.map(card).join('')}<\/div>`;
+        waitH += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : 'Modele'}<\/b><span class="m">${wt.length} bez gry<\/span><\/div>${wt.map(card).join('')}<\/div>`;
       }
     });
-    if (!nAct) h += `<div class="ug-none">Żaden model nie ma teraz triggera ani gry w toku.<\/div>`;
-    if (nWait) h += `<button class="ug-wt" type="button">${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — bez triggera<\/button><div class="ug-wl"${wOpen ? '' : ' hidden'}>${waitH}<\/div>`;
+    if (!nAct) h += `<div class="ug-none">Żaden model nie gra teraz (brak okna po START).<\/div>`;
+    if (nWait) h += `<button class="ug-wt" type="button">${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — przed START / bez triggera<\/button><div class="ug-wl"${wOpen ? '' : ' hidden'}>${waitH}<\/div>`;
     if (cfg.last && cfg.last.length) h += `<div class="ug-last">Ostatnie: ${cfg.last.map(c => `<b>${esc(c)}<\/b>`).join('')}<\/div>`;
     h += `<\/div>`;
     host.innerHTML = h;
     if (cfg.bindTop) cfg.bindTop(host);
     const wb = host.querySelector('.ug-wt');
-    if (wb) wb.onclick = () => { wOpen = !wOpen; host.querySelector('.ug-wl').hidden = !wOpen; wb.textContent = `${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — bez triggera`; };
+    if (wb) wb.onclick = () => { wOpen = !wOpen; host.querySelector('.ug-wl').hidden = !wOpen; wb.textContent = `${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — przed START / bez triggera`; };
     // tapnięcie karty / linii / strzałki → TABELA (linia z Nr → ten wiersz); przytrzymanie karty → okno ze wszystkimi etykietami
     host.querySelectorAll('.ug-mc').forEach(el => {
       const c = idx[+el.dataset.c];

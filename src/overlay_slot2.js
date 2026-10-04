@@ -139,9 +139,9 @@
       const ws = E.models[m.name].windows, L = [];
       ws.filter(w => w.started).forEach(w => {
         const n = nextKrok(two);
-        if (n > MAX_KROKI) L.push({ p: 5, txt: `trig#${w.tn} · K>${MAX_KROKI} → LOSS przy najbliższym WIN bazy`, sub: '', er: w.eventEr });
+        if (n > MAX_KROKI) L.push({ p: 5, act: true, txt: `trig#${w.tn} · K>${MAX_KROKI} → LOSS przy najbliższym WIN bazy`, sub: '', er: w.eventEr });
         else if (two.phase !== 'WAITING') L.push({ p: 1, txt: `▼ GRA x1x · krok ${n}/${MAX_KROKI} · ${STAWKI[n]} zł`, sub: `trig#${w.tn} · baza ${two.phase}`, stake: STAWKI[n], er: w.eventEr });
-        else L.push({ p: 4, txt: `trig#${w.tn} · w grze · po x1x (BUILDUP) krok ${n}/${MAX_KROKI} · ${STAWKI[n]} zł`, sub: 'baza WAITING', er: w.eventEr });
+        else L.push({ p: 4, act: true, txt: `trig#${w.tn} · w grze · po x1x (BUILDUP) krok ${n}/${MAX_KROKI} · ${STAWKI[n]} zł`, sub: 'baza WAITING', er: w.eventEr });
       });
       ws.filter(w => !w.started).forEach(w => L.push(w.krok === m.offset - 1
         ? { p: 4, txt: `trig#${w.tn} · ★ START przy następnym WIN`, sub: `off +${m.offset}`, er: w.eventEr }
