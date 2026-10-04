@@ -520,8 +520,10 @@ body>*:not(.t5f):not(.ut-pop):not(.ug-pop){display:none!important}
 // Gra (okno) = {trigEr, er, K}: er = wiersz rozliczenia (0-based), K = krok trafienia (K > 8 = BUST).
 // Zakłady w oknie: kroki 1…min(K,8), trafienie tylko na kroku K — progresja jak prog() w T50 x1x.
 window.T50Stat = (function () {
-  const esc = window.__t50esc, zl = window.__t50zl, fmt = v => Number(v).toLocaleString('pl-PL');
+  const esc = window.__t50esc || (v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]));
+  const zl = window.__t50zl || (v => `${v >= 0 ? '+' : '−'}${Math.abs(v).toLocaleString('pl-PL')} zł`), fmt = v => Number(v).toLocaleString('pl-PL');
   const css = `
+.t5s .card{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px}
 .t5s{color:#fff;font-size:12px;line-height:1.25}
 .t5s .card{padding:7px 8px;margin-bottom:6px}
 .t5s h2{font-size:13px;margin:0 0 4px;color:#fff}
@@ -619,8 +621,8 @@ window.T50Stat = (function () {
       if (g.name) h += `<tr class="grp"><td colspan="${mc ? 8 : 7}">${esc(g.name)}</td></tr>`;
       g.items.forEach(({ id, s }) => { h += `<tr><td><b>${esc(id)}</b></td><td>${s.zakl}/${s.W}</td><td>${s.hit.toFixed(1)}</td><td>${s.ml}</td><td>${s.B}</td><td class="${s.P >= 0 ? 'pos' : 'neg'}">${(s.P >= 0 ? '+' : '−') + fmt(Math.abs(s.P))}</td><td>${s.okresy}/5</td>${mc ? `<td>${s.score ?? '—'}</td>` : ''}</tr>`; });
     });
-    const tot = items.reduce((a, x) => a + x.s.P, 0);
-    h += `<tr><td><b>Σ</b></td><td>${items.reduce((a, x) => a + x.s.zakl, 0)}/${items.reduce((a, x) => a + x.s.W, 0)}</td><td colspan="3"></td><td><b class="${tot >= 0 ? 'pos' : 'neg'}">${(tot >= 0 ? '+' : '−') + fmt(Math.abs(tot))}</b></td><td></td>${mc ? '<td></td>' : ''}</tr></tbody></table></div>
+    const sumI = items.filter(x => !x.noSum), tot = sumI.reduce((a, x) => a + x.s.P, 0);
+    h += `<tr><td><b>Σ</b></td><td>${sumI.reduce((a, x) => a + x.s.zakl, 0)}/${sumI.reduce((a, x) => a + x.s.W, 0)}</td><td colspan="3"></td><td><b class="${tot >= 0 ? 'pos' : 'neg'}">${(tot >= 0 ? '+' : '−') + fmt(Math.abs(tot))}</b></td><td></td>${mc ? '<td></td>' : ''}</tr></tbody></table></div>
     <div class="muted" style="margin-top:4px">${o.note || ''}</div>
     <div class="row"><button class="btn t5s-mc">${mc ? 'Ukryj Monte-Carlo' : 'Policz Monte-Carlo (bootstrap/permutacja)'}</button></div>
     ${mc ? '<div class="muted" style="margin-top:4px">Monte-Carlo: 5000 losowań, wynik przybliżony.</div>' : ''}</div>`;
@@ -640,5 +642,5 @@ window.T50Stat = (function () {
       ['BUST przy K6 / K7', `${s.k6} / ${s.k7}`], ['Okresy + (z 5)', s.okresy], ['Część 40%: BUST / bilans', `${s.Bo} / ${zl(s.Po)}`],
       ['Obrót', `${fmt(s.obrot)} zł`], ['Ostatni zakład', lastTxt(games, ST, odds)]];
   }
-  return { compute, render, brief };
+  return { compute, render, brief, esc };
 })();
