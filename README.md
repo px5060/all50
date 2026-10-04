@@ -46,6 +46,13 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM
   (klucz `t50razem_v1_added`).
 
+## Instalacja na telefonie (osobny adres)
+
+Pod `/all50/` telefon pokazywał „już zainstalowana”, bo pod tym adresem były wcześniej inne appki (stary SZUKAJ).
+Dlatego T50 RAZEM ma też własny adres, na wzór SZUKAJ / BUST: **https://px5060.github.io/t50razem/**
+(repo `px5060/t50razem`, pliki z `pages/t50razem/` — własny manifest `t50razem-v1`, `start_url ./`, service worker).
+`python3 build.py` buduje oba warianty naraz. Dane (dopisane kody) są wspólne — ta sama domena `px5060.github.io`.
+
 ## Uwagi
 
 - **Nr 14676 = `001` we wszystkich tabelach.** Stara appka x1x 2-slot miała tam `000`; build.py poprawia jej seed

@@ -92,6 +92,48 @@ def main():
     shell = shell.replace('/*__MASTER_SEED__*/', master, 1).replace('/*__APPS__*/', apps_js, 1)
     (ROOT / 'index.html').write_text(shell)
     print(f'index.html: {len(shell):,} B · seed {len(master) // 3} kodów · ' + ', '.join(f"{a['short']} {a['ver']}" for a in out))
+    build_pages(shell)
+
+
+# ---- osobna appka PWA (repo px5060/t50razem → px5060.github.io/t50razem/), na wzór SZUKAJ / BUST ----
+PAGES = ROOT / 'pages' / 't50razem'
+PWA_ID = 't50razem-v1'
+MANIFEST = {
+    'id': PWA_ID, 'name': 'T50 RAZEM — wszystkie tabele Test50', 'short_name': 'T50 RAZEM',
+    'start_url': './', 'scope': './', 'display': 'standalone', 'orientation': 'portrait',
+    'background_color': '#12151c', 'theme_color': '#1b1f2a',
+    'icons': [{'src': 't50razem-192.png', 'sizes': '192x192', 'type': 'image/png', 'purpose': 'any'},
+              {'src': 't50razem-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'any'}],
+}
+SW = """// T50 RAZEM: nawigacje zawsze z sieci (bez starej wersji z pamięci)
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+self.addEventListener('fetch', e => {
+  if (e.request.mode !== 'navigate') return;
+  e.respondWith(fetch(e.request.url, { cache: 'no-store' }).catch(() => fetch(e.request)));
+});
+"""
+
+
+def build_pages(shell):
+    import shutil
+    PAGES.mkdir(parents=True, exist_ok=True)
+    h = re.sub(r'<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\n?', '', shell, count=2)
+    h = h.replace('<title>', '<link rel="manifest" href="t50razem.webmanifest">\n<link rel="icon" href="t50razem-192.png">\n'
+                  '<link rel="apple-touch-icon" href="t50razem-192.png">\n<title>', 1)
+    i = h.rindex('</body>')
+    h = h[:i] + "<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('t50razem-sw.js', { scope: './' }).catch(() => {});</script>\n" + h[i:]
+    (PAGES / 'index.html').write_text(h)
+    (PAGES / 't50razem.webmanifest').write_text(json.dumps(MANIFEST, ensure_ascii=False, indent=1))
+    (PAGES / 't50razem-sw.js').write_text(SW)
+    for n in ('192', '512'):
+        shutil.copyfile(ROOT / f'icon-{n}.png', PAGES / f't50razem-{n}.png')
+    (PAGES / '.nojekyll').write_text('')
+    (PAGES / 'README.md').write_text(
+        '# T50 RAZEM\n\nWszystkie tabele Test50 (1T · 200 · 2T · TRÓJKA · 2-SLOT) w jednej appce PWA.\n\n'
+        'Adres: https://px5060.github.io/t50razem/\n\n'
+        'Pliki są generowane w repo `px5060/all50` (`python3 build.py` → `pages/t50razem/`) — nie edytować tutaj ręcznie.\n')
+    print(f'pages/t50razem/: index.html {len(h):,} B · manifest id {PWA_ID} · service worker')
 
 
 if __name__ == '__main__':
