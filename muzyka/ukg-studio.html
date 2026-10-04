@@ -1,0 +1,341 @@
+<title>Garaż 2-Step</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: jedna kolumna jak sprzęt w studiu — pasek transportu, siatka kroków, karty warstw, przewodnik.
+   Celowo tylko ciemny motyw: to instrument, diody muszą świecić. */
+:root{
+  --bg:#11131d; --panel:#1a1d2c; --panel-2:#242840; --line:#343a5c;
+  --fg:#e8eaf4; --muted:#9ba1c0; --accent:#a9b8ff; --led:#ffb547; --led-soft:#5a4626;
+  --display:'Bricolage Grotesque','Arial Black',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:28px 16px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(2rem,6vw,3.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.35rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:500}
+p{margin:0;max-width:65ch}
+.eyebrow{font:600 .72rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--muted)}
+header{display:flex;flex-direction:column;gap:10px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.transport{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:18px;align-items:end}
+.play{width:84px;height:84px;border-radius:50%;border:2px solid var(--led);background:var(--led-soft);color:var(--fg);font:800 1rem var(--display);cursor:pointer}
+.play[aria-pressed="true"]{background:var(--led);color:#1b1300}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ctl label{font:600 .72rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl output{color:var(--led);font-variant-numeric:tabular-nums}
+.ctl small{color:var(--muted);font-size:.78rem;line-height:1.35}
+input[type=range]{width:100%;accent-color:var(--led)}
+.row2{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.btn{background:var(--panel-2);border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:8px 12px;font:600 .85rem var(--body);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{border-color:var(--accent);color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent);color:#10142b;border-color:var(--accent)}
+select{background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:600 .85rem var(--body)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.spacer{flex:1}
+.status{font:600 .8rem var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.status b{color:var(--led);font-weight:600}
+
+.grid-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:14px}
+.seq{display:flex;flex-direction:column;gap:10px}
+.track{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center}
+.tname{display:flex;align-items:center;gap:8px;min-width:0}
+.tname span{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mute{flex:none;width:28px;height:24px;border-radius:4px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);font:600 .7rem var(--mono);cursor:pointer}
+.mute[aria-pressed="true"]{background:#5b2430;color:#ffd0d8;border-color:#8a3a4a}
+.steps{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.step{aspect-ratio:1/1.15;border-radius:4px;border:1px solid var(--line);background:var(--panel-2);cursor:pointer;padding:0;min-width:0}
+.step:nth-child(4n+1){background:#2c3150}
+.step:nth-child(4n+1):not(:first-child){margin-left:4px}
+.step.on{background:var(--led);border-color:var(--led)}
+.step.now{box-shadow:0 0 0 2px var(--accent) inset}
+.step.on.now{box-shadow:0 0 0 2px #fff inset}
+.ruler{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px}
+.ruler .steps div{font:600 .62rem var(--mono);color:var(--muted);text-align:center}
+.ruler .steps div:nth-child(4n+1):not(:first-child){margin-left:4px}
+.hint{color:var(--muted);font-size:.85rem;margin-top:12px}
+
+.layers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.layer{display:flex;flex-direction:column;gap:10px;min-width:0}
+.layer .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.layer p{color:var(--muted);font-size:.88rem}
+.layer .meter{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden}
+.layer .meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .12s}
+
+.guide{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+.guide ol{margin:12px 0 0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px}
+.guide li::marker{font-family:var(--mono);color:var(--led)}
+dl{margin:12px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px}
+dt{font:600 .8rem var(--mono);color:var(--led);padding-top:2px}
+dd{margin:0;font-size:.9rem;color:var(--fg)}
+.note{font-size:.85rem;color:var(--muted);border-left:2px solid var(--accent);padding-left:12px}
+
+@media (max-width:760px){
+  .transport{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .transport .play{grid-row:span 1}
+  .layers,.guide{grid-template-columns:minmax(0,1fr)}
+  .track,.ruler{grid-template-columns:minmax(0,1fr);gap:6px}
+  .ruler>div:first-child{display:none}
+}
+@media (prefers-reduced-motion:reduce){.layer .meter i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">UK Garage · 130–136 BPM · swing na szesnastkach</div>
+    <h1>Garaż 2-Step</h1>
+    <p class="lede">Gotowy bit UK garage, który możesz zmieniać bez znajomości produkcji. Wciśnij START, klikaj kratki, kręć filtrem. Pod spodem jest wyjaśnienie każdego klocka.</p>
+  </header>
+
+  <section class="panel" aria-label="Sterowanie">
+    <div class="transport">
+      <button id="play" class="play" aria-pressed="false">START</button>
+      <div class="ctl">
+        <label for="bpm">Tempo <output id="bpmOut">132 BPM</output></label>
+        <input id="bpm" type="range" min="120" max="140" step="1" value="132">
+        <small>UKG gra się zwykle 130–136 uderzeń na minutę.</small>
+      </div>
+      <div class="ctl">
+        <label for="swing">Swing <output id="swingOut">42%</output></label>
+        <input id="swing" type="range" min="0" max="80" step="1" value="42">
+        <small>Opóźnia co drugą szesnastkę. To daje „bujanie” garażu.</small>
+      </div>
+      <div class="ctl">
+        <label for="cut">Filtr <output id="cutOut">20 kHz</output></label>
+        <input id="cut" type="range" min="0" max="100" step="1" value="100">
+        <small>W lewo: wycina wysokie tony, jakby muzyka grała za ścianą.</small>
+      </div>
+    </div>
+    <div class="row2">
+      <label class="status" for="preset">Rytm</label>
+      <select id="preset">
+        <option value="twostep">2-step klasyk</option>
+        <option value="speed">Speed garage (4×4)</option>
+        <option value="broken">Połamany</option>
+      </select>
+      <label class="status" for="mood">Akordy</label>
+      <select id="mood">
+        <option value="dark">Nocne (F-moll)</option>
+        <option value="sunny">Słoneczne (Des-dur)</option>
+      </select>
+      <button id="drop" class="btn primary" title="2 takty bez stopy i basu, filtr otwiera się, potem wszystko wraca">Zrób przejście</button>
+      <span class="spacer"></span>
+      <span class="status">Takt <b id="barOut">–</b>/4 · akord <b id="chordOut">–</b></span>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Perkusja">
+    <div class="grid-head">
+      <h2>Perkusja</h2>
+      <span class="status">1 takt = 16 kratek · kliknij kratkę, żeby dodać lub usunąć uderzenie</span>
+    </div>
+    <div class="ruler" aria-hidden="true"><div></div><div class="steps" id="ruler"></div></div>
+    <div class="seq" id="seq"></div>
+    <p class="hint" id="trackHint">Najedź na nazwę instrumentu, żeby zobaczyć, co robi. Przycisk M wycisza ścieżkę.</p>
+  </section>
+
+  <section aria-label="Warstwy melodyczne" class="layers" id="layers"></section>
+
+  <section class="guide">
+    <div class="panel">
+      <h2>Jak z tego zrobić cały utwór</h2>
+      <ol>
+        <li><b>Intro (16 taktów):</b> wycisz stopę i bas, filtr ustaw nisko. Grają hi-haty i przytłumione akordy.</li>
+        <li><b>Wejście (16 taktów):</b> podkręć filtr do końca, włącz stopę.</li>
+        <li><b>Przed dropem:</b> kliknij „Zrób przejście”. Napięcie rośnie przez 2 takty.</li>
+        <li><b>Drop (32 takty):</b> wszystko gra. Co 8 taktów zmień jedną rzecz, np. dodaj rimshot albo zmień rytm.</li>
+        <li><b>Breakdown (16 taktów):</b> zostaw same akordy i chopy, potem wróć do dropu.</li>
+        <li><b>Outro:</b> zdejmuj warstwy po kolei, aż zostanie sam rytm.</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>Słowniczek</h2>
+      <dl>
+        <dt>2-step</dt><dd>Stopa nie gra na każdą ćwierćnutę. Opuszcza 2. i 4. uderzenie, stąd nazwa.</dd>
+        <dt>Swing</dt><dd>Przesunięcie co drugiej nuty w czasie. Bez niego rytm brzmi sztywno.</dd>
+        <dt>Stab</dt><dd>Krótko „dźgnięty” akord. Typowe dla garażu są akordy m7 i m9.</dd>
+        <dt>Filtr</dt><dd>Wycina część częstotliwości. Otwieranie filtra buduje napięcie.</dd>
+        <dt>Sub</dt><dd>Najniższy bas, który bardziej się czuje niż słyszy.</dd>
+        <dt>Chop</dt><dd>Pocięty na kawałki wokal. Tu zastępuje go syntezator.</dd>
+      </dl>
+    </div>
+  </section>
+  <p class="note">Dźwięk startuje dopiero po kliknięciu START (tak działają przeglądarki). Najlepiej słuchać na słuchawkach, bo telefoniczne głośniki nie oddadzą basu.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script>
+const DRUMS=[
+  {id:'kick',name:'Stopa (kick)',hint:'Stopa: najniższe uderzenie. W 2-stepie gra na „raz” i tuż przed „trzy i”, a nie na każdą ćwierćnutę.'},
+  {id:'clap',name:'Klaśnięcie',hint:'Klaśnięcie: na 2 i 4 (kratki 5 i 13). To kręgosłup rytmu, zostaw je w spokoju.'},
+  {id:'hat',name:'Hi-hat',hint:'Hi-hat: krótki „cyk” między uderzeniami. To on najbardziej czuje swing.'},
+  {id:'shaker',name:'Szejker',hint:'Szejker: ciche szesnastki, które dodają ruchu w tle.'},
+  {id:'rim',name:'Rimshot',hint:'Rimshot: pojedyncze akcenty. Przesuń je o jedną kratkę i posłuchaj, jak zmienia się groove.'},
+];
+const PRESETS={
+  twostep:{bpm:132,swing:42,grid:{kick:[0,10],clap:[4,12],hat:[2,6,7,10,14,15],shaker:[1,3,5,9,11,13],rim:[7,13]}},
+  speed:{bpm:134,swing:25,grid:{kick:[0,4,8,12],clap:[4,12],hat:[2,6,10,14],shaker:[1,3,5,7,9,11,13,15],rim:[]}},
+  broken:{bpm:135,swing:50,grid:{kick:[0,7,10],clap:[4,12],hat:[2,3,6,10,11,14],shaker:[5,13],rim:[9,15]}},
+};
+const PROG={
+  dark:[
+    {name:'Fm9',bass:'F1',chord:['Ab3','C4','Eb4','G4']},
+    {name:'D♭maj9',bass:'Db2',chord:['F3','Ab3','C4','Eb4']},
+    {name:'B♭m9',bass:'Bb1',chord:['Ab3','C4','Db4','F4']},
+    {name:'Cm7',bass:'C2',chord:['G3','Bb3','C4','Eb4']},
+  ],
+  sunny:[
+    {name:'D♭maj9',bass:'Db2',chord:['F3','Ab3','C4','Eb4']},
+    {name:'Cm9',bass:'C2',chord:['Eb3','G3','Bb3','D4']},
+    {name:'Fm9',bass:'F1',chord:['Ab3','C4','Eb4','G4']},
+    {name:'B♭m9',bass:'Bb1',chord:['Ab3','C4','Db4','F4']},
+  ],
+};
+// [krok, interwał w półtonach, długość]
+const BASS_PAT=[[0,0,'8n'],[3,0,'16n'],[6,12,'16n'],[8,0,'16n'],[10,0,'8n'],[14,7,'16n']];
+const CHORD_PAT=[[3,'16n'],[6,'8n'],[10,'16n']];
+// [krok, który dźwięk akordu] — chopy grają w taktach 2 i 4
+const CHOP_PAT=[[0,3],[2,2],[6,3],[8,1],[11,2],[14,0]];
+const LAYERS=[
+  {id:'bass',name:'Bas',text:'Krótkie, podskakujące nuty pod stopą. Idzie za akordami, a oktawa w górę na kratce 7 daje typowy garażowy „skok”.'},
+  {id:'chords',name:'Akordy (staby)',text:'Organowe akordy m9 grane krótko i między uderzeniami. To one dają nocny, ciepły klimat UKG.'},
+  {id:'chops',name:'Chopy',text:'Krótkie dźwięki w miejscu pociętego wokalu. W prawdziwym utworze wstawisz tu fragmenty nagranego głosu.'},
+];
+
+const state={grid:{},mute:{},mood:'dark',cutoff:20000,dropStart:-1,dropEnd:-1};
+DRUMS.forEach(d=>{state.grid[d.id]=Array(16).fill(false);state.mute[d.id]=false});
+LAYERS.forEach(l=>state.mute[l.id]=false);
+
+const $=id=>document.getElementById(id);
+const stepEls={};
+
+// --- UI ---
+for(let i=0;i<16;i++){const d=document.createElement('div');d.textContent=i%4===0?(i/4+1):'·';$('ruler').appendChild(d)}
+DRUMS.forEach(d=>{
+  const row=document.createElement('div');row.className='track';
+  const name=document.createElement('div');name.className='tname';
+  const m=document.createElement('button');m.className='mute';m.textContent='M';m.setAttribute('aria-pressed','false');m.setAttribute('aria-label','Wycisz: '+d.name);
+  m.onclick=()=>{state.mute[d.id]=!state.mute[d.id];m.setAttribute('aria-pressed',state.mute[d.id])};
+  const label=document.createElement('span');label.textContent=d.name;label.title=d.hint;
+  name.append(m,label);
+  name.onmouseenter=()=>$('trackHint').textContent=d.hint;
+  const steps=document.createElement('div');steps.className='steps';
+  stepEls[d.id]=[];
+  for(let i=0;i<16;i++){
+    const b=document.createElement('button');b.className='step';b.setAttribute('aria-label',d.name+', kratka '+(i+1));
+    b.onclick=()=>{state.grid[d.id][i]=!state.grid[d.id][i];paint(d.id);$('trackHint').textContent=d.hint;};
+    steps.appendChild(b);stepEls[d.id].push(b);
+  }
+  row.append(name,steps);$('seq').appendChild(row);
+});
+function paint(id){stepEls[id].forEach((b,i)=>{b.classList.toggle('on',state.grid[id][i]);b.setAttribute('aria-pressed',state.grid[id][i])})}
+
+const meters={};
+LAYERS.forEach(l=>{
+  const c=document.createElement('div');c.className='panel layer';
+  c.innerHTML=`<div class="top"><h3>${l.name}</h3><button class="btn" aria-pressed="true" id="ly-${l.id}">Gra</button></div><p>${l.text}</p><div class="meter"><i id="mt-${l.id}"></i></div>`;
+  $('layers').appendChild(c);
+  const b=c.querySelector('button');
+  b.onclick=()=>{state.mute[l.id]=!state.mute[l.id];b.setAttribute('aria-pressed',!state.mute[l.id]);b.textContent=state.mute[l.id]?'Wyciszone':'Gra'};
+  meters[l.id]=c.querySelector('i');
+});
+
+function loadPreset(key){
+  const p=PRESETS[key];
+  DRUMS.forEach(d=>{state.grid[d.id]=Array(16).fill(false);(p.grid[d.id]||[]).forEach(i=>state.grid[d.id][i]=true);paint(d.id)});
+  $('bpm').value=p.bpm;$('swing').value=p.swing;applyBpm();applySwing();
+}
+const cutFromSlider=v=>Math.round(200*Math.pow(100,v/100));
+function fmtHz(f){return f>=1000?(f/1000).toFixed(f>=10000?0:1)+' kHz':f+' Hz'}
+function applyBpm(){$('bpmOut').textContent=$('bpm').value+' BPM';if(window.Tone)Tone.Transport.bpm.value=+$('bpm').value}
+function applySwing(){$('swingOut').textContent=$('swing').value+'%';if(window.Tone){Tone.Transport.swing=$('swing').value/100;Tone.Transport.swingSubdivision='16n'}}
+function applyCut(){state.cutoff=cutFromSlider(+$('cut').value);$('cutOut').textContent=fmtHz(state.cutoff);if(audio)audio.master.frequency.rampTo(state.cutoff,0.05)}
+$('bpm').oninput=applyBpm;$('swing').oninput=applySwing;$('cut').oninput=applyCut;
+$('preset').onchange=e=>loadPreset(e.target.value);
+$('mood').onchange=e=>state.mood=e.target.value;
+
+// --- Dźwięk ---
+let audio=null,step=0,nowCol=-1;
+function buildAudio(){
+  const limiter=new Tone.Limiter(-1).toDestination();
+  const comp=new Tone.Compressor(-16,3).connect(limiter);
+  const master=new Tone.Filter({frequency:state.cutoff,type:'lowpass',rolloff:-24,Q:1.5}).connect(comp);
+  const reverb=new Tone.Reverb({decay:2.4,wet:1}).connect(master);
+  const send=new Tone.Gain(0.3).connect(reverb);
+  const kick=new Tone.MembraneSynth({pitchDecay:0.045,octaves:7,envelope:{attack:0.001,decay:0.38,sustain:0,release:0.1},volume:-1}).connect(master);
+  const clapF=new Tone.Filter(1400,'bandpass');clapF.connect(master);clapF.connect(send);
+  const clap=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.17,sustain:0},volume:-4}).connect(clapF);
+  const hatF=new Tone.Filter(8500,'highpass').connect(master);
+  const hat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.035,sustain:0},volume:-12}).connect(hatF);
+  const shF=new Tone.Filter(5500,'highpass').connect(master);
+  const shaker=new Tone.NoiseSynth({noise:{type:'pink'},envelope:{attack:0.005,decay:0.05,sustain:0},volume:-18}).connect(shF);
+  const rim=new Tone.MembraneSynth({pitchDecay:0.006,octaves:2,envelope:{attack:0.001,decay:0.06,sustain:0},volume:-12}).connect(master);
+  const bass=new Tone.MonoSynth({oscillator:{type:'square'},filter:{Q:3,type:'lowpass',rolloff:-24},envelope:{attack:0.004,decay:0.2,sustain:0.6,release:0.06},filterEnvelope:{attack:0.004,decay:0.14,sustain:0.25,release:0.1,baseFrequency:90,octaves:2.6},volume:-13}).connect(master);
+  const sub=new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:0.004,decay:0.1,sustain:0.9,release:0.06},volume:-7}).connect(master);
+  const chorus=new Tone.Chorus(1.5,3,0.5).start();chorus.connect(master);chorus.connect(send);
+  const chordF=new Tone.Filter(2400,'lowpass').connect(chorus);
+  const chords=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'fatsawtooth',count:3,spread:22},envelope:{attack:0.004,decay:0.25,sustain:0.12,release:0.25},volume:-22}).connect(chordF);
+  const chops=new Tone.FMSynth({harmonicity:2,modulationIndex:2.5,envelope:{attack:0.01,decay:0.14,sustain:0.15,release:0.12},modulation:{type:'triangle'},volume:-17});
+  chops.connect(master);chops.connect(send);
+  return {master,kick,clap,hat,shaker,rim,bass,sub,chords,chops};
+}
+const flash=id=>{const m=meters[id];m.style.width='100%';setTimeout(()=>m.style.width='0',90)};
+
+function tick(time){
+  const s=step%16,bar=Math.floor(step/16)%4,ch=PROG[state.mood][bar];
+  const inDrop=time>=state.dropStart&&time<state.dropEnd;
+  const a=audio,g=state.grid,m=state.mute;
+  const accent=s%4===2?1:0.5;
+  if(g.kick[s]&&!m.kick&&!inDrop)a.kick.triggerAttackRelease('C1','8n',time);
+  if(g.clap[s]&&!m.clap)a.clap.triggerAttackRelease('16n',time,0.9);
+  if(g.hat[s]&&!m.hat)a.hat.triggerAttackRelease('32n',time,accent);
+  if(g.shaker[s]&&!m.shaker)a.shaker.triggerAttackRelease('32n',time,0.6);
+  if(g.rim[s]&&!m.rim)a.rim.triggerAttackRelease('A4','32n',time,0.8);
+  const fl=[];
+  if(!m.bass&&!inDrop){const b=BASS_PAT.find(x=>x[0]===s);if(b){
+    a.bass.triggerAttackRelease(Tone.Frequency(ch.bass).transpose(b[1]),b[2],time);
+    if(b[1]===0)a.sub.triggerAttackRelease(ch.bass,b[2],time);fl.push('bass')}}
+  if(!m.chords){const c=CHORD_PAT.find(x=>x[0]===s);if(c){a.chords.triggerAttackRelease(ch.chord,c[1],time,0.8);fl.push('chords')}}
+  if(!m.chops&&bar%2===1){const c=CHOP_PAT.find(x=>x[0]===s);if(c){a.chops.triggerAttackRelease(Tone.Frequency(ch.chord[c[1]]).transpose(12),'16n',time,0.8);fl.push('chops')}}
+  Tone.Draw.schedule(()=>{
+    if(nowCol>=0)DRUMS.forEach(d=>stepEls[d.id][nowCol].classList.remove('now'));
+    DRUMS.forEach(d=>stepEls[d.id][s].classList.add('now'));nowCol=s;
+    $('barOut').textContent=bar+1;$('chordOut').textContent=ch.name;fl.forEach(flash);
+  },time);
+  step++;
+}
+
+async function ensureTone(){
+  if(window.Tone)return;
+  await new Promise((ok,err)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js';s.onload=ok;s.onerror=err;document.head.appendChild(s)});
+}
+$('play').onclick=async()=>{
+  const b=$('play');
+  try{await ensureTone()}catch(e){b.textContent='BŁĄD';return}
+  await Tone.start();
+  if(!audio){audio=buildAudio();applyBpm();applySwing();Tone.Transport.scheduleRepeat(tick,'16n')}
+  if(Tone.Transport.state==='started'){
+    Tone.Transport.stop();step=0;b.textContent='START';b.setAttribute('aria-pressed','false');
+    if(nowCol>=0)DRUMS.forEach(d=>stepEls[d.id][nowCol].classList.remove('now'));nowCol=-1;
+  }else{Tone.Transport.start('+0.05');b.textContent='STOP';b.setAttribute('aria-pressed','true')}
+};
+$('drop').onclick=()=>{
+  if(!audio||Tone.Transport.state!=='started'){$('drop').textContent='Najpierw START';setTimeout(()=>$('drop').textContent='Zrób przejście',1400);return}
+  const t0=Tone.Transport.nextSubdivision('1m'),dur=Tone.Time('2m').toSeconds();
+  state.dropStart=t0;state.dropEnd=t0+dur;
+  const f=audio.master.frequency;f.cancelScheduledValues(t0);f.setValueAtTime(300,t0);f.exponentialRampToValueAtTime(state.cutoff,t0+dur);
+  const btn=$('drop');btn.setAttribute('aria-pressed','true');btn.textContent='Narasta…';
+  setTimeout(()=>{btn.setAttribute('aria-pressed','false');btn.textContent='Zrób przejście'},(t0-Tone.now()+dur)*1000);
+};
+
+loadPreset('twostep');applyCut();
+</script>
