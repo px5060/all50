@@ -196,27 +196,31 @@ window.UG = (function () {
     h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → statystyki modelu<\/div>`;
     // tylko okna po START: gra na następnym wierszu (p1), gra w toku (p2, p4 bez „START”, BUST czeka na zamknięcie, act);
     // modele bez triggera i okna przed START (przygotowanie, ★ START za 1) → zwinięta lista „Modele oczekujące” pod spodem
-    const act = c => c.lines.some(l => l.p === 1 || l.p === 2 || l.act || (l.p === 4 && !/START/.test(l.txt)) || (l.p === 5 && /^BUST (#|trig#)/.test(l.txt)));
+    // linia okna po START; karta grająca pokazuje tylko takie linie, jej okna przed START idą do „Modele oczekujące”
+    const lA = l => l.p === 1 || l.p === 2 || l.act || (l.p === 4 && !/START/.test(l.txt)) || (l.p === 5 && /^BUST (#|trig#)/.test(l.txt));
+    const lPre = l => !lA(l) && l.p < 6;
+    const act = c => c.lines.some(lA);
     let ci = 0; const idx = [];
-    const card = c => {
-      const top = Math.min(...c.lines.map(l => l.p));
-      const shown = c.lines.slice(0, 2), more = c.lines.length - shown.length;
+    const card = (c, L) => {
+      L = L || c.lines;
+      const top = Math.min(...L.map(l => l.p));
+      const shown = L.slice(0, 2), more = c.lines.length - shown.length;   // przytrzymanie pokazuje wszystkie etykiety karty
       idx.push(c);
       return `<div class="ug-mc b${top}" data-c="${ci++}"><div class="h"><span class="id">${esc(c.id)}<\/span><span class="rule">${esc(c.rule || '')}<span class="go">› tabela<\/span><\/span><\/div>
           ${shown.map(l => lineHtml(l, false)).join('')}${more > 0 ? `<div class="more">+ ${more} ${more === 1 ? 'etykieta' : more < 5 ? 'etykiety' : 'etykiet'} · przytrzymaj<\/div>` : ''}${metaHtml(c.meta)}<\/div>`;
     };
     let nAct = 0, nWait = 0, waitH = '';
     cfg.sections.forEach(s => {
-      const ac = s.cards.filter(act), wt = s.cards.filter(c => !act(c));
+      const ac = s.cards.filter(act), wt = s.cards.filter(c => !act(c)), pre = ac.filter(c => c.lines.some(lPre));
       if (ac.length) {
         const sb = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).length, 0);
         const ss = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).reduce((x, l) => x + (l.stake || 0), 0), 0);
-        h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}<\/b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'gra w toku'}<\/span><\/div>${ac.map(card).join('')}<\/div>`;
+        h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}<\/b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'gra w toku'}<\/span><\/div>${ac.map(c => card(c, c.lines.filter(lA))).join('')}<\/div>`;
         nAct += ac.length;
       }
-      if (wt.length) {
-        nWait += wt.length;
-        waitH += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : 'Modele'}<\/b><span class="m">${wt.length} bez gry<\/span><\/div>${wt.map(card).join('')}<\/div>`;
+      if (wt.length || pre.length) {
+        nWait += wt.length + pre.length;
+        waitH += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : 'Modele'}<\/b><span class="m">${wt.length + pre.length} przed START / bez gry<\/span><\/div>${pre.map(c => card(c, c.lines.filter(lPre))).join('')}${wt.map(c => card(c)).join('')}<\/div>`;
       }
     });
     if (!nAct) h += `<div class="ug-none">Żaden model nie gra teraz (brak okna po START).<\/div>`;
