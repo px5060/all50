@@ -29,7 +29,8 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   - **Dotknięcie wiersza zakładu** (albo wiersza TRIGGER / czekania) w widoku modelu podświetla cały łańcuch, jak w SZUKAJ / BUST:
     STEP (żółty), TRIGGER (niebieski), czekanie (przerywany), następny / START (pomarańczowy), kroki gry (przerywany pomarańczowy),
     WIN (zielony) / przegrana (czerwony), z opisem nad tabelą. Ponowne dotknięcie zamyka.
-  - **Przytrzymanie wiersza** w TABELI albo **karty** na GRA → statystyki modelu.
+  - **Przytrzymanie wiersza** w TABELI → wszystkie etykiety tego wiersza (komórka ze znaczkiem „+N” ma ich więcej) i statystyki modelu;
+    **przytrzymanie karty** na GRA → statystyki i wszystkie etykiety karty.
   - **STATY** we wszystkich zakładkach mają ten sam układ: tabela „zestawienie — N kodów” (M · Zakł/WIN · WR% · maxL · Bust ·
     Bilans · WF, wiersz Σ, Monte-Carlo) i karta każdego modelu (zakłady / cykle / WIN / BUST, trafienie, bilans, max seria,
     max wyłożone, WIN k1…k8, BUST przy K6/K7, okresy + z 5, część 40%, bootstrap, permutacja, pkt z 9, obrót, ostatni zakład, stan),

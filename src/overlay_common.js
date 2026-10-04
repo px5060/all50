@@ -181,7 +181,7 @@ window.UT = (function () {
     tw.querySelectorAll('tbody tr').forEach(tr => {
       const i = +tr.dataset.i; let t = null, lp = false, x0 = 0, y0 = 0;
       const cancel = () => { clearTimeout(t); t = null; };
-      const hold = () => { lp = true; if (!isAll && A.stats) statsPop(mi); else popup(i); };
+      const hold = () => { lp = true; if (!isAll && A.stats) statsPop(mi, i); else popup(i); };
       tr.addEventListener('pointerdown', e => { lp = false; x0 = e.clientX; y0 = e.clientY; cancel(); t = setTimeout(hold, 550); });
       tr.addEventListener('pointermove', e => { if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) cancel(); });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => tr.addEventListener(ev, cancel));
@@ -288,10 +288,16 @@ window.UT = (function () {
     box.querySelector('#utHlX').onclick = () => { S.hl = null; applyHl(h, mi); };
   }
   // ---- STATYSTYKI modelu (przytrzymanie wiersza) ----
-  function statsPop(mi) {
+  function statsPop(mi, ri) {
     const models = A.models(), id = models[mi] ? models[mi].id : '', rows = A.stats ? A.stats(mi) || [] : [];
+    // przytrzymany wiersz: wszystkie jego etykiety (GRA + Stan/Rola) nad statystykami
+    let lab = '';
+    if (ri != null && ri < A.N()) {
+      const c = A.cell(mi, ri) || {}, bl = x => (x.full && x.full.length ? x.full : String(x.t).split(' | ')).map(t => `<div class="bl" style="${x.css || ''}">${esc(t)}</div>`).join('') + (x.sub ? `<div class="hs">${esc(x.sub)}</div>` : '');
+      if (c.gra || c.stan) lab = `<div class="hs" style="margin-top:6px;font-weight:700;color:#ffb27a">ETYKIETY WIERSZA Nr ${ri + 1} · ${esc(A.code(ri))}</div>${c.gra ? bl(c.gra) : ''}${c.stan ? bl(c.stan) : ''}<div class="hs" style="margin-top:10px;font-weight:700;color:#ffb27a">STATYSTYKI MODELU</div>`;
+    }
     const p = document.createElement('div'); p.className = 'ut-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>Statystyki · ${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${lab ? '' : 'Statystyki · '}${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>${lab}
       <table class="stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table><button class="go" id="utStX">✕ Zamknij</button></div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x') || e.target.id === 'utStX') p.remove(); };
     document.body.appendChild(p);
