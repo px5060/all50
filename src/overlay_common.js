@@ -522,17 +522,21 @@ body>*:not(.t5f):not(.ut-pop):not(.ug-pop){display:none!important}
 window.T50Stat = (function () {
   const esc = window.__t50esc, zl = window.__t50zl, fmt = v => Number(v).toLocaleString('pl-PL');
   const css = `
-.t5s{color:#e8ebf2}
-.t5s table td,.t5s table th{border:0;border-bottom:1px solid #2a3142;color:#e8ebf2;text-align:left;background:transparent;vertical-align:top;font-family:inherit}
-.t5s table.stt td:first-child{color:#8b93a7;width:52%}
+.t5s{color:#fff;font-size:12px;line-height:1.25}
+.t5s .card{padding:7px 8px;margin-bottom:6px}
+.t5s h2{font-size:13px;margin:0 0 4px;color:#fff}
+.t5s .muted,.t5s .def{color:#fff;font-size:11px;opacity:.85}
+.t5s .def{margin:0 0 4px}
+.t5s table td,.t5s table th{border:0;border-bottom:1px solid #2a3142;color:#fff;text-align:left;background:transparent;vertical-align:top;font-family:inherit;padding:2px 5px}
+.t5s table.stt{font-size:12px}
+.t5s table.stt td:first-child{color:#fff;width:40%;opacity:.8}
 .t5s td.pos,.t5s .pos{color:#5fd38a}.t5s td.neg,.t5s .neg{color:#ff8a8a}
 .t5s .tw{overflow-x:auto;border:1px solid #323a4d;border-radius:8px}
-.t5s .tw table{border-collapse:collapse;width:100%;font-size:12px;table-layout:auto}
-.t5s .tw td,.t5s .tw th{width:auto!important;min-width:0;max-width:none}
-.t5s .tw th,.t5s .tw td{padding:4px 5px;border-bottom:1px solid #2a3142;white-space:nowrap;text-align:left}
-.t5s .tw th{background:#232838;color:#8b93a7;font-weight:600}
-.t5s .row{display:flex;gap:6px;margin-top:8px}
-.t5s .btn{flex:1;padding:10px;border-radius:9px;border:1px solid #323a4d;background:#232838;color:#e8ebf2;font-weight:600;font-size:14px}
+.t5s .tw table{border-collapse:collapse;width:100%;font-size:11.5px;table-layout:auto}
+.t5s .tw td,.t5s .tw th{width:auto!important;min-width:0;max-width:none;white-space:nowrap;padding:3px 3px}
+.t5s .tw th{background:#232838;color:#fff;font-weight:600;font-size:11px}
+.t5s .row{display:flex;gap:6px;margin-top:6px}
+.t5s .btn{flex:1;padding:6px;border-radius:8px;border:1px solid #323a4d;background:#232838;color:#fff;font-weight:600;font-size:12px}
 .t5s .tw table .grp td{color:#ffb27a;font-weight:700;background:#161a24}`;
   let styled = false;
   function prog(o, ST, odds, Kl) {
@@ -591,21 +595,16 @@ window.T50Stat = (function () {
   // wiersze karty modelu (te same co w T50 x1x) + extra na końcu
   function rows(s, games, ST, odds, extra) {
     const sumPts = Object.values(s.ptsDet).reduce((a, v) => a + v, 0);
+    const mc = s.bootP === null ? `— (Monte-Carlo) · bez MC ${sumPts}/6` : `boot P(≤0) ${s.bootP.toFixed(2)} · med ${zl(Math.round(s.bootMed))} · perm BUST ${s.permMed} · <b>${s.score} pkt</b>`;
     return [
-      ['Zakłady / cykle / WIN / BUST', `${s.zakl} / ${s.cykle} / ${s.W} / ${s.B}`],
-      ['Trafienie % (zakłady) · WR % (cykle)', `${s.hit.toFixed(1)} · ${s.wr.toFixed(1)}`],
-      ['Bilans zł', `<b class="${s.P >= 0 ? 'pos' : 'neg'}">${zl(s.P)}</b>`],
-      ['Zakł./cykl · śr. cykl (w.)', `${s.zc ?? '—'} · ${s.sr ?? '—'}`],
-      ['Max seria przegr. · max wyłożone', `${s.ml} · ${fmt(s.maxwyl)} zł`],
+      ['Zakł / cykle / WIN / BUST', `${s.zakl} / ${s.cykle} / ${s.W} / ${s.B}`],
+      ['Bilans · obrót', `<b class="${s.P >= 0 ? 'pos' : 'neg'}">${zl(s.P)}</b> · ${fmt(s.obrot)} zł`],
+      ['Traf% · WR% · zakł/cykl', `${s.hit.toFixed(1)} · ${s.wr.toFixed(1)} · ${s.zc ?? '—'}`],
+      ['maxL · wyłoż. · śr. cykl', `${s.ml} · ${fmt(s.maxwyl)} zł · ${s.sr ?? '—'} w.`],
       ['WIN k1…k8', s.wk.join(' · ')],
-      ['BUST przy K6 / K7', `${s.k6} / ${s.k7}`],
-      ['Okresy + (z 5)', `${s.okresy} <span class="muted">(${s.per.map(p => (p >= 0 ? '+' : '−') + fmt(Math.abs(p))).join(' · ')})</span>`],
-      ['Część 40%: BUST / bilans', `${s.Bo} / ${zl(s.Po)}`],
-      ['Bootstrap P(≤0) · mediana', s.bootP === null ? '— (MC)' : `${s.bootP.toFixed(3)} · ${zl(Math.round(s.bootMed))}`],
-      ['Permutacja: mediana BUST', s.permMed === null ? '— (MC)' : String(s.permMed)],
-      ['pkt (z 9)', s.score === null ? `— (MC) · bez MC: ${sumPts}/6` : `<b>${s.score}</b>`],
-      ['Obrót zł', fmt(s.obrot)],
-      ['Ostatni zakład', esc(lastTxt(games, ST, odds))],
+      ['BUST K6/K7 · okr · 40%', `${s.k6}/${s.k7} · ${s.okresy}/5 · ${s.Bo} B ${zl(s.Po)}`],
+      ['Monte-Carlo', mc],
+      ['Ostatni', esc(lastTxt(games, ST, odds))],
     ].concat(extra || []);
   }
   // groups: [{name, items:[{id, sub, def, games, extra}]}]
@@ -614,21 +613,21 @@ window.T50Stat = (function () {
     if (!styled) { const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st); styled = true; }
     const { N, ST, odds } = o, mc = mcOn;
     const all = o.groups.map(g => ({ name: g.name, items: g.items.map(it => Object.assign({ s: compute(it.games, N, ST, odds, mc) }, it)) }));
-    let h = `<div class="t5s"><div class="card"><h2>${esc(o.title)} — zestawienie, ${fmt(N)} kodów</h2><div class="tw"><table><thead><tr><th>M</th><th>Zakł/WIN</th><th>WR%</th><th>maxL</th><th>Bust</th><th>Bilans</th><th>WF</th>${mc ? '<th>pkt</th>' : ''}</tr></thead><tbody>`;
+    let h = `<div class="t5s"><div class="card"><h2>${esc(o.title)} — zestawienie, ${fmt(N)} kodów <span class="muted">(bilans w zł)</span></h2><div class="tw"><table><thead><tr><th>M</th><th>Zakł/W</th><th>WR%</th><th>maxL</th><th>B</th><th>Bilans</th><th>WF</th>${mc ? '<th>pkt</th>' : ''}</tr></thead><tbody>`;
     const items = [].concat(...all.map(g => g.items));
     all.forEach(g => {
       if (g.name) h += `<tr class="grp"><td colspan="${mc ? 8 : 7}">${esc(g.name)}</td></tr>`;
-      g.items.forEach(({ id, s }) => { h += `<tr><td><b>${esc(id)}</b></td><td>${s.zakl}/${s.W}</td><td>${s.hit.toFixed(1)}</td><td>${s.ml}</td><td>${s.B}</td><td class="${s.P >= 0 ? 'pos' : 'neg'}">${zl(s.P)}</td><td>${s.okresy}/5</td>${mc ? `<td>${s.score ?? '—'}</td>` : ''}</tr>`; });
+      g.items.forEach(({ id, s }) => { h += `<tr><td><b>${esc(id)}</b></td><td>${s.zakl}/${s.W}</td><td>${s.hit.toFixed(1)}</td><td>${s.ml}</td><td>${s.B}</td><td class="${s.P >= 0 ? 'pos' : 'neg'}">${(s.P >= 0 ? '+' : '−') + fmt(Math.abs(s.P))}</td><td>${s.okresy}/5</td>${mc ? `<td>${s.score ?? '—'}</td>` : ''}</tr>`; });
     });
     const tot = items.reduce((a, x) => a + x.s.P, 0);
-    h += `<tr><td><b>Σ</b></td><td>${items.reduce((a, x) => a + x.s.zakl, 0)}/${items.reduce((a, x) => a + x.s.W, 0)}</td><td colspan="3"></td><td><b class="${tot >= 0 ? 'pos' : 'neg'}">${zl(tot)}</b></td><td></td>${mc ? '<td></td>' : ''}</tr></tbody></table></div>
-    <div class="muted" style="margin-top:6px">${o.note || ''}</div>
+    h += `<tr><td><b>Σ</b></td><td>${items.reduce((a, x) => a + x.s.zakl, 0)}/${items.reduce((a, x) => a + x.s.W, 0)}</td><td colspan="3"></td><td><b class="${tot >= 0 ? 'pos' : 'neg'}">${(tot >= 0 ? '+' : '−') + fmt(Math.abs(tot))}</b></td><td></td>${mc ? '<td></td>' : ''}</tr></tbody></table></div>
+    <div class="muted" style="margin-top:4px">${o.note || ''}</div>
     <div class="row"><button class="btn t5s-mc">${mc ? 'Ukryj Monte-Carlo' : 'Policz Monte-Carlo (bootstrap/permutacja)'}</button></div>
-    ${mc ? '<div class="muted" style="margin-top:6px">Monte-Carlo: 5000 losowań, własny generator — wynik przybliżony.</div>' : ''}</div>`;
+    ${mc ? '<div class="muted" style="margin-top:4px">Monte-Carlo: 5000 losowań, wynik przybliżony.</div>' : ''}</div>`;
     all.forEach(g => g.items.forEach(it => {
-      h += `<div class="card"><h2>${esc(it.id)}${it.sub ? ` · ${esc(it.sub)}` : ''}</h2>${it.def ? `<div class="muted" style="margin:-4px 0 6px">${esc(it.def)}</div>` : ''}<table class="stt"><tbody>${rows(it.s, it.games, ST, odds, it.extra).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</tbody></table></div>`;
+      h += `<div class="card"><h2>${esc(it.id)}${it.sub ? ` · ${esc(it.sub)}` : ''}</h2>${it.def ? `<div class="def">${esc(it.def)}</div>` : ''}<table class="stt"><tbody>${rows(it.s, it.games, ST, odds, it.extra).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</tbody></table></div>`;
     }));
-    h += `<div class="card muted">Punkty: bootstrap mediana &gt; 0 (2) · P(straty) &lt; 0,35 (1) · 5/5 okresów na plus (2; 4/5 = 1) · BUST K7 ≤ 3 (2; ≤ 5 = 1) · część 40%: 0 BUST i bilans &gt; 0 (1) · 0 BUST K8 (1). ≥ 7 GRAĆ.</div>`;
+    h += `<div class="card muted">Punkty (z 9): bootstrap mediana &gt; 0 (2) · P(straty) &lt; 0,35 (1) · 5/5 okresów na plus (2; 4/5 = 1) · BUST K7 ≤ 3 (2; ≤ 5 = 1) · część 40%: 0 BUST i bilans &gt; 0 (1) · 0 BUST K8 (1). ≥ 7 GRAĆ.</div>`;
     h += o.tail || '';
     el.innerHTML = h + '</div>';
     el.querySelector('.t5s-mc').onclick = () => { mcOn = !mcOn; render(el, o); };

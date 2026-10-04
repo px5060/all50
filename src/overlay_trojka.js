@@ -141,7 +141,7 @@
       groups: [{ name: '', items: MODELS.map(m => {
         const s = model.stats(m.name), M = [...m.trig][0];
         return { id: m.name, sub: `trigger M=${M} · off +${OFFSET} · K${K_LIMIT}`, def: `TRIGGER = WIN-cykl M=${M} → przygotowanie ${START_STEP - 1} cykli → ★ START → gra x1x w cyklu T+${OFFSET}`,
-          games: gamesOf(m), extra: [['Triggery · okna otwarte', `${s.trig} · ${s.open}`], ['Stan teraz', esc(cardList(() => {}).find(c => c.id === m.name).lines[0].txt)]] };
+          games: gamesOf(m), extra: [['Trig · okna', `${s.trig} · ${s.open}`], ['Teraz', esc(cardList(() => {}).find(c => c.id === m.name).lines[0].txt)]] };
       }) }],
       tail: `<div class="card"><h2>Baza V1.3</h2><table class="stt"><tbody>${row('Kodów', model.N)}${row('WIN-cykli', model.winCycles.length)}${row('Stan bazy', `${NICE[b.state] || b.state} · K=${b.K}`)}${row('Wersja silnika', APP_VER)}</tbody></table></div>`,
     });

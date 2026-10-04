@@ -182,8 +182,8 @@
           const st = statsFor(E, m.name);
           return { id: `${s}·${m.name}`, sub: `K${m.K} · off +${m.offset}`, def: `TRIGGER = WIN bazy z K=${m.K} → START po ${m.offset} WIN → gra x1x w slotach, K8 · ${NAME[s]}`,
             games: gamesOf(s, m.name),
-            extra: [['Triggery · okna otwarte' + (s === 'A' ? ' · IGN' : ''), `${st.trig} · ${st.open}${s === 'A' ? ` · ${st.ign}` : ''}`],
-              ['Stan teraz', esc(cl.find(c => c.id === m.name).lines[0].txt)]] };
+            extra: [['Trig · okna' + (s === 'A' ? ' · IGN' : ''), `${st.trig} · ${st.open}${s === 'A' ? ` · ${st.ign}` : ''}`],
+              ['Teraz', esc(cl.find(c => c.id === m.name).lines[0].txt)]] };
         }) };
       }),
       tail: `<div class="card"><h2>Baza 2-slot</h2><table class="stt"><tbody>${row('Kodów', codes.length)}${row('Faza bazy', `${two.phase} · K=${two.K}`)}${row('Stawki K8', ST2.join(' · ') + ' zł')}${row('Wersja silnika', APP_VER)}</tbody></table></div>`,
