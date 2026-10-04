@@ -29,6 +29,10 @@ window.UT = (function () {
 .ut-ch::-webkit-scrollbar{display:none}
 .ut-ch button{flex:0 0 auto;padding:6px 9px;border-radius:14px;border:1px solid #323a4d;background:#242a38;color:#e8ebf2;font-weight:700;font-size:13px}
 .ut-ch button.on{background:#ff6600;border-color:#ff6600;color:#fff}
+.ut-ch button.bn1{border:2px solid #ff6600;color:#ffb27a;box-shadow:0 0 6px #ff660099}
+.ut-ch button.bn1.on{border-color:#fff;color:#fff}
+.ut-ch button.bn2{border:2px dashed #ff9a4d}
+.ut-bn{background:#ff6600;color:#fff;border-radius:8px;padding:5px 9px;margin:0 0 6px;font-size:12.5px;font-weight:700}
 .ut-tool{display:flex;gap:5px;flex-wrap:wrap;padding:0 0 6px}
 .ut-tool button{padding:5px 9px;border-radius:12px;border:1px solid #323a4d;background:#1b1f2a;color:#c9cfdc;font-size:12px;font-weight:600}
 .ut-tool button.on{background:#2e75b6;border-color:#2e75b6;color:#fff}
@@ -88,6 +92,16 @@ window.UT = (function () {
     const many = x.full && x.full.length > 1 ? `<span class="more">+${x.full.length - 1}</span>` : '';
     return `<td class="${cls}" style="${x.css || ''}">${many}<span class="cl">${esc(x.t)}</span>${x.sub ? `<span class="sub">${esc(x.sub)}</span>` : ''}${extra || ''}</td>`;
   }
+  // modele grające na następnym wierszu — z linii GRA tej tabeli (window.T60/T50.lines(): p1 pewna, p2 w toku)
+  function betNow(models) {
+    let items = [];
+    try { const W = window.T60 || window.T50; items = [].concat(...W.lines().sections.map(s => s.items)); } catch (e) {}
+    return models.map(m => {
+      let best = 9;
+      items.forEach(it => { const id = String(it.id); if (id === m.id || id.endsWith('·' + m.id)) best = Math.min(best, it.p); });
+      return best === 1 ? 1 : best === 2 ? 2 : 0;
+    });
+  }
   function render(h, adapter) {
     A = adapter; host = h;
     try { const MN = window.parent && window.parent.T50_MASTER_N; if (MN) A.isNew = i => i >= MN; } catch (e) {}
@@ -100,7 +114,10 @@ window.UT = (function () {
     let { from, rows } = rowsRange(N, last);
     if (S.onlyEv) rows = rows.filter(i => i >= N || (isAll ? models.some((m, k) => A.ev(k, i)) : A.ev(mi, i)));
     let x = `<div class="ut"><div class="ut-top">${A.top ? A.top() : ''}</div>`;
-    x += `<div class="ut-ch">${['ALL', ...models.map(m => m.id)].map(id => `<button data-m="${esc(id)}" class="${S.sel === id ? 'on' : ''}">${id === 'ALL' ? 'WSZ' : esc(id)}</button>`).join('')}</div>`;
+    // ▼ = model gra na NASTĘPNYM wierszu (z GRA tej tabeli: linia p1); ▷ = gra w toku (p2)
+    const BN = betNow(models), bnIds = models.filter((m, k) => BN[k] === 1).map(m => m.id);
+    x += `<div class="ut-ch">${['ALL', ...models.map(m => m.id)].map((id, k) => { const b = k ? BN[k - 1] : (bnIds.length ? 1 : 0); return `<button data-m="${esc(id)}" class="${S.sel === id ? 'on' : ''}${b ? ' bn' + b : ''}">${b === 1 ? '▼ ' : b === 2 ? '▷ ' : ''}${id === 'ALL' ? 'WSZ' : esc(id)}</button>`; }).join('')}</div>`;
+    if (bnIds.length) x += `<div class="ut-bn">▼ GRA na następnym wierszu Nr ${(N + 1).toLocaleString('pl-PL')}: <b>${bnIds.map(esc).join(' · ')}</b></div>`;
     x += `<div class="ut-tool"><button id="utEv" class="${S.onlyEv ? 'on' : ''}">tylko zdarzenia</button>${A.tools ? A.tools() : ''}<button id="utEnd">↓ koniec</button><button id="utLeg" class="${S.leg ? 'on' : ''}">legenda ${S.leg ? '▴' : '▾'}</button></div>`;
     if (S.leg) x += `<div class="ut-leg">${A.legend()}<br><b>Kod</b> (widok modelu): <span style="${CC.step}">STEP</span><span style="${CC.trig}">TRIGGER</span><span style="${CC.win}">WIN</span> — kod, który w tym modelu tworzy step, trigger albo wygrany zakład. Tapnij wiersz → pełny opis.</div>`;
     if (A.win) x += `<div class="ut-desc"><span class="ut-win">WIN = ${esc(A.win(isAll ? 0 : mi))}</span>${!isAll && A.desc ? A.desc(mi) : ''}</div>`;
@@ -108,7 +125,7 @@ window.UT = (function () {
     x += `<div class="ut-tw" id="utTw">`;
     if (from > 0) x += `<button class="ut-more" id="utMore">▲ Pokaż +200 wcześniejszych (ukrytych ${from})</button>`;
     if (isAll) {
-      x += `<table><colgroup><col style="width:52px"><col style="width:38px">${models.map(() => '<col>').join('')}</colgroup><thead><tr><th>Nr</th><th>Kod</th>${models.map(m => `<th style="text-align:center;padding:4px 1px">${esc(m.id)}</th>`).join('')}</tr></thead><tbody>`;
+      x += `<table><colgroup><col style="width:52px"><col style="width:38px">${models.map(() => '<col>').join('')}</colgroup><thead><tr><th>Nr</th><th>Kod</th>${models.map((m, k) => BN[k] === 1 ? `<th style="text-align:center;padding:4px 1px;background:#ff6600;color:#fff">▼${esc(m.id)}</th>` : `<th style="text-align:center;padding:4px 1px">${esc(m.id)}</th>`).join('')}</tr></thead><tbody>`;
       for (const i of rows) {
         const g = i >= N;
         let cells = '', chips = [];
@@ -213,6 +230,9 @@ window.UG = (function () {
 .ug-mc{border-left:5px solid #323a4d;background:#242a38;border-radius:8px;padding:7px 9px;margin-bottom:6px;cursor:pointer}
 .ug-mc{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:pan-y}.ug-mc.hold{filter:brightness(1.3);transition:filter .45s}
 .ug-hint{color:#8b93a7;font-size:11px;margin:-2px 2px 6px}
+.ug-none{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:10px 12px;margin-bottom:8px;color:#8b93a7;font-size:13px}
+.ug-wt{display:block;width:100%;margin:2px 0 10px;padding:11px 12px;border-radius:10px;border:1px dashed #3a4358;background:#1b1f2a;color:#9fc4ff;font-weight:700;font-size:13.5px;text-align:left}
+.ug-wl .ug-sec{opacity:.9}
 .ug-mc.b1{border-left-color:#ff6600}.ug-mc.b2{border-left-color:#ff9a4d}.ug-mc.b3{border-left-color:#2e75b6}.ug-mc.b4{border-left-color:#7030a0}
 .ug-mc .h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
 .ug-mc .id{font-weight:800;font-size:15px;white-space:nowrap}
@@ -266,6 +286,7 @@ window.UG = (function () {
       return (pa === 1 ? 0 : 1) - (pb === 1 ? 0 : 1) || a[1] - b[1];
     }).map(x => x[0]);
   }
+  let wOpen = false;   // „Modele oczekujące” rozwinięte / zwinięte (pamiętane między odświeżeniami)
   function render(host, cfg) {
     cfg.sections = order(cfg.sections);
     const all = [].concat(...cfg.sections.map(s => s.cards));
@@ -280,24 +301,39 @@ window.UG = (function () {
       : `<div class="ug-ban idle"><div><b>Bez gry na Nr ${fmt(NX)}</b>${cond ? ` · gra w toku: ${cond}` : ''}</div>${cfg.idleSub ? `<div class="sub">${esc(cfg.idleSub)}</div>` : ''}</div>`;
     if (cfg.note) h += `<div class="ug-note">${cfg.note}</div>`;
     h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → wszystkie etykiety</div>`;
+    // tylko modele z triggerem: gra na następnym wierszu (p1), gra w toku (p2/p4), okno po triggerze (p5 z trig#);
+    // modele bez triggera (czekają na STEP / trigger) → zwinięta lista „Modele oczekujące” pod spodem
+    const act = c => c.lines.some(l => l.p === 1 || l.p === 2 || l.p === 4 || l.act || (l.p === 5 && /trig#\d|\[T:\d|TRIGGER #\d/.test(`${l.txt} ${l.sub || ''}`)));
     let ci = 0; const idx = [];
-    cfg.sections.forEach(s => {
-      const sb = s.cards.reduce((a, c) => a + c.lines.filter(l => l.p === 1).length, 0);
-      const ss = s.cards.reduce((a, c) => a + c.lines.filter(l => l.p === 1).reduce((x, l) => x + (l.stake || 0), 0), 0);
-      h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}</b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'bez gry'}</span></div>`;
-      s.cards.forEach(c => {
-        const top = Math.min(...c.lines.map(l => l.p));
-        const shown = c.lines.slice(0, 2), more = c.lines.length - shown.length;
-        h += `<div class="ug-mc b${top}" data-c="${ci}"><div class="h"><span class="id">${esc(c.id)}</span><span class="rule">${esc(c.rule || '')}<span class="go" data-go="${ci}">› tabela</span></span></div>
+    const card = c => {
+      const top = Math.min(...c.lines.map(l => l.p));
+      const shown = c.lines.slice(0, 2), more = c.lines.length - shown.length;
+      idx.push(c);
+      return `<div class="ug-mc b${top}" data-c="${ci++}"><div class="h"><span class="id">${esc(c.id)}</span><span class="rule">${esc(c.rule || '')}<span class="go">› tabela</span></span></div>
           ${shown.map(l => lineHtml(l, false)).join('')}${more > 0 ? `<div class="more">+ ${more} ${more === 1 ? 'etykieta' : more < 5 ? 'etykiety' : 'etykiet'} · przytrzymaj</div>` : ''}${metaHtml(c.meta)}</div>`;
-        idx.push(c); ci++;
-      });
-      h += `</div>`;
+    };
+    let nAct = 0, nWait = 0, waitH = '';
+    cfg.sections.forEach(s => {
+      const ac = s.cards.filter(act), wt = s.cards.filter(c => !act(c));
+      if (ac.length) {
+        const sb = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).length, 0);
+        const ss = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).reduce((x, l) => x + (l.stake || 0), 0), 0);
+        h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}</b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'gra w toku'}</span></div>${ac.map(card).join('')}</div>`;
+        nAct += ac.length;
+      }
+      if (wt.length) {
+        nWait += wt.length;
+        waitH += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : 'Modele'}</b><span class="m">${wt.length} bez triggera</span></div>${wt.map(card).join('')}</div>`;
+      }
     });
+    if (!nAct) h += `<div class="ug-none">Żaden model nie ma teraz triggera ani gry w toku.</div>`;
+    if (nWait) h += `<button class="ug-wt" type="button">${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — bez triggera</button><div class="ug-wl"${wOpen ? '' : ' hidden'}>${waitH}</div>`;
     if (cfg.last && cfg.last.length) h += `<div class="ug-last">Ostatnie: ${cfg.last.map(c => `<b>${esc(c)}</b>`).join('')}</div>`;
     h += `</div>`;
     host.innerHTML = h;
     if (cfg.bindTop) cfg.bindTop(host);
+    const wb = host.querySelector('.ug-wt');
+    if (wb) wb.onclick = () => { wOpen = !wOpen; host.querySelector('.ug-wl').hidden = !wOpen; wb.textContent = `${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — bez triggera`; };
     // tapnięcie karty / linii / strzałki → TABELA (linia z Nr → ten wiersz); przytrzymanie karty → okno ze wszystkimi etykietami
     host.querySelectorAll('.ug-mc').forEach(el => {
       const c = idx[+el.dataset.c];

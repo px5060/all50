@@ -115,6 +115,9 @@ window.UG = (function () {
 .ug-mc{border-left:5px solid #323a4d;background:#242a38;border-radius:8px;padding:7px 9px;margin-bottom:6px;cursor:pointer}
 .ug-mc{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:pan-y}.ug-mc.hold{filter:brightness(1.3);transition:filter .45s}
 .ug-hint{color:#8b93a7;font-size:11px;margin:-2px 2px 6px}
+.ug-none{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:10px 12px;margin-bottom:8px;color:#8b93a7;font-size:13px}
+.ug-wt{display:block;width:100%;margin:2px 0 10px;padding:11px 12px;border-radius:10px;border:1px dashed #3a4358;background:#1b1f2a;color:#9fc4ff;font-weight:700;font-size:13.5px;text-align:left}
+.ug-wl .ug-sec{opacity:.9}
 .ug-mc.b1{border-left-color:#ff6600}.ug-mc.b2{border-left-color:#ff9a4d}.ug-mc.b3{border-left-color:#2e75b6}.ug-mc.b4{border-left-color:#7030a0}
 .ug-mc .h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
 .ug-mc .id{font-weight:800;font-size:15px;white-space:nowrap}
@@ -168,6 +171,7 @@ window.UG = (function () {
       return (pa === 1 ? 0 : 1) - (pb === 1 ? 0 : 1) || a[1] - b[1];
     }).map(x => x[0]);
   }
+  let wOpen = false;   // „Modele oczekujące” rozwinięte / zwinięte (pamiętane między odświeżeniami)
   function render(host, cfg) {
     cfg.sections = order(cfg.sections);
     const all = [].concat(...cfg.sections.map(s => s.cards));
@@ -182,24 +186,39 @@ window.UG = (function () {
       : `<div class="ug-ban idle"><div><b>Bez gry na Nr ${fmt(NX)}<\/b>${cond ? ` · gra w toku: ${cond}` : ''}<\/div>${cfg.idleSub ? `<div class="sub">${esc(cfg.idleSub)}<\/div>` : ''}<\/div>`;
     if (cfg.note) h += `<div class="ug-note">${cfg.note}<\/div>`;
     h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → wszystkie etykiety<\/div>`;
+    // tylko modele z triggerem: gra na następnym wierszu (p1), gra w toku (p2/p4), okno po triggerze (p5 z trig#);
+    // modele bez triggera (czekają na STEP / trigger) → zwinięta lista „Modele oczekujące” pod spodem
+    const act = c => c.lines.some(l => l.p === 1 || l.p === 2 || l.p === 4 || l.act || (l.p === 5 && /trig#\d|\[T:\d|TRIGGER #\d/.test(`${l.txt} ${l.sub || ''}`)));
     let ci = 0; const idx = [];
-    cfg.sections.forEach(s => {
-      const sb = s.cards.reduce((a, c) => a + c.lines.filter(l => l.p === 1).length, 0);
-      const ss = s.cards.reduce((a, c) => a + c.lines.filter(l => l.p === 1).reduce((x, l) => x + (l.stake || 0), 0), 0);
-      h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}<\/b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'bez gry'}<\/span><\/div>`;
-      s.cards.forEach(c => {
-        const top = Math.min(...c.lines.map(l => l.p));
-        const shown = c.lines.slice(0, 2), more = c.lines.length - shown.length;
-        h += `<div class="ug-mc b${top}" data-c="${ci}"><div class="h"><span class="id">${esc(c.id)}<\/span><span class="rule">${esc(c.rule || '')}<span class="go" data-go="${ci}">› tabela<\/span><\/span><\/div>
+    const card = c => {
+      const top = Math.min(...c.lines.map(l => l.p));
+      const shown = c.lines.slice(0, 2), more = c.lines.length - shown.length;
+      idx.push(c);
+      return `<div class="ug-mc b${top}" data-c="${ci++}"><div class="h"><span class="id">${esc(c.id)}<\/span><span class="rule">${esc(c.rule || '')}<span class="go">› tabela<\/span><\/span><\/div>
           ${shown.map(l => lineHtml(l, false)).join('')}${more > 0 ? `<div class="more">+ ${more} ${more === 1 ? 'etykieta' : more < 5 ? 'etykiety' : 'etykiet'} · przytrzymaj<\/div>` : ''}${metaHtml(c.meta)}<\/div>`;
-        idx.push(c); ci++;
-      });
-      h += `<\/div>`;
+    };
+    let nAct = 0, nWait = 0, waitH = '';
+    cfg.sections.forEach(s => {
+      const ac = s.cards.filter(act), wt = s.cards.filter(c => !act(c));
+      if (ac.length) {
+        const sb = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).length, 0);
+        const ss = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).reduce((x, l) => x + (l.stake || 0), 0), 0);
+        h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}<\/b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'gra w toku'}<\/span><\/div>${ac.map(card).join('')}<\/div>`;
+        nAct += ac.length;
+      }
+      if (wt.length) {
+        nWait += wt.length;
+        waitH += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : 'Modele'}<\/b><span class="m">${wt.length} bez triggera<\/span><\/div>${wt.map(card).join('')}<\/div>`;
+      }
     });
+    if (!nAct) h += `<div class="ug-none">Żaden model nie ma teraz triggera ani gry w toku.<\/div>`;
+    if (nWait) h += `<button class="ug-wt" type="button">${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — bez triggera<\/button><div class="ug-wl"${wOpen ? '' : ' hidden'}>${waitH}<\/div>`;
     if (cfg.last && cfg.last.length) h += `<div class="ug-last">Ostatnie: ${cfg.last.map(c => `<b>${esc(c)}<\/b>`).join('')}<\/div>`;
     h += `<\/div>`;
     host.innerHTML = h;
     if (cfg.bindTop) cfg.bindTop(host);
+    const wb = host.querySelector('.ug-wt');
+    if (wb) wb.onclick = () => { wOpen = !wOpen; host.querySelector('.ug-wl').hidden = !wOpen; wb.textContent = `${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — bez triggera`; };
     // tapnięcie karty / linii / strzałki → TABELA (linia z Nr → ten wiersz); przytrzymanie karty → okno ze wszystkimi etykietami
     host.querySelectorAll('.ug-mc').forEach(el => {
       const c = idx[+el.dataset.c];

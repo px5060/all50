@@ -14,8 +14,11 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 ## Jak działa
 
 - Kod wpisujesz raz, u góry. Trafia do wszystkich tabel naraz. ⟲ cofa go we wszystkich tabelach.
-- **GRA**: baner „NASTĘPNY WIERSZ = GRA” z sumą stawek i karta dla każdego modelu.
-  Tapnięcie karty otwiera tabelę modelu, a przytrzymanie pokazuje wszystkie etykiety.
+- **GRA**: baner „NASTĘPNY WIERSZ = GRA” z sumą stawek. Na górze tylko modele z triggerem
+  (gra na następnym wierszu, gra w toku, okno po triggerze); modele bez triggera są zwinięte
+  pod przyciskiem **„Modele oczekujące”**. Tapnięcie karty otwiera tabelę modelu, przytrzymanie — wszystkie etykiety.
+- **TABELA**: model grający na następnym wierszu ma ▼ i pomarańczową ramkę na przycisku, pasek
+  „▼ GRA na następnym wierszu …” oraz pomarańczowy nagłówek swojej kolumny w widoku WSZ.
 - Każda zakładka ma ten sam układ co w T60 RAZEM: dolny pasek **GRA · TABELA · STATY**.
   - **TABELA**: Nr · Kod · GRA · Stan/Rola, przełącznik modeli (WSZ + każdy model), „tylko zdarzenia”, legenda,
     tapnięcie wiersza otwiera szczegóły. Wiersze bez zdarzeń mają jasne pole z opisem stanu
