@@ -117,14 +117,21 @@ window.UT = (function () {
     });
   }
   function render(h, adapter) {
-    A = adapter; host = h;
+    // wiersze-prognozy (A.fc) wychodzą poza zasięg silnika modelu: cell/tag/chip/ev dla takich wierszy → puste
+    A = adapter.__g ? adapter : Object.assign(Object.create(adapter), { __g: true,
+      cell: (m, i) => i >= adapter.N() && adapter.last(m) < i ? { det: [] } : adapter.cell(m, i),
+      tag: (m, i) => i >= adapter.N() && adapter.last(m) < i ? null : adapter.tag(m, i),
+      chip: adapter.chip ? (m, i) => i >= adapter.N() && adapter.last(m) < i ? null : adapter.chip(m, i) : undefined,
+      ev: (m, i) => i >= adapter.N() && adapter.last(m) < i ? false : adapter.ev(m, i) });
+    host = h;
     try { const MN = window.parent && window.parent.T50_MASTER_N; if (MN) A.isNew = i => i >= MN; } catch (e) {}
     const N = A.N(), models = A.models();
     if (S.sel == null || (S.sel !== 'ALL' && !models.some(m => m.id === S.sel))) S.sel = A.defSel ? A.defSel() : 'ALL';
     const isAll = S.sel === 'ALL';
     const mi = isAll ? -1 : models.findIndex(m => m.id === S.sel);
     let last = N - 1;
-    if (isAll) models.forEach((m, k) => { last = Math.max(last, A.last(k)); }); else last = Math.max(last, A.last(mi));
+    const FC = k => { try { return A.fc ? A.fc(k) || [] : []; } catch (e) { return []; } };   // prognoza po START (adapter)
+    if (isAll) models.forEach((m, k) => { last = Math.max(last, A.last(k), N - 1 + FC(k).length); }); else last = Math.max(last, A.last(mi), N - 1 + FC(mi).length);
     let { from, rows } = rowsRange(N, last);
     if (S.onlyEv) rows = rows.filter(i => i >= N || (isAll ? models.some((m, k) => A.ev(k, i)) : A.ev(mi, i)));
     let x = `<div class="ut"><div class="ut-top">${A.top ? A.top() : ''}</div>`;
@@ -145,7 +152,7 @@ window.UT = (function () {
         const g = i >= N;
         let cells = '', chips = [];
         models.forEach((m, k) => {
-          const t = A.tag(k, i);
+          const f = i >= N ? FC(k)[i - N] : null, t = f ? { t: f.tag || '?', css: f.css } : (i >= N && A.last(k) < i ? null : A.tag(k, i));   // wiersz-prognoza innego modelu: pusto
           cells += t ? `<td class="mi" style="${t.css || ''}">${esc(t.t)}</td>` : '<td class="mi"></td>';
           const ch = A.chip ? A.chip(k, i) : null;
           if (ch) chips.push(`<span class="gc" style="${ch.css || ''}">${esc(m.id)} ${esc(ch.t)}</span>`);
@@ -156,7 +163,8 @@ window.UT = (function () {
     } else {
       x += `<table><colgroup><col style="width:52px"><col style="width:38px"><col style="width:46%"><col></colgroup><thead><tr><th>Nr</th><th>Kod</th><th>GRA</th><th>Stan / Rola</th></tr></thead><tbody>`;
       for (const i of rows) {
-        const g = i >= N, c = A.cell(mi, i) || {};
+        const g = i >= N, f = g ? FC(mi)[i - N] : null;
+        const c = f ? { gra: { t: f.t, css: f.css, sub: f.sub || '' }, stan: { t: f.stan || (i === N ? 'prognoza · następny kod' : 'prognoza · najkrótsza droga'), css: 'color:#8b93a7' } } : (g && A.last(mi) < i ? {} : A.cell(mi, i) || {});
         const stan = c.stan || (g ? { t: i === N ? 'następny kod' : 'przyszły kod', css: 'color:#8b93a7' } : { t: '—', css: NEU });
         const gra = c.gra;
         const cr = !g && A.codeRole ? A.codeRole(mi, i) : null;

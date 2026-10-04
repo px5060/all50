@@ -75,6 +75,7 @@
     }));
     return (C.play[key] = out);
   }
+  const FC_BET = 'background:#FF6600;color:#fff', FC_COND = 'background:#FFF2CC;color:#7F6000', FC_LOSS = 'background:#FF6666;color:#fff';
   const A = {
     stats: mi => {
       const { s, m } = pm(mi), E = both()[s], st = statsFor(E, m.name), two = E.two;
@@ -83,6 +84,18 @@
         .concat(s === 'A' ? [['Ignorowane triggery', st.ign]] : []).concat([['Okna otwarte', st.open], ['Baza teraz', `${two.phase} · K=${two.K}`]]);
     },
     win: () => 'x1x',   // kod, który daje WIN zakładu
+    // prognoza po START: najkrótsza droga bazy 2-slot (x1x = BUILDUP → slot 1 → slot 2)
+    fc: mi => {
+      const { s, m } = pm(mi), E = both()[s], ws = E.models[m.name].windows.filter(w => w.started);
+      if (!ws.length) return [];
+      const two = E.two, tn = 'trig#' + ws.map(w => w.tn).join(',');
+      const slot = (j, k) => k > MAX_KROKI ? { t: `krok ${k} > ${MAX_KROKI} — bez zakładu, LOSS przy najbliższym WIN bazy`, sub: tn, css: FC_LOSS, tag: 'L' }
+        : { t: `slot ${j} · GRA x1x · krok ${k}/${MAX_KROKI} · ${STAWKI[k]} zł`, sub: j === 1 ? 'x1x = ✓ WIN · inny → slot 2' : `x1x = ✓ WIN · inny → K+2, czekam na x1x`, css: FC_BET, tag: String(k) };
+      const K = two.K;
+      if (two.phase === 'SLOT2') return [slot(2, K + 2)];
+      if (two.phase === 'SLOT1') return [slot(1, K + 1), slot(2, K + 2)];
+      return [{ t: 'x1x → BUILDUP (następne 2 wiersze to sloty)', sub: `inny kod = czekam dalej · ${tn}`, css: FC_COND, tag: 'B' }, slot(1, K + 1), slot(2, K + 2)];
+    },
     N: () => codes.length, code: i => codes[i], isNew: i => i >= SEED_STR.length / 3,
     models: () => ML().map(x => ({ id: x.id })),
     defSel: () => 'C·' + MODELS.C[0].name,
