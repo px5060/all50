@@ -29,6 +29,11 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
     STEP (żółty), TRIGGER (niebieski), czekanie (przerywany), następny / START (pomarańczowy), kroki gry (przerywany pomarańczowy),
     WIN (zielony) / przegrana (czerwony), z opisem nad tabelą. Ponowne dotknięcie zamyka.
   - **Przytrzymanie wiersza** w TABELI albo **karty** na GRA → statystyki modelu.
+  - **STATY** we wszystkich zakładkach mają ten sam układ: tabela „zestawienie — N kodów” (M · Zakł/WIN · WR% · maxL · Bust ·
+    Bilans · WF, wiersz Σ, Monte-Carlo) i karta każdego modelu (zakłady / cykle / WIN / BUST, trafienie, bilans, max seria,
+    max wyłożone, WIN k1…k8, BUST przy K6/K7, okresy + z 5, część 40%, bootstrap, permutacja, pkt z 9, obrót, ostatni zakład, stan).
+    TRÓJKA: cykl = okno po triggerze, zakłady 8 · 16 · … · 1024 zł (BUST −2 040). 2-SLOT: cykl = okno po START, stawki Pikoff
+    8 · 8 · 16 · … · 512 zł (BUST −1 024). Bilans zgodny z wynikiem silnika.
   - Silniki appek nie są zmieniane — nakładki tylko czytają ich wyniki.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.

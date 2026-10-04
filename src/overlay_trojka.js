@@ -43,11 +43,18 @@
   const TAG = { trigger: 'T', krok: 'p', start: '★', gra: 'k', win: 'W', loss: 'L' };
   const EVN = { trigger: 'TRIGGER', krok: 'przygotowanie', start: '★ START', gra: 'krok gry', win: 'WIN', loss: 'LOSS (BUST)' };
   const SUBR = { SKIP: 'poza parą — szukam 1. trafienia x1x', para: '1. trafienie pary', 'SPRAWDŹ': '2. trafienie — następny x1x = WIN', miss: 'brak 3. trafienia → K+1', WIN: 'koniec cyklu (WIN-cykl)' };
+  // gry modelu z wierszem rozliczenia (jak _models(): okno trigger i → WIN-cykl i+OFFSET)
+  const ST3 = [8, 16, 32, 64, 128, 256, 512, 1024];   // profit(M) = 3·stawka_M − suma stawek; BUST −2040
+  function gamesOf(m) {
+    const wc = model.winCycles, out = [];
+    for (let i = 0; i + OFFSET < wc.length; i++) if (m.trig.has(wc[i][1])) out.push({ trigEr: wc[i][0] - 1, er: wc[i + OFFSET][0] - 1, K: wc[i + OFFSET][1] });
+    return out;
+  }
   const A = {
     stats: mi => {
       const m = MODELS[mi], s = model.stats(m.name), b = model.baseState;
-      return [['Triggery (WIN M=' + [...m.trig][0] + ')', s.trig], ['Gry rozliczone', s.games], ['WIN / LOSS', `${s.wins} / ${s.loss}`],
-        ['Win rate', `${s.wr.toFixed(1)} %`], ['Wynik', window.__t50zl(s.pnl)], ['Okna otwarte', s.open], ['Baza teraz', `${NICE[b.state] || b.state} · K=${b.K}`]];
+      return [['Triggery (WIN M=' + [...m.trig][0] + ')', s.trig]].concat(window.T50Stat.brief(gamesOf(m), model.N, ST3, 3),
+        [['Okna otwarte', s.open], ['Baza teraz', `${NICE[b.state] || b.state} · K=${b.K}`]]);
     },
     win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => model.N, code: i => model.codes[i], isNew: i => i >= SEED.length / 3,
@@ -127,16 +134,17 @@
 
   // ---- STATY ----
   function renderStat() {
-    const row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`;
-    let h = '';
-    MODELS.forEach(m => {
-      const s = model.stats(m.name);
-      h += `<div class="card"><h2>${m.name} · trigger M=${[...m.trig][0]} · off +${OFFSET} · K${K_LIMIT}</h2><table class="stt"><tbody>` +
-        row('Triggery', s.trig) + row('Gry rozliczone', s.games) + row('Wygrane / porażki', `${s.wins} / ${s.loss}`) +
-        row('Okna otwarte', s.open) + row('Win rate', s.wr.toFixed(1) + '%') + row('Wynik', `<b class="${s.pnl >= 0 ? 'pos' : 'neg'}">${window.__t50zl(s.pnl)}</b>`) + `</tbody></table></div>`;
+    const b = model.baseState, row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`;
+    window.T50Stat.render(F.main, {
+      title: 'TRÓJKA V1.3', N: model.N, ST: ST3, odds: 3,
+      note: `Cykl = okno po triggerze (gra w WIN-cyklu T+${OFFSET}). Zakłady na krokach 1…M cyklu: ${ST3.join(' · ')} zł, WIN = 3× stawka, K>${K_LIMIT} = BUST −2 040 zł.`,
+      groups: [{ name: '', items: MODELS.map(m => {
+        const s = model.stats(m.name), M = [...m.trig][0];
+        return { id: m.name, sub: `trigger M=${M} · off +${OFFSET} · K${K_LIMIT}`, def: `TRIGGER = WIN-cykl M=${M} → przygotowanie ${START_STEP - 1} cykli → ★ START → gra x1x w cyklu T+${OFFSET}`,
+          games: gamesOf(m), extra: [['Triggery · okna otwarte', `${s.trig} · ${s.open}`], ['Stan teraz', esc(cardList(() => {}).find(c => c.id === m.name).lines[0].txt)]] };
+      }) }],
+      tail: `<div class="card"><h2>Baza V1.3</h2><table class="stt"><tbody>${row('Kodów', model.N)}${row('WIN-cykli', model.winCycles.length)}${row('Stan bazy', `${NICE[b.state] || b.state} · K=${b.K}`)}${row('Wersja silnika', APP_VER)}</tbody></table></div>`,
     });
-    h += `<div class="card"><h2>Baza V1.3</h2><table class="stt"><tbody>${row('Kodów', model.N)}${row('WIN-cykli', model.winCycles.length)}${row('Stan bazy', `${NICE[model.baseState.state] || model.baseState.state} · K=${model.baseState.K}`)}${row('Wersja silnika', APP_VER)}</tbody></table></div>`;
-    F.main.innerHTML = h;
   }
 
   F.render = v => {

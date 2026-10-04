@@ -60,11 +60,26 @@
   const SUBR = { SKIP: 'czekam na x1x (BUILDUP)', BUILDUP: 'x1x — następne 2 wiersze to sloty', 'krok1 miss': 'slot 1 pudło → slot 2', 'krok2 miss': 'slot 2 pudło → K+2, czekam na x1x', WIN: 'trafienie w slocie — koniec cyklu' };
   const TAG = { trigger: 'T', start: '★', win: 'W', loss: 'L', ignored: '⊘' };
   const pm = mi => ML()[mi];
+  // gry modelu: okno rozliczone zdarzeniem win/loss (K) w wierszu WIN bazy; trigger z tym samym #T
+  const ST2 = [1, 2, 3, 4, 5, 6, 7, 8].map(k => STAWKI[k]);
+  function gamesOf(s, name) {
+    const C = both(), key = 'g' + s + name;
+    if (C.play[key]) return C.play[key];
+    const trig = {}, out = [];
+    C[s].rows.forEach((row, i) => (((row.cells[name] || {}).events) || []).forEach(([t, txt]) => {
+      if (t === 'trigger') { const n = (txt.match(/#(\d+)/) || [])[1]; if (n) trig[n] = i; }
+      else if (t === 'win' || t === 'loss') {
+        const K = +(txt.match(/K=(\d+)/) || [])[1], n = (txt.match(/T:(\d+)/) || [])[1];
+        out.push({ trigEr: trig[n] != null ? trig[n] : null, er: i, K });
+      }
+    }));
+    return (C.play[key] = out);
+  }
   const A = {
     stats: mi => {
       const { s, m } = pm(mi), E = both()[s], st = statsFor(E, m.name), two = E.two;
-      return [['Strategia', NAME[s]], ['Trigger', `WIN bazy z K=${m.K} · START po ${m.offset} WIN`], ['Triggery', st.trig],
-        ['Gry rozliczone', st.games], ['WIN / LOSS', `${st.win} / ${st.loss}`], ['Win rate', `${st.wr.toFixed(1)} %`]]
+      return [['Strategia', NAME[s]], ['Trigger', `WIN bazy z K=${m.K} · START po ${m.offset} WIN`], ['Triggery', st.trig]]
+        .concat(window.T50Stat.brief(gamesOf(s, m.name), codes.length, ST2, 3))
         .concat(s === 'A' ? [['Ignorowane triggery', st.ign]] : []).concat([['Okna otwarte', st.open], ['Baza teraz', `${two.phase} · K=${two.K}`]]);
     },
     win: () => 'x1x',   // kod, który daje WIN zakładu
@@ -157,20 +172,22 @@
 
   // ---- STATY ----
   function renderStat() {
-    const row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`;
-    let h = '';
-    ['C', 'A'].forEach(s => {
-      const E = both()[s];
-      h += `<div class="card"><h2>Strategia ${NAME[s]}</h2><table class="stt"><tbody>`;
-      E.M.forEach(m => {
-        const st = statsFor(E, m.name);
-        h += row(`<b style="color:#e8ebf2">${m.name}</b> · K${m.K} · off +${m.offset}`, `${st.trig} trig · ${st.games} gier · W ${st.win} · L ${st.loss}${s === 'A' ? ` · IGN ${st.ign}` : ''} · okna ${st.open} · WR ${st.wr.toFixed(1)}%`);
-      });
-      h += `</tbody></table></div>`;
+    const row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`, two = both().C.two;
+    window.T50Stat.render(F.main, {
+      title: 'x1x 2-SLOT', N: codes.length, ST: ST2, odds: 3,
+      note: `Cykl = okno po START, rozliczone przy WIN bazy z K. Zakłady na krokach 1…K: ${ST2.join(' · ')} zł (Pikoff 2-slot), WIN = 3× stawka, K>${MAX_KROKI} = BUST −1 024 zł.`,
+      groups: ['C', 'A'].map(s => {
+        const E = both()[s], cl = cardList(() => {}, s);
+        return { name: `Strategia ${NAME[s]}`, items: E.M.map(m => {
+          const st = statsFor(E, m.name);
+          return { id: `${s}·${m.name}`, sub: `K${m.K} · off +${m.offset}`, def: `TRIGGER = WIN bazy z K=${m.K} → START po ${m.offset} WIN → gra x1x w slotach, K8 · ${NAME[s]}`,
+            games: gamesOf(s, m.name),
+            extra: [['Triggery · okna otwarte' + (s === 'A' ? ' · IGN' : ''), `${st.trig} · ${st.open}${s === 'A' ? ` · ${st.ign}` : ''}`],
+              ['Stan teraz', esc(cl.find(c => c.id === m.name).lines[0].txt)]] };
+        }) };
+      }),
+      tail: `<div class="card"><h2>Baza 2-slot</h2><table class="stt"><tbody>${row('Kodów', codes.length)}${row('Faza bazy', `${two.phase} · K=${two.K}`)}${row('Stawki K8', ST2.join(' · ') + ' zł')}${row('Wersja silnika', APP_VER)}</tbody></table></div>`,
     });
-    const two = both().C.two;
-    h += `<div class="card"><h2>Baza 2-slot</h2><table class="stt"><tbody>${row('Kodów', codes.length)}${row('Faza bazy', `${two.phase} · K=${two.K}`)}${row('Stawki K8', '8 · 8 · 16 · 32 · 64 · 128 · 256 · 512 zł')}${row('Wersja silnika', APP_VER)}</tbody></table></div>`;
-    F.main.innerHTML = h;
   }
 
   F.render = v => {
