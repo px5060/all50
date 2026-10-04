@@ -33,6 +33,20 @@ window.UT = (function () {
 .ut-ch button.bn1.on{border-color:#fff;color:#fff}
 .ut-ch button.bn2{border:2px dashed #ff9a4d}
 .ut-bn{background:#ff6600;color:#fff;border-radius:8px;padding:5px 9px;margin:0 0 6px;font-size:12.5px;font-weight:700}
+.ut tr.hl-step,.ut tr.hl-trig,.ut tr.hl-wait,.ut tr.hl-pre,.ut tr.hl-play,.ut tr.hl-win,.ut tr.hl-loss{outline-offset:-3px}
+.ut tr.hl-step{outline:3px solid #ffd34d}.ut tr.hl-step td.nr,.ut tr.hl-step td.c{background:rgba(255,211,77,.18)}
+.ut tr.hl-trig{outline:3px solid #4da3ff}.ut tr.hl-trig td.nr,.ut tr.hl-trig td.c{background:rgba(77,163,255,.2)}
+.ut tr.hl-wait{outline:2px dashed #9aa3b5}
+.ut tr.hl-pre{outline:3px solid #ff6600}.ut tr.hl-pre td.nr,.ut tr.hl-pre td.c{background:rgba(255,102,0,.18)}
+.ut tr.hl-play{outline:3px dashed #ff6600}
+.ut tr.hl-win{outline:3px solid #5fd38a}.ut tr.hl-win td.nr,.ut tr.hl-win td.c{background:rgba(95,211,138,.2)}
+.ut tr.hl-loss{outline:3px solid #ff6666}.ut tr.hl-loss td.nr,.ut tr.hl-loss td.c{background:rgba(255,102,102,.2)}
+.ut-hlb{background:#1b1f2a;border:1px solid #323a4d;border-radius:8px;padding:7px 9px;margin:0 0 6px;font-size:12.5px;line-height:1.5}
+.ut-hlb .sw{display:inline-block;border-radius:5px;padding:1px 6px;margin:3px 4px 0 0;font-size:11.5px;font-weight:700;color:#12151c}
+.ut-hlb .s1{background:#ffd34d}.ut-hlb .s2{background:#4da3ff}.ut-hlb .s3{background:transparent;color:#c9cfdc;border:1px dashed #9aa3b5}.ut-hlb .s4{background:#ff6600;color:#fff}.ut-hlb .s5{background:transparent;color:#ffb27a;border:1px dashed #ff6600}.ut-hlb .s6{background:#5fd38a}.ut-hlb .s7{background:#ff6666;color:#fff}
+.ut-hlb .bt{display:flex;gap:6px;margin-top:6px}.ut-hlb .bt button{flex:1;padding:6px;border-radius:8px;border:1px solid #323a4d;background:#242a38;color:#e8ebf2;font-weight:600;font-size:12px}
+.ut-hlb .hm{color:#8b93a7;font-size:11px}
+.ut-pop .stt{margin-top:4px}.ut-pop .stt td:last-child{text-align:right!important;font-weight:700!important}
 .ut-tool{display:flex;gap:5px;flex-wrap:wrap;padding:0 0 6px}
 .ut-tool button{padding:5px 9px;border-radius:12px;border:1px solid #323a4d;background:#1b1f2a;color:#c9cfdc;font-size:12px;font-weight:600}
 .ut-tool button.on{background:#2e75b6;border-color:#2e75b6;color:#fff}
@@ -122,6 +136,7 @@ window.UT = (function () {
     if (S.leg) x += `<div class="ut-leg">${A.legend()}<br><b>Kod</b> (widok modelu): <span style="${CC.step}">STEP</span><span style="${CC.trig}">TRIGGER</span><span style="${CC.win}">WIN</span> — kod, który w tym modelu tworzy step, trigger albo wygrany zakład. Tapnij wiersz → pełny opis.</div>`;
     if (A.win) x += `<div class="ut-desc"><span class="ut-win">WIN = ${esc(A.win(isAll ? 0 : mi))}</span>${!isAll && A.desc ? A.desc(mi) : ''}</div>`;
     else if (!isAll && A.desc) x += `<div class="ut-desc">${A.desc(mi)}</div>`;
+    if (!isAll) x += `<div class="ut-hlb" id="utHl" hidden></div><div class="ut-desc" style="margin-top:-2px">dotknij wiersz zakładu → łańcuch STEP · TRIGGER · GRA · przytrzymaj wiersz → statystyki modelu</div>`;
     x += `<div class="ut-tw" id="utTw">`;
     if (from > 0) x += `<button class="ut-more" id="utMore">▲ Pokaż +200 wcześniejszych (ukrytych ${from})</button>`;
     if (isAll) {
@@ -161,7 +176,31 @@ window.UT = (function () {
     if (mb) mb.onclick = () => { const fb = tw.scrollHeight - tw.scrollTop; S.limit += 200; S.keep = fb; render(host, A); };
     const mark = i => { S.selRow = i; tw.querySelectorAll('tbody tr.sel').forEach(t => t.classList.remove('sel')); tw.querySelectorAll(`tbody tr[data-i="${i}"]`).forEach(t => t.classList.add('sel')); };
     if (S.selRow != null) mark(S.selRow);
-    tw.querySelectorAll('tbody tr').forEach(tr => tr.onclick = () => { mark(+tr.dataset.i); popup(+tr.dataset.i); });
+    // dotknięcie: widok modelu → łańcuch zakładu (STEP · TRIGGER · czekanie · następny · GRA), WSZ → okno wiersza;
+    // przytrzymanie wiersza (albo prawy klik) → STATYSTYKI modelu
+    tw.querySelectorAll('tbody tr').forEach(tr => {
+      const i = +tr.dataset.i; let t = null, lp = false, x0 = 0, y0 = 0;
+      const cancel = () => { clearTimeout(t); t = null; };
+      const hold = () => { lp = true; if (!isAll && A.stats) statsPop(mi); else popup(i); };
+      tr.addEventListener('pointerdown', e => { lp = false; x0 = e.clientX; y0 = e.clientY; cancel(); t = setTimeout(hold, 550); });
+      tr.addEventListener('pointermove', e => { if (t && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) cancel(); });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => tr.addEventListener(ev, cancel));
+      tr.addEventListener('contextmenu', e => { e.preventDefault(); cancel(); hold(); });
+      tr.onclick = () => {
+        if (lp) { lp = false; return; }
+        if (isAll) { mark(i); popup(i); return; }
+        if (S.hl && S.hl.sel === S.sel && /\bhl-/.test(tr.className)) { S.hl = null; applyHl(h, mi); return; }   // ponowne dotknięcie zamyka
+        const ch = chainAt(mi, i);
+        if (ch) {
+          S.hl = { sel: S.sel, i };
+          // łańcuch zaczyna się nad widocznymi wierszami → dociągnij je i zostań przy dotkniętym wierszu
+          const lo = Math.min(...['step', 'trig', 'wait', 'pre', 'play', 'win', 'loss'].map(k => ch[k].length ? Math.min(...ch[k]) : Infinity));
+          if (lo < from) { S.limit = A.N() - lo + 5; S.focus = i; render(host, A); } else applyHl(h, mi);
+        }
+        else { mark(i); popup(i); }
+      };
+    });
+    if (!isAll) applyHl(h, mi);
     // tabela wypełnia ekran do dolnego paska; przewija się tylko tabela (nagłówek kolumn zostaje)
     const fit = () => {
       const top = tw.getBoundingClientRect().top;
@@ -178,6 +217,85 @@ window.UT = (function () {
   }
   // otwarcie modelu z innego ekranu (tapnięcie w GRA): model + wiersz do pokazania
   function open(id, focusI) { S.sel = id; S.focus = focusI == null ? null : focusI; S.limit = Math.max(80, (A ? A.N() : window.T50 ? window.T50.count() : 0) - (focusI == null ? 0 : focusI) + 40); }
+
+  // ---- łańcuch zakładu: adapter A.chain(mi, i) (silniki STEP → TRIGGER → zakład) albo okno po numerze triggera w etykietach ----
+  const KEYRE = /(?:\[T:|okno T:|TRIG#|TRIGGER #|trig#)(\d+)/g;
+  function segs(mi, i) {
+    const c = A.cell(mi, i) || {}, out = [];
+    [c.gra].forEach(x => { if (!x) return; (x.full && x.full.length ? x.full : String(x.t).split(' | ')).forEach(t => out.push(`${t} ${x.sub || ''}`)); });   // rodzaj tylko z kolumny GRA
+    return out;
+  }
+  function kindOf(t) {
+    if (/IGNORED/.test(t)) return null;
+    if (/pudło|bez rozstrzygnięcia|czekamy na|\(STEP\)|✗ · ▼/.test(t)) return 'play';   // krok gry bez wygranej — gra trwa dalej
+    if (/▶|TRIGGER|TRIG#|\(trigger\)/.test(t)) return 'trig';
+    if (/✓|→ WIN|WIN K=|WIN \+/.test(t)) return 'win';
+    if (/LOSS|BUST|przegran/.test(t)) return 'loss';
+    if (/START/.test(t)) return 'pre';
+    if (/▼|następny wiersz|nast\. wiersz/.test(t)) return 'pre';
+    if (/krok gry|Krok Gry|stawka|GRA /i.test(t)) return 'play';
+    return 'wait';
+  }
+  const KR = { win: 0, loss: 0, play: 1, pre: 2, trig: 3, wait: 4 };
+  function keysAt(mi, i) {
+    // numer triggera z etykiet (albo ze szczegółów wiersza, jak w PIKOFF); rodzaj zdarzenia tylko z etykiet GRA / Stan
+    const out = [], rowKeys = new Set(), free = [], c = A.cell(mi, i) || {};
+    const keysIn = t => { const r = []; let m; KEYRE.lastIndex = 0; while ((m = KEYRE.exec(t))) r.push(m[1]); return r; };
+    segs(mi, i).forEach(t => { const k = kindOf(t), ks = keysIn(t); ks.forEach(x => rowKeys.add(x)); if (!k) return; if (ks.length) ks.forEach(x => out.push({ key: x, kind: k })); else free.push(k); });
+    (c.det || []).forEach(d => keysIn(String(d[1])).forEach(x => rowKeys.add(x)));
+    if (rowKeys.size === 1 && free.length) { const key = [...rowKeys][0]; free.forEach(k => out.push({ key, kind: k })); }
+    return out;
+  }
+  function chainAt(mi, i) {
+    if (A.chain) {
+      const c = A.chain(mi, i); if (!c) return null;
+      const out = { step: c.step || [], trig: c.trig || [], wait: [], pre: [], play: c.play || [], win: [], loss: [] };
+      const lt = Math.max(...out.trig, -1);
+      for (let j = lt + 1; j < c.betI - 1; j++) out.wait.push(j);
+      if (c.betI - 1 > lt) out.pre.push(c.betI - 1);
+      (c.res === 'win' ? out.win : c.res ? out.loss : out.pre).push(c.betI);
+      const N = A.N(), res = c.res === 'win' ? 'WIN' : c.res === 'bust' ? 'BUST' : c.res ? 'przegrana' : null;
+      out.title = res ? `Zakład Nr ${c.betI + 1}${c.k ? ` · K${c.k}` : ''} → ${res}` : `Gra w toku → zakład na Nr ${c.betI + 1}${c.k ? ` · K${c.k}` : ''}${c.betI === N ? ' (NASTĘPNY WIERSZ)' : ''}`;
+      return out;
+    }
+    const ks = keysAt(mi, i); if (!ks.length) return null;
+    ks.sort((a, b) => KR[a.kind] - KR[b.kind]);
+    const key = ks[0].key, out = { step: [], trig: [], wait: [], pre: [], play: [], win: [], loss: [] };
+    const N = A.N(), hi = Math.min(Math.max(N - 1, A.last(mi)), i + 2500);
+    for (let j = Math.max(0, i - 2500); j <= hi; j++) {
+      let best = null;
+      keysAt(mi, j).forEach(x => { if (x.key === key && (!best || KR[x.kind] < KR[best])) best = x.kind; });
+      if (best) out[best].push(j);
+    }
+    const res = out.win.length ? 'WIN' : out.loss.length ? 'LOSS / BUST' : null;
+    out.title = `Okno trig#${key}${res ? ` → ${res}` : ' · w toku'}`;
+    return out;
+  }
+  const rngTxt = a => { if (!a.length) return ''; const s = a.slice().sort((x, y) => x - y); return s.length === 1 ? `Nr ${s[0] + 1}` : `Nr ${s[0] + 1}–${s[s.length - 1] + 1}${s.length > 2 && s[s.length - 1] - s[0] + 1 !== s.length ? ` (${s.length})` : ''}`; };
+  function applyHl(h, mi) {
+    const tw = h.querySelector('#utTw'), box = h.querySelector('#utHl'); if (!tw || !box) return;
+    tw.querySelectorAll('tbody tr').forEach(r => r.classList.remove('hl-step', 'hl-trig', 'hl-wait', 'hl-pre', 'hl-play', 'hl-win', 'hl-loss'));
+    const c = S.hl && S.hl.sel === S.sel ? chainAt(mi, S.hl.i) : null;
+    if (!c) { box.hidden = true; box.innerHTML = ''; return; }
+    const add = (arr, cl) => arr.forEach(j => tw.querySelectorAll(`tbody tr[data-i="${j}"]`).forEach(r => r.classList.add(cl)));
+    add(c.wait, 'hl-wait'); add(c.step, 'hl-step'); add(c.trig, 'hl-trig'); add(c.play, 'hl-play'); add(c.pre, 'hl-pre'); add(c.win, 'hl-win'); add(c.loss, 'hl-loss');
+    const chip = (a, cl, t) => a.length ? `<span class="sw ${cl}">${t} ${rngTxt(a)}</span>` : '';
+    box.innerHTML = `<b>${esc(c.title)}</b><div>${chip(c.step, 's1', 'STEP')}${chip(c.trig, 's2', 'TRIGGER')}${chip(c.wait, 's3', 'czekanie')}${chip(c.pre, 's4', '▶ następny / START')}${chip(c.play, 's5', 'GRA')}${chip(c.win, 's6', 'WIN')}${chip(c.loss, 's7', 'przegrana')}</div>
+      <div class="bt"><button id="utHlRow">Szczegóły wiersza Nr ${S.hl.i + 1}</button><button id="utHlSt">Statystyki</button><button id="utHlX">✕ Zamknij</button></div><div class="hm">dotknij obramowany wiersz, żeby zamknąć</div>`;
+    box.hidden = false;
+    box.querySelector('#utHlRow').onclick = () => popup(S.hl.i);
+    box.querySelector('#utHlSt').onclick = () => { if (A.stats) statsPop(mi); };
+    box.querySelector('#utHlX').onclick = () => { S.hl = null; applyHl(h, mi); };
+  }
+  // ---- STATYSTYKI modelu (przytrzymanie wiersza) ----
+  function statsPop(mi) {
+    const models = A.models(), id = models[mi] ? models[mi].id : '', rows = A.stats ? A.stats(mi) || [] : [];
+    const p = document.createElement('div'); p.className = 'ut-pop';
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>Statystyki · ${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>
+      <table class="stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table><button class="go" id="utStX">✕ Zamknij</button></div>`;
+    p.onclick = e => { if (e.target === p || e.target.classList.contains('x') || e.target.id === 'utStX') p.remove(); };
+    document.body.appendChild(p);
+  }
 
   function popup(i) {
     const N = A.N(), models = A.models(), isAll = S.sel === 'ALL', g = i >= N;
@@ -209,7 +327,7 @@ window.UT = (function () {
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x')) p.remove(); };
     document.body.appendChild(p);
   }
-  return { render, open, S, popup };
+  return { render, open, S, popup, statsPop };
 })();
 
 // ===== UG — wspólny ekran GRA (wzór PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
@@ -230,6 +348,8 @@ window.UG = (function () {
 .ug-mc{border-left:5px solid #323a4d;background:#242a38;border-radius:8px;padding:7px 9px;margin-bottom:6px;cursor:pointer}
 .ug-mc{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:pan-y}.ug-mc.hold{filter:brightness(1.3);transition:filter .45s}
 .ug-hint{color:#8b93a7;font-size:11px;margin:-2px 2px 6px}
+.ug-lb{font-size:11px;color:#8b93a7;margin:10px 0 3px;letter-spacing:.4px;text-transform:uppercase}
+.ug-stt{width:100%;border-collapse:collapse;font-size:13px}.ug-stt td{padding:4px 2px;border-bottom:1px solid #323a4d}.ug-stt td:first-child{color:#8b93a7;width:55%}.ug-stt td:last-child{text-align:right;font-weight:700}
 .ug-none{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:10px 12px;margin-bottom:8px;color:#8b93a7;font-size:13px}
 .ug-wt{display:block;width:100%;margin:2px 0 10px;padding:11px 12px;border-radius:10px;border:1px dashed #3a4358;background:#1b1f2a;color:#9fc4ff;font-weight:700;font-size:13.5px;text-align:left}
 .ug-wl .ug-sec{opacity:.9}
@@ -264,10 +384,16 @@ window.UG = (function () {
   const lineHtml = (l, pop) => `<div class="ug-st p${l.p}${pop && l.er ? ' j' : ''}"${l.er ? ` data-er="${l.er}"` : ''}>${pop && l.er ? `<span class="jr">Nr ${l.er} ›</span>` : ''}${esc(l.txt)}${l.sub ? `<span class="s">${esc(l.sub)}</span>` : ''}</div>`;
   const metaHtml = m => m ? `<div class="meta"><span>${esc(m[0])}</span><span class="${/^\+/.test(m[1]) ? 'pos' : /^[−-]/.test(m[1]) ? 'neg' : ''}">${esc(m[1])}</span></div>` : '';
 
+  // przytrzymanie karty → STATYSTYKI modelu (jak SZUKAJ / BUST) + wszystkie etykiety
+  function statsHtml(c) {
+    let rows = [];
+    try { rows = c.stats ? c.stats() || [] : []; } catch (e) {}
+    return rows.length ? `<div class="ug-lb">Statystyki modelu</div><table class="ug-stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : '';
+  }
   function popup(c) {
     const p = document.createElement('div'); p.className = 'ug-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${esc(c.id)}</h3><div class="hs">${esc(c.rule || '')}</div>
-      ${c.lines.map(l => lineHtml(l, true)).join('')}${metaHtml(c.meta)}<button class="gobtn">› TABELA ${esc(c.id)}</button></div>`;
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${esc(c.id)}</h3><div class="hs">${esc(c.rule || '')}</div>${statsHtml(c)}
+      <div class="ug-lb">Etykiety teraz</div>${c.lines.map(l => lineHtml(l, true)).join('')}${metaHtml(c.meta)}<button class="gobtn">› TABELA ${esc(c.id)}</button></div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x')) p.remove(); };
     p.querySelector('.gobtn').onclick = () => { p.remove(); c.go(); };
     p.querySelectorAll('.ug-st.j').forEach(el => el.onclick = () => { p.remove(); c.go(+el.dataset.er); });
@@ -300,7 +426,7 @@ window.UG = (function () {
       ? `<div class="ug-ban bet"><div class="big">▼ NASTĘPNY WIERSZ Nr ${fmt(NX)} = GRA</div><div class="sub">${bets.length} × · razem ${fmt(sum)} zł · ${bets.map(b => esc(b.id)).join(' · ')}</div></div>`
       : `<div class="ug-ban idle"><div><b>Bez gry na Nr ${fmt(NX)}</b>${cond ? ` · gra w toku: ${cond}` : ''}</div>${cfg.idleSub ? `<div class="sub">${esc(cfg.idleSub)}</div>` : ''}</div>`;
     if (cfg.note) h += `<div class="ug-note">${cfg.note}</div>`;
-    h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → wszystkie etykiety</div>`;
+    h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → statystyki modelu</div>`;
     // tylko modele z triggerem: gra na następnym wierszu (p1), gra w toku (p2/p4), okno po triggerze (p5 z trig#);
     // modele bez triggera (czekają na STEP / trigger) → zwinięta lista „Modele oczekujące” pod spodem
     const act = c => c.lines.some(l => l.p === 1 || l.p === 2 || l.p === 4 || l.act || (l.p === 5 && /trig#\d|\[T:\d|TRIGGER #\d/.test(`${l.txt} ${l.sub || ''}`)));

@@ -61,6 +61,12 @@
   const TAG = { trigger: 'T', start: '★', win: 'W', loss: 'L', ignored: '⊘' };
   const pm = mi => ML()[mi];
   const A = {
+    stats: mi => {
+      const { s, m } = pm(mi), E = both()[s], st = statsFor(E, m.name), two = E.two;
+      return [['Strategia', NAME[s]], ['Trigger', `WIN bazy z K=${m.K} · START po ${m.offset} WIN`], ['Triggery', st.trig],
+        ['Gry rozliczone', st.games], ['WIN / LOSS', `${st.win} / ${st.loss}`], ['Win rate', `${st.wr.toFixed(1)} %`]]
+        .concat(s === 'A' ? [['Ignorowane triggery', st.ign]] : []).concat([['Okna otwarte', st.open], ['Baza teraz', `${two.phase} · K=${two.K}`]]);
+    },
     win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => codes.length, code: i => codes[i], isNew: i => i >= SEED_STR.length / 3,
     models: () => ML().map(x => ({ id: x.id })),
@@ -83,7 +89,7 @@
       const pl = p && p.k && !p.wait ? `GRA x1x · krok ${p.k}/${MAX_KROKI} · ${STAWKI[p.k]} zł ${p.res === 'win' ? '✓' : '✗ pudło'}` : null;
       if (evs.length) out.gra = { t: evs.map(e => e[1]).join(' | '), css: es(c.prio), full: evs.length > 1 ? evs.map(e => e[1]) : null, sub: pl || '' };
       else if (pl) out.gra = { t: pl, css: MISS, sub: `okno T:${p.tn.join(',')}` };
-      else if (p && p.over) out.gra = { t: `K>${MAX_KROKI} — bez zakładu, LOSS przy WIN bazy`, css: es('loss'), sub: `okno T:${p.tn.join(',')}` };
+      else if (p && p.over) out.gra = { t: `K>${MAX_KROKI} — bez zakładu, okno zamknie najbliższy WIN bazy`, css: es('loss'), sub: `okno T:${p.tn.join(',')}` };
       else if (p && p.wait) out.gra = { t: `w grze · po x1x krok ${p.k}/${MAX_KROKI}`, css: WAITP, sub: `okno T:${p.tn.join(',')}` };
       if (p && p.k && !p.wait) out.det.push(['Zakład', `krok ${p.k} · ${STAWKI[p.k]} zł · ${p.res === 'win' ? 'WIN' : 'pudło'}`]);
       return out;
@@ -131,7 +137,7 @@
       const st = statsFor(E, m.name);
       return { id: m.name, rule: `${s} · K${m.K} · off +${m.offset}`, lines: L,
         meta: [`${st.trig} trig · ${st.games} gier · W ${st.win} · L ${st.loss}${s === 'A' ? ` · IGN ${st.ign}` : ''}`, `WR ${st.wr.toFixed(1)}%`],
-        go: er => goFn(`${s}:${m.name}`, er) };
+        go: er => goFn(`${s}:${m.name}`, er), stats: () => A.stats(ML().findIndex(x => x.id === `${s}·${m.name}`)) };
     });
   }
   function cards(goFn) { return ['C', 'A'].map(s => ({ name: NAME[s], cards: cardList(goFn, s) })); }

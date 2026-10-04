@@ -44,6 +44,11 @@
   const EVN = { trigger: 'TRIGGER', krok: 'przygotowanie', start: '★ START', gra: 'krok gry', win: 'WIN', loss: 'LOSS (BUST)' };
   const SUBR = { SKIP: 'poza parą — szukam 1. trafienia x1x', para: '1. trafienie pary', 'SPRAWDŹ': '2. trafienie — następny x1x = WIN', miss: 'brak 3. trafienia → K+1', WIN: 'koniec cyklu (WIN-cykl)' };
   const A = {
+    stats: mi => {
+      const m = MODELS[mi], s = model.stats(m.name), b = model.baseState;
+      return [['Triggery (WIN M=' + [...m.trig][0] + ')', s.trig], ['Gry rozliczone', s.games], ['WIN / LOSS', `${s.wins} / ${s.loss}`],
+        ['Win rate', `${s.wr.toFixed(1)} %`], ['Wynik', window.__t50zl(s.pnl)], ['Okna otwarte', s.open], ['Baza teraz', `${NICE[b.state] || b.state} · K=${b.K}`]];
+    },
     win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => model.N, code: i => model.codes[i], isNew: i => i >= SEED.length / 3,
     models: () => MODELS.map(m => ({ id: m.name })),
@@ -104,7 +109,7 @@
       const s = model.stats(m.name);
       return { id: m.name, rule: `trigger M=${M} · off +${OFFSET} · K${K_LIMIT}`, lines: L,
         meta: [`${s.games} gier · W ${s.wins} · L ${s.loss} · WR ${s.wr.toFixed(1)}%`, window.__t50zl(s.pnl)],
-        go: er => goFn(m.name, er) };
+        go: er => goFn(m.name, er), stats: () => A.stats(MODELS.indexOf(m)) };
     });
   }
   function cards(goFn) { return [{ name: '', cards: cardList(goFn) }]; }

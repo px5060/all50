@@ -25,6 +25,10 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
     (np. „czekam na STEP”, „STEP otwarty · czekam na TRIGGER”, „SKIP · poza parą”); kolumna GRA
     bez zakładu zostaje ciemna, jak w T60 RAZEM.
   - 2-SLOT: w kolumnie GRA zaznaczone są kroki gry (krok n/8, stawka, pudło / WIN) w oknie po START.
+  - **Dotknięcie wiersza zakładu** (albo wiersza TRIGGER / czekania) w widoku modelu podświetla cały łańcuch, jak w SZUKAJ / BUST:
+    STEP (żółty), TRIGGER (niebieski), czekanie (przerywany), następny / START (pomarańczowy), kroki gry (przerywany pomarańczowy),
+    WIN (zielony) / przegrana (czerwony), z opisem nad tabelą. Ponowne dotknięcie zamyka.
+  - **Przytrzymanie wiersza** w TABELI albo **karty** na GRA → statystyki modelu.
   - Silniki appek nie są zmieniane — nakładki tylko czytają ich wyniki.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.

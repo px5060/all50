@@ -62,6 +62,23 @@
   const betAt = (mi, i) => { const r = results[mi]; if (!BY.has(r)) BY.set(r, new Map(r.d.map(x => [x.w_ZAKLAD - 1, x]))); return BY.get(r).get(i); };
   const pending = r => r.st.faza === 'CZEKA NA MECZ ZAKŁADU';
   const A = {
+    // łańcuch zakładu z rekordu silnika: STEP (w_STEP, seria/układ) · T1 (2T) · TRIGGER/T2 · czekanie · zakład
+    chain: (mi, i) => {
+      const r = results[mi], pe = getPlans()[mi].get(i); if (!pe) return null;
+      const m = MODELS[mi], d = pe.pending ? r.st : r.d.find(x => x.w_ZAKLAD - 1 === pe.betI);
+      const parts = p => p ? String(p).split(' → ').length : 1, back = (end, n) => Array.from({ length: n }, (_, q) => end - n + 1 + q);
+      const tp = m.TRIGGER2 || m.TRIGGER || m.TRIGGER1, trig = back(pe.trigI, parts(tp));
+      if (m.TRIGGER2 && d && d.w_T1) trig.unshift(...back(d.w_T1 - 1, parts(m.TRIGGER1)));
+      const step = d && d.w_STEP ? back(d.w_STEP - 1, String(m.STEP).includes(' → ') ? parts(m.STEP) : (m.xSTEP || 1)) : [];
+      return { step, trig, betI: pe.betI, k: pe.k, res: pe.pending ? null : pe.wyn === 'WIN' ? 'win' : pe.wyn === 'BUST' ? 'bust' : 'loss' };
+    },
+    stats: mi => {
+      const r = results[mi], s = computeStats(r, codes.length), rr = rankingRow(r, codes), z = window.__t50zl;
+      return [['Zakłady / cykle', `${s.zakl} / ${s.cykle}`], ['WIN / BUST', `${s.W} / ${s.B}`], ['Trafienie', `${s.hit.toFixed(1)} %`],
+        ['Bilans', z(s.P)], ['Max seria przegranych', s.ml], ['Max wyłożone', `${s.maxwyl} zł`],
+        ['WIN na krokach k1…k8', [1, 2, 3, 4, 5, 6, 7, 8].map(j => s['wk' + j]).join(' · ')], ['BUST przy K6 / K7', `${s.k6} / ${s.k7}`],
+        ['Okresy na plus (z 5)', s.okresy], ['Stan teraz', `${r.st.faza} · K${r.st.krok} · ${r.st.stawka} zł`], ['Ostatni zakład', rr.ostatni]];
+    },
     win: () => 'x1x',   // kod, który daje WIN zakładu
     N: () => codes.length, code: i => codes[i], isNew: i => i >= SEED_N,
     models: () => MODELS.map(m => ({ id: m.m })),
@@ -123,7 +140,7 @@
         id: `${LBL[k]}·${m.m}`, rule: `${m.id} · zakład +${m.offset}`,
         lines: f.map(x => ({ p: x.p, txt: x.tekst, sub: x.sub || '', stake: x.p === 1 ? x.stawka : 0 })),
         meta: [`${r.d.length} zakł. · WIN ${W} · BUST ${B}`, window.__t50zl(r.st.bilans)],
-        go: er => goFn(`${k}|${m.m}`, er),
+        go: er => goFn(`${k}|${m.m}`, er), stats: () => A.stats(i),
       };
     });
   }
