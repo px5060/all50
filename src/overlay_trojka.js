@@ -54,7 +54,7 @@
   const A = {
     stats: mi => {
       const m = MODELS[mi], s = model.stats(m.name), b = model.baseState;
-      return [['Triggery (WIN M=' + [...m.trig][0] + ')', s.trig]].concat(window.T50Stat.brief(gamesOf(m), model.N, ST3, 3),
+      return [['Ocena (pkt z 9)', window.__ocenaGames(gamesOf(m), model.N, ST3, 3)], ['Triggery (WIN M=' + [...m.trig][0] + ')', s.trig]].concat(window.T50Stat.brief(gamesOf(m), model.N, ST3, 3),
         [['Okna otwarte', s.open], ['Baza teraz', `${NICE[b.state] || b.state} · K=${b.K}`]]);
     },
     win: () => 'x1x',   // kod, który daje WIN zakładu

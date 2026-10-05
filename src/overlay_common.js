@@ -711,3 +711,7 @@ window.T50Stat = (function () {
   }
   return { compute, render, brief, esc };
 })();
+
+// ===== Ocena modelu z punktów (z 9, z Monte-Carlo — jak w T50 x1x: ≥ 7 GRAĆ) · 5–6 REZERWA · ≤ 4 ODRZUĆ =====
+window.__ocena = function (score) { return score == null ? '—' : `${score >= 7 ? 'GRAĆ' : score >= 5 ? 'REZERWA' : 'ODRZUĆ'} · ${score}/9 pkt`; };
+window.__ocenaGames = (games, N, ST, odds) => window.__ocena(games.length ? window.T50Stat.compute(games, N, ST, odds, true).score : null);

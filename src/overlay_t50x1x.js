@@ -74,7 +74,7 @@
     },
     stats: mi => {
       const r = results[mi], s = computeStats(r, codes.length), rr = rankingRow(r, codes), z = window.__t50zl;
-      return [['Zakłady / cykle', `${s.zakl} / ${s.cykle}`], ['WIN / BUST', `${s.W} / ${s.B}`], ['Trafienie', `${s.hit.toFixed(1)} %`],
+      return [['Ocena (pkt z 9)', window.__ocena(computeStats(r, codes.length, { mc: true }).score)], ['Zakłady / cykle', `${s.zakl} / ${s.cykle}`], ['WIN / BUST', `${s.W} / ${s.B}`], ['Trafienie', `${s.hit.toFixed(1)} %`],
         ['Bilans', z(s.P)], ['Max seria przegranych', s.ml], ['Max wyłożone', `${s.maxwyl} zł`],
         ['WIN na krokach k1…k8', [1, 2, 3, 4, 5, 6, 7, 8].map(j => s['wk' + j]).join(' · ')], ['BUST przy K6 / K7', `${s.k6} / ${s.k7}`],
         ['Okresy na plus (z 5)', s.okresy], ['Stan teraz', `${r.st.faza} · K${r.st.krok} · ${r.st.stawka} zł`], ['Ostatni zakład', rr.ostatni]];

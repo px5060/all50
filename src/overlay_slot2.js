@@ -79,7 +79,7 @@
   const A = {
     stats: mi => {
       const { s, m } = pm(mi), E = both()[s], st = statsFor(E, m.name), two = E.two;
-      return [['Strategia', NAME[s]], ['Trigger', `WIN bazy z K=${m.K} · START po ${m.offset} WIN`], ['Triggery', st.trig]]
+      return [['Ocena (pkt z 9)', window.__ocenaGames(gamesOf(s, m.name), codes.length, ST2, 3)], ['Strategia', NAME[s]], ['Trigger', `WIN bazy z K=${m.K} · START po ${m.offset} WIN`], ['Triggery', st.trig]]
         .concat(window.T50Stat.brief(gamesOf(s, m.name), codes.length, ST2, 3))
         .concat(s === 'A' ? [['Ignorowane triggery', st.ign]] : []).concat([['Okna otwarte', st.open], ['Baza teraz', `${two.phase} · K=${two.K}`]]);
     },
