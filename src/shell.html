@@ -102,6 +102,16 @@ const MOJE = { key: 't50razem_v1_moje',
   has(k, id) { return this.list().some(g => g.k === k && g.id === id); },
   add(k, id, info) { const a = this.list().filter(g => !(g.k === k && g.id === id)), n = allCodes().length; a.push({ k, id, start: n, t: Date.now(), info: info || '' }); this.save(a); try { toast(`▶ <b>${esc(id)}</b> dodany do MOJE GRY (wynik od Nr ${fmtN(n + 1)})`); refresh(); } catch (e) {} },
   del(k, id) { this.save(this.list().filter(g => !(g.k === k && g.id === id))); try { toast(`Usunięto <b>${esc(id)}</b> z MOJE GRY`); refresh(); } catch (e) {} },
+  // MOJE ZAKŁADY — zakłady zagrane naprawdę: { k, id, row (0-based), step, stake, t }; wynik z tabeli modelu (kurs 3: WIN = +2 × stawka)
+  bkey: 't50razem_v1_bets',
+  bets() { try { const v = JSON.parse(localStorage.getItem(this.bkey) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
+  saveBets(a) { try { localStorage.setItem(this.bkey, JSON.stringify(a)); } catch (e) {} },
+  N() { return allCodes().length; },
+  card(k, id) { try { return [].concat(...W(k).cards(() => {}).map(s => s.cards)).find(x => (x.mid || x.id) === id) || null; } catch (e) { return null; } },
+  rowRes(k, id, r) { try { const fw = $('fr_' + k).contentWindow, T = fw.T50 || fw.T60; return T && T.rowRes ? T.rowRes(id, r) : fw.UT.rowRes(id, r); } catch (e) { return null; } },
+  betList(k, id) { const N = allCodes().length; return this.bets().filter(b => b.k === k && b.id === id).sort((a, b) => a.row - b.row || a.t - b.t).map(b => Object.assign({}, b, { res: b.row >= N ? null : this.rowRes(k, id, b.row) })); },
+  addBet(k, id, row, step, stake) { const a = this.bets(); a.push({ k, id, row, step, stake, t: Date.now() }); this.saveBets(a); try { toast(`Zapisano zakład <b>${esc(id)}</b>: Nr ${fmtN(row + 1)} · k${step} · ${stake} zł`); refresh(); } catch (e) {} },
+  delBet(t) { this.saveBets(this.bets().filter(b => b.t !== t)); try { refresh(); } catch (e) {} },
 };
 window.__MOJE = MOJE;
 // MOJE z zakładem na następnym wierszu → przycisk MOJE świeci, dopóki nie wejdziesz w zakładkę (zapamiętane: liczba kodów przy wejściu)
@@ -118,18 +128,41 @@ const APPS = /*__APPS__*/;
 // ===== UG — wspólny ekran GRA (wzór T60 RAZEM / PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
 // cfg = { N, top?, bindTop?, note?, idleSub?, sections:[{name?, cards:[{id, rule, lines:[{p,txt,sub,er?}], meta:[l,r], go(er?)}]}], last:[kody] }
 // p: 1 GRA pewna · 2 GRA warunkowa / w toku · 3 trigger jeśli wpadnie · 4 gra za n / start · 5 inne zdarzenie · 6 brak
-// ===== MOJE GRY — przycisk „Gram / obserwuję” w oknach statystyk (lista zapisana w powłoce RAZEM) =====
+// ===== MOJE GRY — przycisk „Gram / obserwuję” + MOJE ZAKŁADY (zagrane naprawdę: Nr · krok · kwota) w oknach statystyk; zapis w powłoce RAZEM =====
 window.__MJ = window.__MJ || (function () {
   const api = () => { try { return window.__MOJE || (window.parent !== window && window.parent.__MOJE) || null; } catch (e) { return null; } };
   const frameK = () => { try { return window.frameElement ? window.frameElement.id.replace(/^fr_/, '') : null; } catch (e) { return null; } };
   const st = document.createElement('style');
-  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #ff6600;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}';
+  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #ff6600;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}'
+    + '.mj-bets{margin:8px 0;padding:8px;border:1px solid #323a4d;border-radius:9px;background:#161a24}.mj-lb{font-size:12px;font-weight:700;color:#ffb27a;margin-bottom:4px}'
+    + '.mj-r{display:flex;gap:6px;align-items:center;font-size:12.5px;padding:3px 0;border-bottom:1px solid #2a3142}.mj-r span:first-child{flex:1}.mj-r .pos{color:#5fd38a}.mj-r .neg{color:#ff8a8a}'
+    + '.mj-del{background:none;border:0;color:#8b93a7;font-size:14px;padding:0 4px;cursor:pointer}'
+    + '.mj-f{display:flex;gap:5px;align-items:flex-end;margin-top:6px;flex-wrap:wrap}.mj-f label{display:flex;flex-direction:column;font-size:10.5px;color:#8b93a7}'
+    + '.mj-f input{width:64px;padding:6px;border-radius:7px;border:1px solid #323a4d;background:#12151c;color:#e8ebf2;font-size:15px;font-weight:700}.mj-f .mj-nr{width:84px}'
+    + '.mj-save{flex:1;min-width:110px;padding:9px;border-radius:8px;border:0;background:#FF6600;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}';
   document.head.appendChild(st);
   const TXT = on => on ? '■ W MOJE GRY — usuń z listy' : '▶ Gram / obserwuję — dodaj do MOJE GRY';
+  const q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
   function html(k, id) {
     const a = api(); k = k || frameK(); if (!a || !k || id == null) return '';
-    const on = a.has(k, String(id)), q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
-    return `<button class="mj-b${on ? ' on' : ''}" data-mjk="${q(k)}" data-mjid="${q(id)}">${TXT(on)}<\/button><div class="mj-h"${on ? ' hidden' : ''}>Model trafi na zakładkę MOJE — z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS).<\/div>`;
+    const on = a.has(k, String(id));
+    return `<button class="mj-b${on ? ' on' : ''}" data-mjk="${q(k)}" data-mjid="${q(id)}">${TXT(on)}</button><div class="mj-h"${on ? ' hidden' : ''}>Model trafi na zakładkę MOJE — z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS).</div>`;
+  }
+  // MOJE ZAKŁADY: lista + formularz (domyślnie: następny wiersz, krok i stawka z linii „GRA na następnym wierszu” karty modelu)
+  function bets(k, id) {
+    const a = api(); k = k || frameK(); if (!a || !a.betList || !k || id == null) return '';
+    id = String(id);
+    const L = a.betList(k, id), N = a.N(), c = a.card(k, id), l1 = c ? c.lines.find(l => l.p === 1) : null;
+    const dk = l1 ? (l1.k || +((String(l1.txt).match(/(?:krok(?: gry)?|K|k)\s?(\d)/) || [])[1]) || '') : '';
+    const ds = l1 && l1.stake ? l1.stake : '';
+    let put = 0, wyn = 0;
+    const rows = L.map(b => {
+      put += b.stake; const v = b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0; wyn += v;
+      const r = b.res === 'win' ? `✔ WIN +${2 * b.stake} zł` : b.res === 'lost' ? `✗ −${b.stake} zł` : b.res === 'none' ? '? model nie grał w tym wierszu' : 'czeka na wynik';
+      return `<div class="mj-r"><span>Nr ${(b.row + 1).toLocaleString('pl-PL')} · k${b.step} · <b>${b.stake} zł</b></span><span class="${b.res === 'win' ? 'pos' : b.res === 'lost' ? 'neg' : ''}">${r}</span><button class="mj-del" data-t="${b.t}" title="usuń wpis">✕</button></div>`;
+    }).join('');
+    return `<div class="mj-bets" data-mjk="${q(k)}" data-mjid="${q(id)}"><div class="mj-lb">MOJE ZAKŁADY${L.length ? ` · ${L.length} · postawione ${put} zł · wynik ${wyn >= 0 ? '+' : '−'}${Math.abs(wyn)} zł` : ' — zapisz zakład, który naprawdę zagrałeś'}</div>${rows}
+      <div class="mj-f"><label>Nr wiersza<input type="number" class="mj-nr" inputmode="numeric" value="${N + 1}"></label><label>krok<input type="number" class="mj-k" inputmode="numeric" min="1" max="8" value="${dk}"></label><label>postawione zł<input type="number" class="mj-zl" inputmode="numeric" min="1" value="${ds}"></label><button class="mj-save">Zapisz zakład</button></div></div>`;
   }
   function bind(root, info) {
     root.querySelectorAll('.mj-b').forEach(b => b.onclick = e => {
@@ -139,8 +172,20 @@ window.__MJ = window.__MJ || (function () {
       const on = a.has(k, id); b.classList.toggle('on', on); b.textContent = TXT(on);
       const h = b.nextElementSibling; if (h && h.classList.contains('mj-h')) h.hidden = on;
     });
+    root.querySelectorAll('.mj-bets').forEach(box => {
+      const k = box.dataset.mjk, id = box.dataset.mjid, a = api(); if (!a) return;
+      const redo = () => { const t = document.createElement('div'); t.innerHTML = bets(k, id); const nb = t.firstElementChild; box.replaceWith(nb); bind(nb.parentNode, info); };
+      box.onclick = e => e.stopPropagation();
+      const sv = box.querySelector('.mj-save');
+      if (sv) sv.onclick = () => {
+        const nr = +box.querySelector('.mj-nr').value, kk = +box.querySelector('.mj-k').value, zl = +box.querySelector('.mj-zl').value;
+        if (!(nr >= 1) || !(kk >= 1 && kk <= 8) || !(zl > 0)) { box.querySelector('.mj-lb').textContent = 'Podaj Nr wiersza, krok 1–8 i kwotę w zł'; return; }
+        a.addBet(k, id, nr - 1, kk, zl); redo();
+      };
+      box.querySelectorAll('.mj-del').forEach(d => d.onclick = () => { if (confirm('Usunąć ten wpis z MOJE ZAKŁADY?')) { a.delBet(+d.dataset.t); redo(); } });
+    });
   }
-  return { html, bind, frameK };
+  return { html, bets, bind, frameK };
 })();
 
 window.UG = (function () {
@@ -202,7 +247,7 @@ window.UG = (function () {
   }
   function popup(c) {
     const p = document.createElement('div'); p.className = 'ug-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕<\/button><h3>${esc(c.id)}<\/h3><div class="hs">${esc(c.rule || '')}<\/div>${window.__MJ ? __MJ.html(c.app, c.mid || c.id) : ''}${statsHtml(c)}
+    p.innerHTML = `<div class="sh"><button class="x">✕<\/button><h3>${esc(c.id)}<\/h3><div class="hs">${esc(c.rule || '')}<\/div>${window.__MJ ? __MJ.html(c.app, c.mid || c.id) + (__MJ.bets ? __MJ.bets(c.app, c.mid || c.id) : '') : ''}${statsHtml(c)}
       <div class="ug-lb">Etykiety teraz<\/div>${c.lines.map(l => lineHtml(l, true)).join('')}${metaHtml(c.meta)}<button class="gobtn">› TABELA ${esc(c.id)}<\/button><\/div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x')) p.remove(); };
     if (window.__MJ) __MJ.bind(p, c.rule || '');
@@ -427,6 +472,13 @@ function renderMoje() {
     const lines = [res
       ? { p: res.win ? 2 : 5, act: true, txt: `${res.win ? '✔ WIN' : '✖ BUST / LOSS'} w Nr ${fmtN(res.i + 1)} — od dodania`, sub: res.t, er: res.i + 1 }
       : { p: 6, act: true, txt: `śledzę od Nr ${fmtN(g.start + 1)} · bez rozstrzygnięcia (${fmtN(N - g.start)} kod.)`, sub: g.info || '' }];
+    const B = MOJE.betList(g.k, g.id);
+    if (B.length) {
+      let put = 0, wyn = 0; B.forEach(b => { put += b.stake; wyn += b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0; });
+      const lb = B[B.length - 1];
+      lines.push({ p: 0, act: true, txt: `Moje zakłady: ${B.length} · postawione ${fmtN(put)} zł · wynik ${wyn >= 0 ? '+' : '−'}${fmtN(Math.abs(wyn))} zł`,
+        sub: `ostatni: Nr ${fmtN(lb.row + 1)} · k${lb.step} · ${lb.stake} zł · ${lb.res === 'win' ? 'WIN' : lb.res === 'lost' ? 'przegrany' : lb.res === 'none' ? 'model nie grał' : 'czeka'}`, er: lb.row + 1 });
+    }
     if (c) lines.push(...c.lines);
     cards.push({ id: g.id, app: g.k, mid: g.id, rule: `${a.short} · od Nr ${fmtN(g.start + 1)}${c && c.rule ? ' · ' + c.rule : ''}`, lines,
       meta: c ? c.meta : null, go: er => c ? c.go(er) : goModel(g.k, g.id, er), stats: c && c.stats ? c.stats : null });

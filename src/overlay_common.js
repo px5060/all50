@@ -20,18 +20,41 @@ window.__t50flash = function (tr) {
 
 // ===== UT — wspólny widok TABELI (wzór TOP5): Nr · Kod · GRA · Stan/Rola + okno szczegółów =====
 // Adapter A (z nakładki aplikacji) podaje tylko etykiety, które silnik tej aplikacji już liczy.
-// ===== MOJE GRY — przycisk „Gram / obserwuję” w oknach statystyk (lista zapisana w powłoce RAZEM) =====
+// ===== MOJE GRY — przycisk „Gram / obserwuję” + MOJE ZAKŁADY (zagrane naprawdę: Nr · krok · kwota) w oknach statystyk; zapis w powłoce RAZEM =====
 window.__MJ = window.__MJ || (function () {
   const api = () => { try { return window.__MOJE || (window.parent !== window && window.parent.__MOJE) || null; } catch (e) { return null; } };
   const frameK = () => { try { return window.frameElement ? window.frameElement.id.replace(/^fr_/, '') : null; } catch (e) { return null; } };
   const st = document.createElement('style');
-  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #ff6600;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}';
+  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #ff6600;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}'
+    + '.mj-bets{margin:8px 0;padding:8px;border:1px solid #323a4d;border-radius:9px;background:#161a24}.mj-lb{font-size:12px;font-weight:700;color:#ffb27a;margin-bottom:4px}'
+    + '.mj-r{display:flex;gap:6px;align-items:center;font-size:12.5px;padding:3px 0;border-bottom:1px solid #2a3142}.mj-r span:first-child{flex:1}.mj-r .pos{color:#5fd38a}.mj-r .neg{color:#ff8a8a}'
+    + '.mj-del{background:none;border:0;color:#8b93a7;font-size:14px;padding:0 4px;cursor:pointer}'
+    + '.mj-f{display:flex;gap:5px;align-items:flex-end;margin-top:6px;flex-wrap:wrap}.mj-f label{display:flex;flex-direction:column;font-size:10.5px;color:#8b93a7}'
+    + '.mj-f input{width:64px;padding:6px;border-radius:7px;border:1px solid #323a4d;background:#12151c;color:#e8ebf2;font-size:15px;font-weight:700}.mj-f .mj-nr{width:84px}'
+    + '.mj-save{flex:1;min-width:110px;padding:9px;border-radius:8px;border:0;background:#FF6600;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}';
   document.head.appendChild(st);
   const TXT = on => on ? '■ W MOJE GRY — usuń z listy' : '▶ Gram / obserwuję — dodaj do MOJE GRY';
+  const q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
   function html(k, id) {
     const a = api(); k = k || frameK(); if (!a || !k || id == null) return '';
-    const on = a.has(k, String(id)), q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
+    const on = a.has(k, String(id));
     return `<button class="mj-b${on ? ' on' : ''}" data-mjk="${q(k)}" data-mjid="${q(id)}">${TXT(on)}</button><div class="mj-h"${on ? ' hidden' : ''}>Model trafi na zakładkę MOJE — z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS).</div>`;
+  }
+  // MOJE ZAKŁADY: lista + formularz (domyślnie: następny wiersz, krok i stawka z linii „GRA na następnym wierszu” karty modelu)
+  function bets(k, id) {
+    const a = api(); k = k || frameK(); if (!a || !a.betList || !k || id == null) return '';
+    id = String(id);
+    const L = a.betList(k, id), N = a.N(), c = a.card(k, id), l1 = c ? c.lines.find(l => l.p === 1) : null;
+    const dk = l1 ? (l1.k || +((String(l1.txt).match(/(?:krok(?: gry)?|K|k)\s?(\d)/) || [])[1]) || '') : '';
+    const ds = l1 && l1.stake ? l1.stake : '';
+    let put = 0, wyn = 0;
+    const rows = L.map(b => {
+      put += b.stake; const v = b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0; wyn += v;
+      const r = b.res === 'win' ? `✔ WIN +${2 * b.stake} zł` : b.res === 'lost' ? `✗ −${b.stake} zł` : b.res === 'none' ? '? model nie grał w tym wierszu' : 'czeka na wynik';
+      return `<div class="mj-r"><span>Nr ${(b.row + 1).toLocaleString('pl-PL')} · k${b.step} · <b>${b.stake} zł</b></span><span class="${b.res === 'win' ? 'pos' : b.res === 'lost' ? 'neg' : ''}">${r}</span><button class="mj-del" data-t="${b.t}" title="usuń wpis">✕</button></div>`;
+    }).join('');
+    return `<div class="mj-bets" data-mjk="${q(k)}" data-mjid="${q(id)}"><div class="mj-lb">MOJE ZAKŁADY${L.length ? ` · ${L.length} · postawione ${put} zł · wynik ${wyn >= 0 ? '+' : '−'}${Math.abs(wyn)} zł` : ' — zapisz zakład, który naprawdę zagrałeś'}</div>${rows}
+      <div class="mj-f"><label>Nr wiersza<input type="number" class="mj-nr" inputmode="numeric" value="${N + 1}"></label><label>krok<input type="number" class="mj-k" inputmode="numeric" min="1" max="8" value="${dk}"></label><label>postawione zł<input type="number" class="mj-zl" inputmode="numeric" min="1" value="${ds}"></label><button class="mj-save">Zapisz zakład</button></div></div>`;
   }
   function bind(root, info) {
     root.querySelectorAll('.mj-b').forEach(b => b.onclick = e => {
@@ -41,8 +64,20 @@ window.__MJ = window.__MJ || (function () {
       const on = a.has(k, id); b.classList.toggle('on', on); b.textContent = TXT(on);
       const h = b.nextElementSibling; if (h && h.classList.contains('mj-h')) h.hidden = on;
     });
+    root.querySelectorAll('.mj-bets').forEach(box => {
+      const k = box.dataset.mjk, id = box.dataset.mjid, a = api(); if (!a) return;
+      const redo = () => { const t = document.createElement('div'); t.innerHTML = bets(k, id); const nb = t.firstElementChild; box.replaceWith(nb); bind(nb.parentNode, info); };
+      box.onclick = e => e.stopPropagation();
+      const sv = box.querySelector('.mj-save');
+      if (sv) sv.onclick = () => {
+        const nr = +box.querySelector('.mj-nr').value, kk = +box.querySelector('.mj-k').value, zl = +box.querySelector('.mj-zl').value;
+        if (!(nr >= 1) || !(kk >= 1 && kk <= 8) || !(zl > 0)) { box.querySelector('.mj-lb').textContent = 'Podaj Nr wiersza, krok 1–8 i kwotę w zł'; return; }
+        a.addBet(k, id, nr - 1, kk, zl); redo();
+      };
+      box.querySelectorAll('.mj-del').forEach(d => d.onclick = () => { if (confirm('Usunąć ten wpis z MOJE ZAKŁADY?')) { a.delBet(+d.dataset.t); redo(); } });
+    });
   }
-  return { html, bind, frameK };
+  return { html, bets, bind, frameK };
 })();
 
 window.UT = (function () {
@@ -336,7 +371,7 @@ window.UT = (function () {
       if (c.gra || c.stan) lab = `<div class="hs" style="margin-top:6px;font-weight:700;color:#ffb27a">ETYKIETY WIERSZA Nr ${ri + 1} · ${esc(A.code(ri))}</div>${c.gra ? bl(c.gra) : ''}${c.stan ? bl(c.stan) : ''}<div class="hs" style="margin-top:10px;font-weight:700;color:#ffb27a">STATYSTYKI MODELU</div>`;
     }
     const p = document.createElement('div'); p.className = 'ut-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${lab ? '' : 'Statystyki · '}${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>${window.__MJ ? __MJ.html(null, id) : ''}${lab}
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${lab ? '' : 'Statystyki · '}${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>${window.__MJ ? __MJ.html(null, id) + (__MJ.bets ? __MJ.bets(null, id) : '') : ''}${lab}
       <table class="stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table><button class="go" id="utStX">✕ Zamknij</button></div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x') || e.target.id === 'utStX') p.remove(); };
     document.body.appendChild(p);
@@ -389,7 +424,17 @@ window.UT = (function () {
     }
     return null;
   }
-  return { render, open, S, popup, statsPop, track };
+  // MOJE ZAKŁADY: wynik zakładu modelu id w wierszu r — 'win' · 'lost' (pudło / LOSS / BUST) · 'none' (model nie grał) · null (wiersz jeszcze nie padł)
+  function rowRes(id, r) {
+    const Ad = window.UT.A || A; if (!Ad) return null;
+    const mi = Ad.models().findIndex(m => m.id === id); if (mi < 0 || r >= Ad.N()) return null;
+    const g = (Ad.cell(mi, r) || {}).gra; if (!g) return 'none';
+    const segs = g.full && g.full.length ? g.full : String(g.t).split(' | ');
+    if (segs.some(t => kindOf(t) === 'win' || (/\bWIN\b/.test(t) && !/jeśli/.test(t)))) return 'win';
+    if (segs.some(t => kindOf(t) === 'play' || kindOf(t) === 'loss' || /pudło|LOSS|BUST|przegran|✗/.test(t))) return 'lost';
+    return 'none';
+  }
+  return { render, open, S, popup, statsPop, track, rowRes };
 })();
 
 // ===== UG — wspólny ekran GRA (wzór PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
@@ -454,7 +499,7 @@ window.UG = (function () {
   }
   function popup(c) {
     const p = document.createElement('div'); p.className = 'ug-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${esc(c.id)}</h3><div class="hs">${esc(c.rule || '')}</div>${window.__MJ ? __MJ.html(c.app, c.mid || c.id) : ''}${statsHtml(c)}
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${esc(c.id)}</h3><div class="hs">${esc(c.rule || '')}</div>${window.__MJ ? __MJ.html(c.app, c.mid || c.id) + (__MJ.bets ? __MJ.bets(c.app, c.mid || c.id) : '') : ''}${statsHtml(c)}
       <div class="ug-lb">Etykiety teraz</div>${c.lines.map(l => lineHtml(l, true)).join('')}${metaHtml(c.meta)}<button class="gobtn">› TABELA ${esc(c.id)}</button></div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x')) p.remove(); };
     if (window.__MJ) __MJ.bind(p, c.rule || '');

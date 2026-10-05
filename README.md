@@ -47,6 +47,10 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   **„▶ Gram / obserwuję — dodaj do MOJE GRY”**. Zakładka MOJE pokazuje wybrane modele ze wszystkich tabel: bieżący stan karty
   i pierwsze rozstrzygnięcie od chwili dodania (✔ WIN albo ✖ BUST / LOSS; przegrany pojedynczy krok progresji się nie liczy).
   Usuwanie tym samym przyciskiem („■ W MOJE GRY — usuń z listy”). Lista zapisana w telefonie (klucz `t50razem_v1_moje`).
+- **MOJE ZAKŁADY** (w oknie statystyk modelu): zapis zakładu zagranego naprawdę — Nr wiersza, krok, postawiona kwota
+  (domyślnie następny wiersz i krok / stawka z linii „GRA na następnym wierszu”). Wynik z tabeli modelu: ✔ WIN (+2 × stawka, kurs 3),
+  ✗ przegrany, „czeka” (wiersz jeszcze nie padł), „model nie grał” (w tym wierszu model nie miał zakładu). Suma: postawione i wynik;
+  podsumowanie także na karcie w MOJE. Wpisy usuwa ✕. Zapis w telefonie (klucz `t50razem_v1_bets`).
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM
