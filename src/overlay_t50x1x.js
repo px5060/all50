@@ -137,7 +137,7 @@
       const r = results[i], f = fcs[i];
       const W = r.d.filter(x => x.wynik === 'WIN').length, B = r.d.filter(x => x.wynik === 'BUST').length;
       return {
-        id: `${LBL[k]}·${m.m}`, rule: `${m.id} · zakład +${m.offset}`,
+        id: `${LBL[k]}·${m.m}`, mid: m.m, rule: `${m.id} · zakład +${m.offset}`,
         lines: f.map(x => ({ p: x.p, txt: x.tekst, sub: x.sub || '', stake: x.p === 1 ? x.stawka : 0 })),
         meta: [`${r.d.length} zakł. · WIN ${W} · BUST ${B}`, window.__t50zl(r.st.bilans)],
         go: er => goFn(`${k}|${m.m}`, er), stats: () => A.stats(i),

@@ -138,6 +138,8 @@
     bottomH: () => F.nav.offsetHeight,
   };
 
+  UT.A = A;   // MOJE GRY: wynik modelu bez otwierania TABELI
+
   // ---- GRA (UG) ----
   const nextKrok = two => two.K + (two.phase === 'SLOT2' ? 2 : 1);
   function trigNext(E, s, m) {                     // czy x1x na następnym wierszu da trigger temu modelowi
@@ -163,7 +165,7 @@
       if (!L.length) L.push({ p: 6, txt: `brak · trigger przy WIN K=${m.K}`, sub: `off +${m.offset} · baza ${two.phase}, K=${two.K}` });
       L.sort((a, b) => a.p - b.p);
       const st = statsFor(E, m.name);
-      return { id: m.name, rule: `${s} · K${m.K} · off +${m.offset}`, lines: L,
+      return { id: m.name, mid: `${s}·${m.name}`, rule: `${s} · K${m.K} · off +${m.offset}`, lines: L,
         meta: [`${st.trig} trig · ${st.games} gier · W ${st.win} · L ${st.loss}${s === 'A' ? ` · IGN ${st.ign}` : ''}`, `WR ${st.wr.toFixed(1)}%`],
         go: er => goFn(`${s}:${m.name}`, er), stats: () => A.stats(ML().findIndex(x => x.id === `${s}·${m.name}`)) };
     });

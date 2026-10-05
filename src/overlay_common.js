@@ -20,6 +20,31 @@ window.__t50flash = function (tr) {
 
 // ===== UT — wspólny widok TABELI (wzór TOP5): Nr · Kod · GRA · Stan/Rola + okno szczegółów =====
 // Adapter A (z nakładki aplikacji) podaje tylko etykiety, które silnik tej aplikacji już liczy.
+// ===== MOJE GRY — przycisk „Gram / obserwuję” w oknach statystyk (lista zapisana w powłoce RAZEM) =====
+window.__MJ = window.__MJ || (function () {
+  const api = () => { try { return window.__MOJE || (window.parent !== window && window.parent.__MOJE) || null; } catch (e) { return null; } };
+  const frameK = () => { try { return window.frameElement ? window.frameElement.id.replace(/^fr_/, '') : null; } catch (e) { return null; } };
+  const st = document.createElement('style');
+  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #ff6600;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}';
+  document.head.appendChild(st);
+  const TXT = on => on ? '■ W MOJE GRY — usuń z listy' : '▶ Gram / obserwuję — dodaj do MOJE GRY';
+  function html(k, id) {
+    const a = api(); k = k || frameK(); if (!a || !k || id == null) return '';
+    const on = a.has(k, String(id)), q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
+    return `<button class="mj-b${on ? ' on' : ''}" data-mjk="${q(k)}" data-mjid="${q(id)}">${TXT(on)}</button><div class="mj-h"${on ? ' hidden' : ''}>Model trafi na zakładkę MOJE — z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS).</div>`;
+  }
+  function bind(root, info) {
+    root.querySelectorAll('.mj-b').forEach(b => b.onclick = e => {
+      e.stopPropagation(); const a = api(); if (!a) return;
+      const k = b.dataset.mjk, id = b.dataset.mjid;
+      if (a.has(k, id)) a.del(k, id); else a.add(k, id, info || '');
+      const on = a.has(k, id); b.classList.toggle('on', on); b.textContent = TXT(on);
+      const h = b.nextElementSibling; if (h && h.classList.contains('mj-h')) h.hidden = on;
+    });
+  }
+  return { html, bind, frameK };
+})();
+
 window.UT = (function () {
   const esc = window.__t50esc;
   const css = `
@@ -311,10 +336,11 @@ window.UT = (function () {
       if (c.gra || c.stan) lab = `<div class="hs" style="margin-top:6px;font-weight:700;color:#ffb27a">ETYKIETY WIERSZA Nr ${ri + 1} · ${esc(A.code(ri))}</div>${c.gra ? bl(c.gra) : ''}${c.stan ? bl(c.stan) : ''}<div class="hs" style="margin-top:10px;font-weight:700;color:#ffb27a">STATYSTYKI MODELU</div>`;
     }
     const p = document.createElement('div'); p.className = 'ut-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${lab ? '' : 'Statystyki · '}${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>${lab}
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${lab ? '' : 'Statystyki · '}${esc(id)}</h3><div class="hs">${A.descTxt ? esc(A.descTxt(mi)) : ''}${A.win ? ` · WIN = ${esc(A.win(mi))}` : ''}</div>${window.__MJ ? __MJ.html(null, id) : ''}${lab}
       <table class="stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table><button class="go" id="utStX">✕ Zamknij</button></div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x') || e.target.id === 'utStX') p.remove(); };
     document.body.appendChild(p);
+    if (window.__MJ) __MJ.bind(p, A.descTxt ? A.descTxt(mi) : '');
   }
 
   function popup(i) {
@@ -347,7 +373,23 @@ window.UT = (function () {
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x')) p.remove(); };
     document.body.appendChild(p);
   }
-  return { render, open, S, popup, statsPop };
+  // MOJE GRY: pierwsze rozstrzygnięcie (WIN / BUST / LOSS) modelu id od wiersza from (adapter UT.A — działa też bez otwierania TABELI)
+  function track(id, from) {
+    const Ad = window.UT.A || A; if (!Ad) return null;
+    const mi = Ad.models().findIndex(m => m.id === id); if (mi < 0) return null;
+    const N = Ad.N();
+    for (let i = Math.max(0, from); i < N; i++) {
+      const g = (Ad.cell(mi, i) || {}).gra; if (!g) continue;
+      for (const t of (g.full && g.full.length ? g.full : String(g.t).split(' | '))) {
+        if (!/BUST/.test(t) && /→ LOSS|przegran/.test(t)) continue;   // przegrany krok (progresja trwa) — nie koniec gry
+        let k = kindOf(t);
+        if (k !== 'win' && k !== 'loss') k = /\bWIN\b/.test(t) && !/jeśli|pudło/.test(t) ? 'win' : /\b(BUST|LOSS)\b/.test(t) && !/jeśli|→ BUST|przy zamknięciu/.test(t) ? 'loss' : k;
+        if (k === 'win' || k === 'loss') return { win: k === 'win', i, t };
+      }
+    }
+    return null;
+  }
+  return { render, open, S, popup, statsPop, track };
 })();
 
 // ===== UG — wspólny ekran GRA (wzór PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
@@ -412,9 +454,10 @@ window.UG = (function () {
   }
   function popup(c) {
     const p = document.createElement('div'); p.className = 'ug-pop';
-    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${esc(c.id)}</h3><div class="hs">${esc(c.rule || '')}</div>${statsHtml(c)}
+    p.innerHTML = `<div class="sh"><button class="x">✕</button><h3>${esc(c.id)}</h3><div class="hs">${esc(c.rule || '')}</div>${window.__MJ ? __MJ.html(c.app, c.mid || c.id) : ''}${statsHtml(c)}
       <div class="ug-lb">Etykiety teraz</div>${c.lines.map(l => lineHtml(l, true)).join('')}${metaHtml(c.meta)}<button class="gobtn">› TABELA ${esc(c.id)}</button></div>`;
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x')) p.remove(); };
+    if (window.__MJ) __MJ.bind(p, c.rule || '');
     p.querySelector('.gobtn').onclick = () => { p.remove(); c.go(); };
     p.querySelectorAll('.ug-st.j').forEach(el => el.onclick = () => { p.remove(); c.go(+el.dataset.er); });
     document.body.appendChild(p);
@@ -452,7 +495,7 @@ window.UG = (function () {
     // linia okna po START; karta grająca pokazuje tylko takie linie, jej okna przed START idą do „Modele oczekujące”
     const lA = l => l.p === 1 || l.p === 2 || l.act || (l.p === 4 && !/START/.test(l.txt)) || (l.p === 5 && /^BUST (#|trig#)/.test(l.txt));
     const lPre = l => !lA(l) && l.p < 6;
-    const act = c => c.lines.some(lA);
+    const act = c => cfg.all || c.lines.some(lA);   // cfg.all (MOJE GRY): wszystkie karty i linie
     let ci = 0; const idx = [];
     const card = (c, L) => {
       L = L || c.lines;
@@ -464,11 +507,11 @@ window.UG = (function () {
     };
     let nAct = 0, nWait = 0, waitH = '';
     cfg.sections.forEach(s => {
-      const ac = s.cards.filter(act), wt = s.cards.filter(c => !act(c)), pre = ac.filter(c => c.lines.some(lPre));
+      const ac = s.cards.filter(act), wt = s.cards.filter(c => !act(c)), pre = cfg.all ? [] : ac.filter(c => c.lines.some(lPre));
       if (ac.length) {
         const sb = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).length, 0);
         const ss = ac.reduce((a, c) => a + c.lines.filter(l => l.p === 1).reduce((x, l) => x + (l.stake || 0), 0), 0);
-        h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}</b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'gra w toku'}</span></div>${ac.map(c => card(c, c.lines.filter(lA))).join('')}</div>`;
+        h += `<div class="ug-sec"><div class="ug-sh"><b>${s.name ? esc(s.name) : `NASTĘPNY WIERSZ Nr ${fmt(NX)}`}</b><span class="${sb ? 'g' : 'm'}">${sb ? `GRA ${sb} × · ${fmt(ss)} zł` : 'gra w toku'}</span></div>${ac.map(c => card(c, cfg.all ? c.lines : c.lines.filter(lA))).join('')}</div>`;
         nAct += ac.length;
       }
       if (wt.length || pre.length) {

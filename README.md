@@ -41,6 +41,10 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
     TRÓJKA: cykl = okno po triggerze, zakłady 8 · 16 · … · 1024 zł (BUST −2 040). 2-SLOT: cykl = okno po START, stawki Pikoff
     8 · 8 · 16 · … · 512 zł (BUST −1 024). Bilans zgodny z wynikiem silnika.
   - Silniki appek nie są zmieniane — nakładki tylko czytają ich wyniki.
+- **MOJE** (jak MOJE GRY w SZUKAJ / BUST): w oknie statystyk (przytrzymanie karty na GRA albo wiersza w TABELI) przycisk
+  **„▶ Gram / obserwuję — dodaj do MOJE GRY”**. Zakładka MOJE pokazuje wybrane modele ze wszystkich tabel: bieżący stan karty
+  i pierwsze rozstrzygnięcie od chwili dodania (✔ WIN albo ✖ BUST / LOSS; przegrany pojedynczy krok progresji się nie liczy).
+  Usuwanie tym samym przyciskiem („■ W MOJE GRY — usuń z listy”). Lista zapisana w telefonie (klucz `t50razem_v1_moje`).
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM

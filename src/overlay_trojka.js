@@ -108,6 +108,8 @@
     bottomH: () => F.nav.offsetHeight,
   };
 
+  UT.A = A;   // MOJE GRY: wynik modelu bez otwierania TABELI
+
   // ---- GRA (UG) ----
   function playLine(w) {
     const b = model.baseState, K = b.K;
