@@ -53,6 +53,8 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   (domyślnie następny wiersz i krok / stawka z linii „GRA na następnym wierszu”). Wynik z tabeli modelu: ✔ WIN (+2 × stawka, kurs 3),
   ✗ przegrany, „czeka” (wiersz jeszcze nie padł), „model nie grał” (w tym wierszu model nie miał zakładu). Suma: postawione i wynik;
   podsumowanie także na karcie w MOJE. Wpisy usuwa ✕. Zapis w telefonie (klucz `t50razem_v1_bets`).
+- **Podsumowanie MOJE ZAKŁADY** na dole zakładki STATY każdej tabeli: Model · zakł. (✔ WIN / ✗ przegrane / ⏳ czeka) · kroki (np. k2×2) ·
+  postawione zł · wynik zł, wiersz Σ i tabela „Według kroku”. W zakładce MOJE ta sama tabela dla wszystkich tabel naraz.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM

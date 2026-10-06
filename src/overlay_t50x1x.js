@@ -119,6 +119,9 @@
   };
   UT.A = A;
   renderTab = function () { UT.render($main, A); };
+  // STATY: na dole podsumowanie MOJE ZAKŁADY tej tabeli
+  const renderStat0 = renderStat;
+  renderStat = function () { renderStat0.apply(this, arguments); if (window.__MJ && __MJ.mount) __MJ.mount($main); };
 
   // tapnięcie w GRA → TABELA modelu; gra w toku → wiersz TRIGGERA, inaczej koniec tabeli
   goTable = function (sel) {

@@ -31,7 +31,10 @@ window.__MJ = window.__MJ || (function () {
     + '.mj-del{background:none;border:0;color:#8b93a7;font-size:14px;padding:0 4px;cursor:pointer}'
     + '.mj-f{display:flex;gap:5px;align-items:flex-end;margin-top:6px;flex-wrap:wrap}.mj-f label{display:flex;flex-direction:column;font-size:10.5px;color:#8b93a7}'
     + '.mj-f input{width:64px;padding:6px;border-radius:7px;border:1px solid #323a4d;background:#12151c;color:#e8ebf2;font-size:15px;font-weight:700}.mj-f .mj-nr{width:84px}'
-    + '.mj-save{flex:1;min-width:110px;padding:9px;border-radius:8px;border:0;background:#FF6600;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}';
+    + '.mj-save{flex:1;min-width:110px;padding:9px;border-radius:8px;border:0;background:#FF6600;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}'
+    + '.mj-sum{margin:8px 0;padding:7px 8px;border:1px solid #7030A0;border-radius:10px;background:#1b1f2a;color:#fff;font:12px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.mj-sum h2{font-size:13px;margin:0 0 5px;color:#ffb27a}'
+    + '.mj-sum table{width:100%!important;border-collapse:collapse;table-layout:auto!important}.mj-sum th,.mj-sum td{width:auto!important;max-width:none!important;overflow:visible!important;position:static!important}.mj-sum th,.mj-sum td{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif!important;text-transform:none!important;letter-spacing:0!important;background:none!important;color:#fff!important;font-size:12px}.mj-sum th{color:#8b93a7!important;font-size:10.5px}.mj-sum td .pos{color:#5fd38a!important}.mj-sum td .neg{color:#ff8a8a!important}.mj-sum td .mu{color:#8b93a7!important}.mj-sum td.ks{color:#c9cfdc!important;font-size:11px}.mj-sum th{text-transform:none;letter-spacing:0;font-size:10.5px;color:#8b93a7;font-weight:600;text-align:right;padding:3px 3px;border-bottom:1px solid #323a4d}.mj-sum td{padding:3px 3px;border-bottom:1px solid #2a3142;text-align:right;white-space:nowrap}'
+    + '.mj-sum th:first-child,.mj-sum td:first-child{text-align:left}.mj-sum th{white-space:normal!important}.mj-sum td:first-child{white-space:normal!important}.mj-sum td.ks{white-space:normal;text-align:left;font-size:11px;color:#c9cfdc;min-width:70px}.mj-sum th.ks{text-align:left}.mj-sum .pos{color:#5fd38a;font-weight:700}.mj-sum .neg{color:#ff8a8a;font-weight:700}.mj-sum tr.s td{font-weight:800;border-top:1px solid #7030A0}.mj-sum .mu{color:#8b93a7;font-size:10.5px;margin-top:5px}';
   document.head.appendChild(st);
   const TXT = on => on ? '■ W MOJE GRY — usuń z listy' : '▶ Gram / obserwuję — dodaj do MOJE GRY';
   const q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
@@ -77,7 +80,38 @@ window.__MJ = window.__MJ || (function () {
       box.querySelectorAll('.mj-del').forEach(d => d.onclick = () => { if (confirm('Usunąć ten wpis z MOJE ZAKŁADY?')) { a.delBet(+d.dataset.t); redo(); } });
     });
   }
-  return { html, bets, bind, frameK };
+
+  // MOJE ZAKŁADY — podsumowanie (dół STATY): k = tabela; bez k (powłoka) = wszystkie tabele
+  function sum(k) {
+    const a = api(); if (!a || !a.betList || !a.bets) return '';
+    if (k === undefined) k = frameK();
+    const all = a.bets().filter(b => !k || b.k === k), keys = [];
+    all.forEach(b => { const x = b.k + '\u0001' + b.id; if (!keys.includes(x)) keys.push(x); });
+    const f = n => (+n).toLocaleString('pl-PL'), zl = v => `<span class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : v < 0 ? '−' : ''}${f(Math.abs(v))}</span>`;
+    const val = b => b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0;
+    const T = { n: 0, w: 0, l: 0, c: 0, put: 0, wyn: 0 }, KS = {};
+    const rows = keys.map(x => {
+      const [kk, id] = x.split('\u0001'), L = a.betList(kk, id), S = {}, r = { n: L.length, w: 0, l: 0, c: 0, put: 0, wyn: 0 };
+      L.forEach(b => {
+        const v = val(b); r.put += b.stake; r.wyn += v; if (b.res === 'win') r.w++; else if (b.res === 'lost') r.l++; else r.c++;
+        S[b.step] = (S[b.step] || 0) + 1;
+        const q2 = KS[b.step] = KS[b.step] || { n: 0, w: 0, put: 0, wyn: 0 }; q2.n++; q2.put += b.stake; q2.wyn += v; if (b.res === 'win') q2.w++;
+      });
+      Object.keys(T).forEach(z => T[z] += r[z]);
+      const lab = !k && a.lab ? `<span class="mu">${q(a.lab(kk))}</span><br>` : '';
+      const ks = Object.keys(S).sort((p, q) => p - q).map(s => `k${s}${S[s] > 1 ? '×' + S[s] : ''}`).join(' ');
+      return `<tr><td>${lab}<b>${q(id)}</b></td><td>${r.n}${r.w ? ` <span class="pos">✔${r.w}</span>` : ''}${r.l ? ` <span class="neg">✗${r.l}</span>` : ''}${r.c ? ` <span class="mu">⏳${r.c}</span>` : ''}</td><td class="ks">${ks}</td><td>${f(r.put)}</td><td>${zl(r.wyn)}</td></tr>`;
+    }).join('');
+    const head = `MOJE ZAKŁADY — podsumowanie${k ? '' : ' (wszystkie tabele)'}`;
+    if (!all.length) return `<div class="mj-sum"><h2>${head}</h2><div class="mu">Brak zapisanych zakładów${k ? ' w tej tabeli' : ''}. Zakład zapisujesz w oknie statystyk modelu (przytrzymaj kartę na GRA albo wiersz w TABELI) → MOJE ZAKŁADY → „Zapisz zakład”.</div></div>`;
+    const kRows = Object.keys(KS).sort((p, q) => p - q).map(s => { const z = KS[s]; return `<tr><td>k${s}</td><td>${z.n}${z.w ? ` <span class="pos">✔${z.w}</span>` : ''}</td><td>${f(z.put)}</td><td>${zl(z.wyn)}</td></tr>`; }).join('');
+    return `<div class="mj-sum"><h2>${head}</h2><table><thead><tr><th>Model</th><th>zakł.</th><th class="ks">kroki</th><th>postawione zł</th><th>wynik zł</th></tr></thead><tbody>${rows}`
+      + `<tr class="s"><td>Σ</td><td>${T.n}${T.w ? ` <span class="pos">✔${T.w}</span>` : ''}${T.l ? ` <span class="neg">✗${T.l}</span>` : ''}${T.c ? ` <span class="mu">⏳${T.c}</span>` : ''}</td><td></td><td>${f(T.put)}</td><td>${zl(T.wyn)}</td></tr></tbody></table>`
+      + `<h2 style="margin-top:8px">Według kroku</h2><table><thead><tr><th>krok</th><th>zakł.</th><th>postawione zł</th><th>wynik zł</th></tr></thead><tbody>${kRows}</tbody></table>`
+      + `<div class="mu">✔ WIN = +2 × stawka (kurs 3) · ✗ przegrany = −stawka · ⏳ czeka na wynik albo model nie grał w tym wierszu (0 zł).</div></div>`;
+  }
+  function mount(el, k) { if (!el) return; el.querySelectorAll('.mj-sum').forEach(x => x.remove()); const h = sum(k); if (!h) return; const t = document.createElement('div'); t.innerHTML = h; el.appendChild(t.firstElementChild); }
+  return { html, bets, bind, frameK, sum, mount };
 })();
 
 window.UT = (function () {
@@ -757,6 +791,7 @@ window.T50Stat = (function () {
     }));
     h += `<div class="card muted">Punkty (z 9): bootstrap mediana &gt; 0 (2) · P(straty) &lt; 0,35 (1) · 5/5 okresów na plus (2; 4/5 = 1) · BUST K7 ≤ 3 (2; ≤ 5 = 1) · część 40%: 0 BUST i bilans &gt; 0 (1) · 0 BUST K8 (1). ≥ 7 GRAĆ.</div>`;
     h += o.tail || '';
+    if (window.__MJ && __MJ.sum) h += __MJ.sum();
     el.innerHTML = h + '</div>';
     el.querySelector('.t5s-mc').onclick = () => { mcOn = !mcOn; render(el, o); };
   }
