@@ -10,6 +10,7 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 | **2T** | T50 x1x 2.0.0, silnik 2T | 6 modeli, podwójny trigger, K8 |
 | **TRÓJKA** | `trojka`: V1.3 TRÓJKA Test50 x1x | T1, T2 · off +7 · K8 |
 | **2-SLOT** | `px50x1x`: x1x 2-slot Test50 | C: 3 modele · A: 7 modeli · K8 |
+| **SZUKAJ** | modele przeniesione z appek SZUKAJ / SZUKAJ+ | wybrane przez Ciebie · K8 |
 
 ## Jak działa
 
@@ -55,6 +56,11 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   podsumowanie także na karcie w MOJE. Wpisy usuwa ✕. Zapis w telefonie (klucz `t50razem_v1_bets`).
 - **Podsumowanie MOJE ZAKŁADY** na dole zakładki STATY każdej tabeli: Model · zakł. (✔ WIN / ✗ przegrane / ⏳ czeka) · kroki (np. k2×2) ·
   postawione zł · wynik zł, wiersz Σ i tabela „Według kroku”. W zakładce MOJE ta sama tabela dla wszystkich tabel naraz.
+- **SZUKAJ** (zakładka-tabela): modele przeniesione z appek **SZUKAJ** i **SZUKAJ+**. W tamtej appce przytrzymaj kartę modelu →
+  **„⇢ Dodaj do T50 RAZEM — zakładka SZUKAJ”** (ten sam przycisk usuwa), albo w RAZEM: SZUKAJ → **MODELE** → „＋ dodaj” z MOJE GRY appek SZUKAJ / SZUKAJ+.
+  Silnik 1:1 z SZUKAJ+ (STEP ×x → [STEP2] → TRIGGER ×n → zakład +off, progresja trwała K8 8 · 8 · 16 · … · 512 zł, kurs 3) — zgodność sprawdzona na 800 modelach pul.
+  Karty idą na wspólny ekran GRA, do MOJE GRY i MOJE ZAKŁADY; TABELA i STATY jak w innych tabelach (+ Ocena GRAĆ / REZERWA / ODRZUĆ).
+  Lista w telefonie: klucz `t50razem_v1_szk` (w T60 RAZEM `t60razem_v1_szk`, cele x1x i xx1). ✕ w MODELE usuwa model tylko z RAZEM.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM

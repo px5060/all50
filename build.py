@@ -36,6 +36,12 @@ APPS = [
          store='json', key='x1x_2slot_codes_v1', extra=[],
          css='.pad{display:none!important}footer .frow{margin-bottom:0!important}#bak,#toast{display:none!important}'
              '#miExp,#miImp,#miClear,.sw{display:none!important}'),
+    # modele przeniesione z appek SZUKAJ / SZUKAJ+ (lista w pamięci telefonu, kody z powłoki — bez własnego seeda)
+    dict(k='szk', short='SZUKAJ', name='SZUKAJ · modele z SZUKAJ / SZUKAJ+ · K8', src='szukaj.html', overlay='overlay_szukaj.js',
+         store='parent', key='', extra=[], noseed=True,
+         szk=dict(title='SZUKAJ · modele z SZUKAJ / SZUKAJ+ · K8', alph=[a + b + c for a in '01' for b in '01' for c in '01'], targets=['x1x'],
+                  key='t50razem_v1_szk', masterVar='T50_MASTER_N', razem='T50 RAZEM',
+                  src=[['SZUKAJ', 't50_szukaj_v1_moje_', False], ['SZUKAJ+', 't50_szukajp_v1_moje_', True]])),
 ]
 
 VER = {'t50x1x.html': r"const APP_VER = '([^']+)'",
@@ -58,6 +64,12 @@ def main():
     seeds, out = {}, []
     for a in APPS:
         html = (SRC / 'apps' / a['src']).read_text()
+        if a.get('noseed'):   # tabela bez własnego ciągu (SZUKAJ): kody czyta z powłoki
+            ov = f"window.__SZK = {json.dumps(a['szk'], ensure_ascii=False)};\n" + (SRC / a['overlay']).read_text()
+            html = html.replace('</body>', f'<script>{common}</script>\n<script>{ov}</script>\n</body>', 1)
+            out.append(dict(k=a['k'], short=a['short'], name=a['name'], ver=re.search(r"const APP_VER = '([^']+)'", html).group(1),
+                            store=a['store'], key=a['key'], extra=a['extra'], hintPrefix=True, seedN=0, html=html))
+            continue
         m = re.search(SEEDS[a['src']], html)
         seed = m.group(1)
         for nr, c in SEED_FIX.get(a['src'], {}).items():

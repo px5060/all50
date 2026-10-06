@@ -95,7 +95,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.10.0';
+const APP_VER = '1.11.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -392,6 +392,7 @@ const seedArr = MASTER_SEED.match(/.{3}/g);
 let added = [];
 (function () { const s = lsGet(LS.added, ''); if (/^(\d{3})*$/.test(s)) for (let i = 0; i < s.length; i += 3) added.push(s.substr(i, 3)); })();
 const allCodes = () => seedArr.concat(added);
+window.__allCodes = allCodes;   // tabela SZUKAJ czyta ciąg z powłoki
 function saveAdded() { if (!lsSet(LS.added, added.join(''))) alert('BŁĄD zapisu pamięci telefonu — zrób eksport JSON!'); }
 // Kody dopisane w innej appce na tej domenie (SZUKAJ / BUST, druga kopia RAZEM — ten sam klucz) → wczytaj, zanim cokolwiek zapiszesz.
 // Bez tego RAZEM otwarty w tle nadpisywał listę swoją starą kopią i „czyścił” kody dopisane gdzie indziej.
@@ -413,6 +414,7 @@ try { if (navigator.storage && navigator.storage.persist) navigator.storage.pers
 function writeAppKeys() {
   const all = allCodes();
   for (const a of APPS) {
+    if (a.store === 'parent') continue;   // SZUKAJ: kody czyta z powłoki
     if (a.store === 'csv') lsSet(a.key, all.join(','));
     else if (a.store === 'full') lsSet(a.key, all.join(''));
     else if (a.store === 'json') lsSet(a.key, JSON.stringify(all));
