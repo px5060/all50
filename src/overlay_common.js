@@ -176,7 +176,7 @@ window.UT = (function () {
     items = [].concat(...items.map(it => [it].concat((it.more || []).map(m => Object.assign({ id: it.id }, m)))));
     return models.map(m => {
       const ns = items.filter(it => { const id = String(it.id); return (id === m.id || id.endsWith('·' + m.id)) && it.p === 4; })
-        .map(it => +((String(it.txt).match(/gra za (\d+)/) || [])[1] || 0)).filter(n => n >= 2);
+        .map(it => +((String(it.txt).match(/gra za (\d+)/) || [])[1] || 0)).filter(n => n >= 2 && n <= 3);   // żółty od 3 wierszy do gry (1 = następny wiersz → pomarańczowy)
       return [...new Set(ns)].sort((a, b) => a - b);
     });
   }

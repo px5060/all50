@@ -439,7 +439,7 @@ function gatherLines() {
     try { r = W(a.k).lines(); } catch (e) {}
     const items = [].concat(...r.sections.map(s => s.items));
     const p1 = items.filter(x => x.p === 1);
-    const soon = [...new Set([].concat(...items.map(x => [x].concat(x.more || []))).filter(x => x.p === 4).map(x => +((String(x.txt).match(/gra za (\d+)/) || [])[1] || 0)).filter(n => n >= 2))].sort((a, b) => a - b);   // gra z pewnym terminem (żółty znaczek)
+    const soon = [...new Set([].concat(...items.map(x => [x].concat(x.more || []))).filter(x => x.p === 4).map(x => +((String(x.txt).match(/gra za (\d+)/) || [])[1] || 0)).filter(n => n >= 2 && n <= 3))].sort((a, b) => a - b);   // gra z pewnym terminem (żółty znaczek)
     return { a, r, soon, bets: p1.length, stake: p1.reduce((s, x) => s + (x.stake || 0), 0), cond: items.filter(x => x.p === 2).length };
   });
 }

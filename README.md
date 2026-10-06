@@ -19,7 +19,7 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   Okna przed START (przygotowanie, „★ START za 1”) i modele bez triggera są zwinięte
   pod przyciskiem **„Modele oczekujące”**. Tapnięcie karty otwiera tabelę modelu, przytrzymanie — wszystkie etykiety.
 - **Gra z pewnym terminem** („gra za N → Nr …”: 1T / 200 / 2T, w T60 TOP5 / TOP7 / BUST): żółty znaczek z liczbą wierszy do gry
-  (np. „3” albo „2,3”) w lewym górnym rogu przycisku tabeli u góry i przycisku modelu w TABELI; na wierszu przed grą przechodzi w pomarańczowy ▼.
+  (tylko 3 i 2 wiersze do gry, np. „3” albo „2,3”) w lewym górnym rogu przycisku tabeli u góry i przycisku modelu w TABELI; na wierszu przed grą przechodzi w pomarańczowy ▼.
 - **TABELA**: model grający na następnym wierszu ma ▼ i pomarańczową ramkę na przycisku, pasek
   „▼ GRA na następnym wierszu …” oraz pomarańczowy nagłówek swojej kolumny w widoku WSZ.
 - Każda zakładka ma ten sam układ co w T60 RAZEM: dolny pasek **GRA · TABELA · STATY**.
