@@ -85,7 +85,9 @@ window.UT = (function () {
   const css = `
 .ut{color:#e8ebf2;font:13px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 .ut-top{padding:6px 0 0}
-.ut-ch{display:flex;gap:4px;overflow-x:auto;padding:6px 0;scrollbar-width:none}
+.ut-ch{display:flex;gap:4px;overflow-x:auto;padding:9px 0 6px 4px;scrollbar-width:none}
+.ut-ch button{position:relative}
+.ut-ch button b.soon{position:absolute;top:-7px;left:-5px;min-width:16px;height:16px;border-radius:8px;background:#FFD700;color:#000;font:700 10px/16px system-ui;padding:0 4px;border:1px solid #fff}
 .ut-ch::-webkit-scrollbar{display:none}
 .ut-ch button{flex:0 0 auto;padding:6px 9px;border-radius:14px;border:1px solid #323a4d;background:#242a38;color:#e8ebf2;font-weight:700;font-size:13px}
 .ut-ch button.on{background:#ff6600;border-color:#ff6600;color:#fff}
@@ -167,6 +169,17 @@ window.UT = (function () {
     return `<td class="${cls}" style="${x.css || ''}">${many}<span class="cl">${esc(x.t)}</span>${x.sub ? `<span class="sub">${esc(x.sub)}</span>` : ''}${extra || ''}</td>`;
   }
   // modele grające na następnym wierszu — z linii GRA tej tabeli (window.T60/T50.lines(): p1 pewna, p2 w toku)
+  // gra z pewnym terminem („gra za N → Nr …”, N ≥ 2) → żółty znaczek z liczbą wierszy do gry (lewy górny róg przycisku modelu)
+  function soonNow(models) {
+    let items = [];
+    try { const W = window.T60 || window.T50; items = [].concat(...W.lines().sections.map(s => s.items)); } catch (e) {}
+    items = [].concat(...items.map(it => [it].concat((it.more || []).map(m => Object.assign({ id: it.id }, m)))));
+    return models.map(m => {
+      const ns = items.filter(it => { const id = String(it.id); return (id === m.id || id.endsWith('·' + m.id)) && it.p === 4; })
+        .map(it => +((String(it.txt).match(/gra za (\d+)/) || [])[1] || 0)).filter(n => n >= 2);
+      return [...new Set(ns)].sort((a, b) => a - b);
+    });
+  }
   function betNow(models) {
     let items = [];
     try { const W = window.T60 || window.T50; items = [].concat(...W.lines().sections.map(s => s.items)); } catch (e) {}
@@ -199,7 +212,8 @@ window.UT = (function () {
     let x = `<div class="ut"><div class="ut-top">${A.top ? A.top() : ''}</div>`;
     // ▼ = model gra na NASTĘPNYM wierszu (z GRA tej tabeli: linia p1); ▷ = gra w toku (p2)
     const BN = betNow(models), bnIds = models.filter((m, k) => BN[k] === 1).map(m => m.id);
-    x += `<div class="ut-ch">${['ALL', ...models.map(m => m.id)].map((id, k) => { const b = k ? BN[k - 1] : (bnIds.length ? 1 : 0); return `<button data-m="${esc(id)}" class="${S.sel === id ? 'on' : ''}${b ? ' bn' + b : ''}">${b === 1 ? '▼ ' : b === 2 ? '▷ ' : ''}${id === 'ALL' ? 'WSZ' : esc(id)}</button>`; }).join('')}</div>`;
+    const SN = soonNow(models), snAll = [...new Set([].concat(...SN))].sort((a, b) => a - b);
+    x += `<div class="ut-ch">${['ALL', ...models.map(m => m.id)].map((id, k) => { const b = k ? BN[k - 1] : (bnIds.length ? 1 : 0), sn = k ? SN[k - 1] : snAll; return `<button data-m="${esc(id)}" class="${S.sel === id ? 'on' : ''}${b ? ' bn' + b : ''}">${b === 1 ? '▼ ' : b === 2 ? '▷ ' : ''}${id === 'ALL' ? 'WSZ' : esc(id)}${sn.length ? `<b class="soon" title="gra za … wierszy">${sn.join(',')}</b>` : ''}</button>`; }).join('')}</div>`;
     if (bnIds.length) x += `<div class="ut-bn">▼ GRA na następnym wierszu Nr ${(N + 1).toLocaleString('pl-PL')}: <b>${bnIds.map(esc).join(' · ')}</b></div>`;
     x += `<div class="ut-tool"><button id="utEv" class="${S.onlyEv ? 'on' : ''}">tylko zdarzenia</button>${A.tools ? A.tools() : ''}<button id="utEnd">↓ koniec</button><button id="utLeg" class="${S.leg ? 'on' : ''}">legenda ${S.leg ? '▴' : '▾'}</button></div>`;
     if (S.leg) x += `<div class="ut-leg">${A.legend()}<br><b>Kod</b> (widok modelu): <span style="${CC.step}">STEP</span><span style="${CC.trig}">TRIGGER</span><span style="${CC.win}">WIN</span> — kod, który w tym modelu tworzy step, trigger albo wygrany zakład. Tapnij wiersz → pełny opis.</div>`;

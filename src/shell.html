@@ -32,6 +32,8 @@ html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui
 #chips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 #chips button.glow{background:#FF6600;border-color:#fff;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
 @keyframes mjg{from{box-shadow:0 0 0 0 #ff660000}to{box-shadow:0 0 10px 3px #ff6600}}
+#chips button.sn{padding-left:22px}
+#chips button b.soon{position:absolute;top:-3px;left:-3px;min-width:16px;height:16px;border-radius:8px;background:#FFD700;color:#000;font:700 10px/16px system-ui;padding:0 4px;border:1px solid #fff}
 #chips button i{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:8px;background:#FF6600;color:#fff;font:700 10px/16px system-ui;font-style:normal;padding:0 4px;border:1px solid #fff}
 #chips button.on i{background:#fff;color:#FF6600}
 #home{padding:10px 10px 30px}
@@ -403,10 +405,10 @@ function onReady() {
 function renderChips() {
   const L = gatherLines();
   $('chips').innerHTML = [['gra', 'GRA'], ['moje', 'MOJE'], ...APPS.map(a => [a.k, a.short]), ['dane', 'DANE']].map(([k, t]) => {
-    const n = k === 'moje' ? MOJE.list().length : (L.find(x => x.a.k === k) || {}).bets || 0;
+    const n = k === 'moje' ? MOJE.list().length : (L.find(x => x.a.k === k) || {}).bets || 0, sn = (L.find(x => x.a.k === k) || {}).soon || [];
     if (k === 'moje' && cur === 'moje') lsSet(MOJE_SEEN, String(allCodes().length));   // jesteś w MOJE → zakład widziany
     const mb = k === 'moje' ? mojeBets() : 0, glow = mb && k !== cur && lsGet(MOJE_SEEN, '') !== String(allCodes().length);
-    return `<button data-k="${k}" class="${k === cur ? 'on' : ''}${glow ? ' glow' : ''}">${t}${mb ? ' ▼' + mb : ''}${n ? `<i>${n}</i>` : ''}</button>`;
+    return `<button data-k="${k}" class="${k === cur ? 'on' : ''}${glow ? ' glow' : ''}${sn.length ? ' sn' : ''}">${t}${mb ? ' ▼' + mb : ''}${sn.length ? `<b class="soon">${sn.join(',')}</b>` : ''}${n ? `<i>${n}</i>` : ''}</button>`;
   }).join('');
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => show(b.dataset.k));
   $('hdrN').innerHTML = `n=${fmtN(allCodes().length)}${added.length ? `<br>+${added.length}` : ''}`;
@@ -437,7 +439,8 @@ function gatherLines() {
     try { r = W(a.k).lines(); } catch (e) {}
     const items = [].concat(...r.sections.map(s => s.items));
     const p1 = items.filter(x => x.p === 1);
-    return { a, r, bets: p1.length, stake: p1.reduce((s, x) => s + (x.stake || 0), 0), cond: items.filter(x => x.p === 2).length };
+    const soon = [...new Set([].concat(...items.map(x => [x].concat(x.more || []))).filter(x => x.p === 4).map(x => +((String(x.txt).match(/gra za (\d+)/) || [])[1] || 0)).filter(n => n >= 2))].sort((a, b) => a - b);   // gra z pewnym terminem (żółty znaczek)
+    return { a, r, soon, bets: p1.length, stake: p1.reduce((s, x) => s + (x.stake || 0), 0), cond: items.filter(x => x.p === 2).length };
   });
 }
 function lineHtml(ak, x) {
