@@ -358,6 +358,21 @@ let added = [];
 (function () { const s = lsGet(LS.added, ''); if (/^(\d{3})*$/.test(s)) for (let i = 0; i < s.length; i += 3) added.push(s.substr(i, 3)); })();
 const allCodes = () => seedArr.concat(added);
 function saveAdded() { if (!lsSet(LS.added, added.join(''))) alert('BŁĄD zapisu pamięci telefonu — zrób eksport JSON!'); }
+// Kody dopisane w innej appce na tej domenie (SZUKAJ / BUST, druga kopia RAZEM — ten sam klucz) → wczytaj, zanim cokolwiek zapiszesz.
+// Bez tego RAZEM otwarty w tle nadpisywał listę swoją starą kopią i „czyścił” kody dopisane gdzie indziej.
+function syncAdded(quiet) {
+  const s = lsGet(LS.added, '');
+  if (!/^(\d{3})*$/.test(s) || s === added.join('')) return false;
+  const prev = added.length; added = s.match(/.{3}/g) || [];
+  if (typeof ready === 'number' && ready >= APPS.length) { writeAppKeys(); try { checkSync(); refresh(); } catch (e) { console.error(e); } }
+  if (!quiet) toast(`Wczytano kody z innej appki: n=${fmtN(SEED_N + added.length)} (${added.length - prev >= 0 ? '+' : '−'}${Math.abs(added.length - prev)})`);
+  return true;
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncAdded(); });
+window.addEventListener('focus', () => syncAdded());
+window.addEventListener('storage', e => { if (e.key === LS.added) syncAdded(); });
+// trwała pamięć: przeglądarka nie usunie danych appki (kodów, MOJE) przy braku miejsca
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
 // ---- zapis kodów do kluczy każdej tabeli (RAZEM = jedyne źródło prawdy) ----
 function writeAppKeys() {
@@ -504,6 +519,7 @@ function toast(html, ms = 3500) {
 }
 $('toast').onclick = () => $('toast').classList.remove('on');
 function addCode(c) {
+  syncAdded();   // czytaj → zmień → zapisz (nie gub kodów dopisanych w innej appce)
   added.push(c); saveAdded();
   const N = allCodes().length, parts = [];
   for (const a of APPS) {
@@ -521,6 +537,7 @@ function addCode(c) {
   if (lsGet(LS.autobk, '1') === '1' && added.length % 10 === 0) exportJSON(true);
 }
 function undo() {
+  syncAdded();
   if (!added.length) { toast('Brak dopisanych kodów do cofnięcia (kody z pliku są chronione).'); return; }
   const N = allCodes().length, c = added[added.length - 1];
   if (!confirm(`Cofnąć Nr ${N}: ${c}?\n(cofa we wszystkich tabelach)`)) return;
@@ -566,6 +583,7 @@ function exportJSON(auto) {
   if (homeView === 'dane' && cur === 'dane') renderDane();
 }
 function importFile(d, fname) {
+  syncAdded(true);
   const raw = Array.isArray(d) ? d : d && d.codes;
   if (!Array.isArray(raw)) throw new Error('w pliku nie ma listy kodów (codes)');
   const arr = raw.map(x => String(x == null ? '' : x).trim().padStart(3, '0'));
