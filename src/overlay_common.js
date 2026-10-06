@@ -108,7 +108,8 @@ window.__MJ = window.__MJ || (function () {
       Object.keys(T).forEach(z => T[z] += r[z]);
       const lab = !k && a.lab ? `<span class="mu">${q(a.lab(kk))}</span><br>` : '';
       const ks = Object.keys(S).sort((p, q) => p - q).map(s => `k${s}${S[s] > 1 ? '×' + S[s] : ''}`).join(' ');
-      return `<tr><td>${lab}<b>${q(id)}</b></td><td>${r.n}${r.w ? ` <span class="pos">✔${r.w}</span>` : ''}${r.l ? ` <span class="neg">✗${r.l}</span>` : ''}${r.c ? ` <span class="mu">⏳${r.c}</span>` : ''}</td><td class="ks">${ks}</td><td>${f(r.put)}</td><td>${zl(r.wyn)}</td></tr>`;
+      const gone = kk === 'szk' && a.card && !a.card(kk, id);
+      return `<tr><td>${lab}<b>${q(id)}</b>${gone ? ' <span class="mu">(usunięty)</span>' : ''}</td><td>${r.n}${r.w ? ` <span class="pos">✔${r.w}</span>` : ''}${r.l ? ` <span class="neg">✗${r.l}</span>` : ''}${r.c ? ` <span class="mu">⏳${r.c}</span>` : ''}</td><td class="ks">${ks}</td><td>${f(r.put)}</td><td>${zl(r.wyn)}</td></tr>`;
     }).join('');
     const head = `MOJE ZAKŁADY — podsumowanie${k ? '' : ' (wszystkie tabele)'}`;
     if (!all.length) return `<div class="mj-sum"><h2>${head}</h2><div class="mu">Brak zapisanych zakładów${k ? ' w tej tabeli' : ''}. Zakład zapisujesz w oknie statystyk modelu (przytrzymaj kartę na GRA albo wiersz w TABELI) → MOJE ZAKŁADY → „Zapisz zakład”.</div></div>`;
