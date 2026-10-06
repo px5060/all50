@@ -60,7 +60,7 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   **„⇢ Dodaj do T50 RAZEM — zakładka SZUKAJ”** (ten sam przycisk usuwa), albo w RAZEM: SZUKAJ → **MODELE** → „＋ dodaj” z MOJE GRY appek SZUKAJ / SZUKAJ+.
   Silnik 1:1 z SZUKAJ+ (STEP ×x → [STEP2] → TRIGGER ×n → zakład +off, progresja trwała K8 8 · 8 · 16 · … · 512 zł, kurs 3) — zgodność sprawdzona na 800 modelach pul.
   Karty idą na wspólny ekran GRA, do MOJE GRY i MOJE ZAKŁADY; TABELA i STATY jak w innych tabelach (+ Ocena GRAĆ / REZERWA / ODRZUĆ).
-  Lista w telefonie: klucz `t50razem_v1_szk` (w T60 RAZEM `t60razem_v1_szk`, cele x1x i xx1). ✕ w MODELE usuwa model tylko z RAZEM.
+  Lista w telefonie: klucz `t50razem_v1_szk` (w T60 RAZEM `t60razem_v1_szk`, cele x1x i xx1). ✕ w MODELE albo „✕ Usuń ten model z RAZEM” w oknie statystyk (przytrzymanie karty / wiersza) usuwa model tylko z RAZEM.
 - **DANE**: eksport i import JSON, auto-kopia co 10 kodów, test zgodności silników.
   Eksport ma format TRÓJKI (`app: v13_troika`), więc czyta go T50 x1x (import z TRÓJKI) i skrypty PC.
 - Wspólny ciąg to seed T50 x1x 2.0.0 (15 227 kodów od Nr 1) plus kody dopisane w RAZEM

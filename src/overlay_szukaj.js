@@ -344,6 +344,7 @@
   const API = {
     count: () => N, last: () => codes[N - 1], seedN: 0,
     sync, add, undo: sync, lines, cards, go, render: () => F.render(F.view),
+    remove: id => { const md = L.find(x => x.id === id); if (!md) return false; setList(getList().filter(e => spec(e.m, e.tgt) !== spec(md.m, md.tgt))); changed(); return true; },
     rowRes: (id, r) => { const md = L.find(x => x.id === id); if (!md || r >= N) return null; const k = R(md).lb.K[r]; return k === 6 ? 'win' : k === 7 || k === 8 ? 'lost' : 'none'; },
     track: (id, from) => { const md = L.find(x => x.id === id); if (!md) return null; const K = R(md).lb.K; for (let i = Math.max(0, from); i < N; i++) if (K[i] === 6 || K[i] === 8) return { win: K[i] === 6, i, t: A.cell(L.indexOf(md), i).gra.t }; return null; },
     selfTest: () => {
