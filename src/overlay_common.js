@@ -228,7 +228,7 @@ window.UT = (function () {
     try { const W = window.T60 || window.T50; items = [].concat(...W.lines().sections.map(s => s.items)); } catch (e) {}
     return models.map(m => {
       let best = 9;
-      items.forEach(it => { const id = String(it.id); if (id === m.id || id.endsWith('·' + m.id)) best = Math.min(best, it.p); });
+      items.forEach(it => { const id = String(it.id); if (id === m.id || id.endsWith('·' + m.id) || (it.alias || []).includes(m.id)) best = Math.min(best, it.p); });   // alias: np. COMBO = T1 +8 / +9
       return best === 1 ? 1 : best === 2 ? 2 : 0;
     });
   }
