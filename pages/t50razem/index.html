@@ -97,7 +97,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.14.0';
+const APP_VER = '1.15.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -115,8 +115,9 @@ const MOJE = { key: 't50razem_v1_moje',
   // dotknięcie zapisanego zakładu → TABELA modelu na wierszu zakładu
   // dotknięcie zapisanego zakładu → MOJE: karta modelu na chwilę w niebieskiej ramce
   goBet(k, id, row) { if (!APPS.some(a => a.k === k)) return; if (k === 'szk' && !this.card(k, id)) { try { toast(`Model <b>${esc(id)}</b> usunięty z zakładki SZUKAJ`); } catch (e) {} return; }
-    this.addQuiet(k, id); flashMJ = { k, id, until: Date.now() + 2600 }; show('moje');
-    setTimeout(() => { const c = flashCard(); if (c) c.scrollIntoView({ block: 'center' }); }, 60);
+    // model w MOJE → ramka w MOJE; usunięty z MOJE → zakładka GRA i ramka na karcie modelu (zwinięte „Modele oczekujące” rozwijam)
+    const inMoje = this.has(k, id); flashMJ = { k, id, until: Date.now() + 2600 }; show(inMoje ? 'moje' : 'gra');
+    setTimeout(() => { const c = flashCard(true); if (c) c.scrollIntoView({ block: 'center' }); else { flashMJ = null; goModel(k, id, row == null || isNaN(row) ? null : row + 1); } }, 60);
     setTimeout(() => document.querySelectorAll('#home .ug-mc.bflash').forEach(c => c.classList.remove('bflash')), 2650); },
   // model z zakładki SZUKAJ: usuń z RAZEM (lista w tabeli SZUKAJ + MOJE GRY); w appce SZUKAJ zostaje
   szkDel(id) {
@@ -553,10 +554,17 @@ function renderGraHome() {
     if (a.k === 'trojka') { try { note = '<b>TRÓJKA</b> · ' + W(a.k).note(); } catch (e) {} }
   });
   UG.render($('home'), { N: allCodes().length, sections, note, last: allCodes().slice(-8), idleSub: 'Żadna tabela nie gra na następnym wierszu.' });
+  flashCard();
 }
 // ---- MOJE GRY: karty wybranych modeli (bieżący stan z tabeli) + pierwsze rozstrzygnięcie od chwili dodania ----
 let flashMJ = null;   // niebieska ramka karty w MOJE po dotknięciu zakładu
-function flashCard() { if (!flashMJ || Date.now() > flashMJ.until) return null; const c = [...document.querySelectorAll('#home .ug-mc')].find(x => x.dataset.app === flashMJ.k && x.dataset.mid === flashMJ.id); if (c) c.classList.add('bflash'); return c; }
+function flashCard(open) {
+  if (!flashMJ || Date.now() > flashMJ.until) return null;
+  const all = () => [...document.querySelectorAll('#home .ug-mc')].filter(x => x.dataset.app === flashMJ.k && x.dataset.mid === flashMJ.id);
+  let L = all(), c = L.find(x => !x.closest('[hidden]'));
+  if (!c && L.length && open) { const wb = document.querySelector('#home .ug-wt'); if (wb) { wb.click(); L = all(); c = L.find(x => !x.closest('[hidden]')); } }   // karta w zwiniętych „Modele oczekujące”
+  c = c || null; if (c) c.classList.add('bflash'); return c;
+}
 function renderMoje() {
   MOJE.ensureFromBets();
   const L = MOJE.list(), N = allCodes().length, cards = [];
