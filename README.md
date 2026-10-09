@@ -53,7 +53,7 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 - **MOJE ZAKŁADY** (w oknie statystyk modelu): zapis zakładu zagranego naprawdę — Nr wiersza, krok, postawiona kwota
   (domyślnie następny wiersz i krok / stawka z linii „GRA na następnym wierszu”). Wynik z tabeli modelu: ✔ WIN (+2 × stawka, kurs 3),
   ✗ przegrany, „czeka” (wiersz jeszcze nie padł), „model nie grał” (w tym wierszu model nie miał zakładu). Suma: postawione i wynik;
-  podsumowanie także na karcie w MOJE. Wpisy usuwa ✕. Zapis w telefonie (klucz `t50razem_v1_bets`).
+  podsumowanie także na karcie w MOJE. Wpisy usuwa ✕. Dotknięcie zakładu (lista w oknie modelu, podsumowanie w STATY, „Wszystkie zakłady” w MOJE) → TABELA modelu na wierszu zakładu. Zapis w telefonie (klucz `t50razem_v1_bets`).
 - **Podsumowanie MOJE ZAKŁADY** na dole zakładki STATY każdej tabeli: Model · zakł. (✔ WIN / ✗ przegrane / ⏳ czeka) · kroki (np. k2×2) ·
   postawione zł · wynik zł, wiersz Σ i tabela „Według kroku”. W zakładce MOJE ta sama tabela dla wszystkich tabel naraz.
 - **SZUKAJ** (zakładka-tabela): modele przeniesione z appek **SZUKAJ** i **SZUKAJ+**. W tamtej appce przytrzymaj kartę modelu →

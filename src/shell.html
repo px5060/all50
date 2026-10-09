@@ -95,7 +95,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.12.2';
+const APP_VER = '1.13.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -110,6 +110,10 @@ const MOJE = { key: 't50razem_v1_moje',
   saveBets(a) { try { localStorage.setItem(this.bkey, JSON.stringify(a)); } catch (e) {} },
   N() { return allCodes().length; },
   lab(k) { const x = APPS.find(z => z.k === k); return x ? x.short : k; },
+  // dotknięcie zapisanego zakładu → TABELA modelu na wierszu zakładu
+  goBet(k, id, row) { if (!APPS.some(a => a.k === k)) return; if (k === 'szk' && !this.card(k, id)) { try { toast(`Model <b>${esc(id)}</b> usunięty z zakładki SZUKAJ`); } catch (e) {} return; } goModel(k, id, row == null || isNaN(row) ? null : row + 1);
+    // tabela modelu ustawiona na wierszu zakładu (część tabel przy przejściu z GRA pokazuje koniec tabeli) — przewinięcie + mignięcie wiersza
+    if (row != null && !isNaN(row)) setTimeout(() => { try { const fw = $('fr_' + k).contentWindow, T = fw.T50 || fw.T60; if (fw.UT && fw.UT.S.sel === id) { fw.UT.open(id, row); T.render(); } } catch (e) {} }, 150); },
   // model z zakładki SZUKAJ: usuń z RAZEM (lista w tabeli SZUKAJ + MOJE GRY); w appce SZUKAJ zostaje
   szkDel(id) {
     // zakłady usuwanego modelu: zapamiętaj wynik (po usunięciu tabela go już nie policzy)
@@ -152,7 +156,16 @@ window.__MJ = window.__MJ || (function () {
     + '.mj-sum{margin:8px 0;padding:7px 8px;border:1px solid #7030A0;border-radius:10px;background:#1b1f2a;color:#fff;font:12px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.mj-sum h2{font-size:13px;margin:0 0 5px;color:#ffb27a}'
     + '.mj-sum table{width:100%!important;border-collapse:collapse;table-layout:auto!important}.mj-sum th,.mj-sum td{width:auto!important;max-width:none!important;overflow:visible!important;position:static!important}.mj-sum th,.mj-sum td{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif!important;text-transform:none!important;letter-spacing:0!important;background:none!important;color:#fff!important;font-size:12px}.mj-sum th{color:#8b93a7!important;font-size:10.5px}.mj-sum td .pos{color:#5fd38a!important}.mj-sum td .neg{color:#ff8a8a!important}.mj-sum td .mu{color:#8b93a7!important}.mj-sum td.ks{color:#c9cfdc!important;font-size:11px}.mj-sum th{text-transform:none;letter-spacing:0;font-size:10.5px;color:#8b93a7;font-weight:600;text-align:right;padding:3px 3px;border-bottom:1px solid #323a4d}.mj-sum td{padding:3px 3px;border-bottom:1px solid #2a3142;text-align:right;white-space:nowrap}'
     + '.mj-sum th:first-child,.mj-sum td:first-child{text-align:left}.mj-sum th{white-space:normal!important}.mj-sum td:first-child{white-space:normal!important}.mj-sum td.ks{white-space:normal;text-align:left;font-size:11px;color:#c9cfdc;min-width:70px}.mj-sum th.ks{text-align:left}.mj-sum .pos{color:#5fd38a;font-weight:700}.mj-sum .neg{color:#ff8a8a;font-weight:700}.mj-sum tr.s td{font-weight:800;border-top:1px solid #7030A0}.mj-sum .mu{color:#8b93a7;font-size:10.5px;margin-top:5px}';
+  st.textContent += '.mj-go{cursor:pointer}.mj-sum tr.mj-go:active td,.mj-r .mj-go:active{background:rgba(255,102,0,.25)!important}.mj-r .mj-go{text-decoration:underline dotted #8b93a7}';
   document.head.appendChild(st);
+  // dotknięcie zakładu / wiersza podsumowania → TABELA modelu na wierszu zakładu (powłoka: MOJE.goBet)
+  document.addEventListener('click', e => {
+    const t = e.target && e.target.closest ? e.target.closest('[data-mjgo]') : null; if (!t) return;
+    const a = api(); if (!a || !a.goBet) return;
+    e.stopPropagation(); e.preventDefault();
+    const pop = t.closest('.ut-pop,.ug-pop,#statPop'); if (pop) pop.remove();
+    a.goBet(t.dataset.k, t.dataset.id, t.dataset.row === '' || t.dataset.row == null ? null : +t.dataset.row);
+  }, true);
   const TXT = on => on ? '■ W MOJE GRY — usuń z listy' : '▶ Gram / obserwuję — dodaj do MOJE GRY';
   const q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
   function html(k, id) {
@@ -172,7 +185,7 @@ window.__MJ = window.__MJ || (function () {
     const rows = L.map(b => {
       put += b.stake; const v = b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0; wyn += v;
       const r = b.res === 'win' ? `✔ WIN +${2 * b.stake} zł` : b.res === 'lost' ? `✗ −${b.stake} zł` : b.res === 'none' ? '? model nie grał w tym wierszu' : 'czeka na wynik';
-      return `<div class="mj-r"><span>Nr ${(b.row + 1).toLocaleString('pl-PL')} · k${b.step} · <b>${b.stake} zł</b></span><span class="${b.res === 'win' ? 'pos' : b.res === 'lost' ? 'neg' : ''}">${r}</span><button class="mj-del" data-t="${b.t}" title="usuń wpis">✕</button></div>`;
+      return `<div class="mj-r"><span class="mj-go" data-mjgo="1" data-k="${q(k)}" data-id="${q(id)}" data-row="${b.row}">Nr ${(b.row + 1).toLocaleString('pl-PL')} · k${b.step} · <b>${b.stake} zł</b> ›</span><span class="${b.res === 'win' ? 'pos' : b.res === 'lost' ? 'neg' : ''}">${r}</span><button class="mj-del" data-t="${b.t}" title="usuń wpis">✕</button></div>`;
     }).join('');
     return `<div class="mj-bets" data-mjk="${q(k)}" data-mjid="${q(id)}"><div class="mj-lb">MOJE ZAKŁADY${L.length ? ` · ${L.length} · postawione ${put} zł · wynik ${wyn >= 0 ? '+' : '−'}${Math.abs(wyn)} zł` : ' — zapisz zakład, który naprawdę zagrałeś'}</div>${rows}
       <div class="mj-f"><label>Nr wiersza<input type="number" class="mj-nr" inputmode="numeric" value="${N + 1}"></label><label>krok<input type="number" class="mj-k" inputmode="numeric" min="1" max="8" value="${dk}"></label><label>postawione zł<input type="number" class="mj-zl" inputmode="numeric" min="1" value="${ds}"></label><button class="mj-save">Zapisz zakład</button></div></div>`;
@@ -213,7 +226,7 @@ window.__MJ = window.__MJ || (function () {
     all.forEach(b => { const x = b.k + '\u0001' + b.id; if (!keys.includes(x)) keys.push(x); });
     const f = n => (+n).toLocaleString('pl-PL'), zl = v => `<span class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : v < 0 ? '−' : ''}${f(Math.abs(v))}</span>`;
     const val = b => b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0;
-    const T = { n: 0, w: 0, l: 0, c: 0, put: 0, wyn: 0 }, KS = {};
+    const T = { n: 0, w: 0, l: 0, c: 0, put: 0, wyn: 0 }, KS = {}; const allB = [];
     const rows = keys.map(x => {
       const [kk, id] = x.split('\u0001'), L = a.betList(kk, id), S = {}, r = { n: L.length, w: 0, l: 0, c: 0, put: 0, wyn: 0 };
       L.forEach(b => {
@@ -222,10 +235,12 @@ window.__MJ = window.__MJ || (function () {
         const q2 = KS[b.step] = KS[b.step] || { n: 0, w: 0, put: 0, wyn: 0 }; q2.n++; q2.put += b.stake; q2.wyn += v; if (b.res === 'win') q2.w++;
       });
       Object.keys(T).forEach(z => T[z] += r[z]);
+      L.forEach(b => allB.push(Object.assign({ kk, id }, b)));
       const lab = !k && a.lab ? `<span class="mu">${q(a.lab(kk))}</span><br>` : '';
       const ks = Object.keys(S).sort((p, q) => p - q).map(s => `k${s}${S[s] > 1 ? '×' + S[s] : ''}`).join(' ');
       const gone = kk === 'szk' && a.card && !a.card(kk, id);
-      return `<tr><td>${lab}<b>${q(id)}</b>${gone ? ' <span class="mu">(usunięty)</span>' : ''}</td><td>${r.n}${r.w ? ` <span class="pos">✔${r.w}</span>` : ''}${r.l ? ` <span class="neg">✗${r.l}</span>` : ''}${r.c ? ` <span class="mu">⏳${r.c}</span>` : ''}</td><td class="ks">${ks}</td><td>${f(r.put)}</td><td>${zl(r.wyn)}</td></tr>`;
+      const lastRow = L.length ? L[L.length - 1].row : '';
+      return `<tr class="mj-go" data-mjgo="1" data-k="${q(kk)}" data-id="${q(id)}" data-row="${lastRow}"><td>${lab}<b>${q(id)}</b>${gone ? ' <span class="mu">(usunięty)</span>' : ''}</td><td>${r.n}${r.w ? ` <span class="pos">✔${r.w}</span>` : ''}${r.l ? ` <span class="neg">✗${r.l}</span>` : ''}${r.c ? ` <span class="mu">⏳${r.c}</span>` : ''}</td><td class="ks">${ks}</td><td>${f(r.put)}</td><td>${zl(r.wyn)}</td></tr>`;
     }).join('');
     const head = `MOJE ZAKŁADY — podsumowanie${k ? '' : ' (wszystkie tabele)'}`;
     if (!all.length) return `<div class="mj-sum"><h2>${head}</h2><div class="mu">Brak zapisanych zakładów${k ? ' w tej tabeli' : ''}. Zakład zapisujesz w oknie statystyk modelu (przytrzymaj kartę na GRA albo wiersz w TABELI) → MOJE ZAKŁADY → „Zapisz zakład”.</div></div>`;
@@ -233,7 +248,9 @@ window.__MJ = window.__MJ || (function () {
     return `<div class="mj-sum"><h2>${head}</h2><table><thead><tr><th>Model</th><th>zakł.</th><th class="ks">kroki</th><th>postawione zł</th><th>wynik zł</th></tr></thead><tbody>${rows}`
       + `<tr class="s"><td>Σ</td><td>${T.n}${T.w ? ` <span class="pos">✔${T.w}</span>` : ''}${T.l ? ` <span class="neg">✗${T.l}</span>` : ''}${T.c ? ` <span class="mu">⏳${T.c}</span>` : ''}</td><td></td><td>${f(T.put)}</td><td>${zl(T.wyn)}</td></tr></tbody></table>`
       + `<h2 style="margin-top:8px">Według kroku</h2><table><thead><tr><th>krok</th><th>zakł.</th><th>postawione zł</th><th>wynik zł</th></tr></thead><tbody>${kRows}</tbody></table>`
-      + `<div class="mu">✔ WIN = +2 × stawka (kurs 3) · ✗ przegrany = −stawka · ⏳ czeka na wynik albo model nie grał w tym wierszu (0 zł).</div></div>`;
+      + (k ? '' : `<h2 style="margin-top:8px">Wszystkie zakłady (najnowsze u góry) · dotknij → tabela modelu</h2><table><tbody>${allB.sort((x, y) => y.row - x.row || y.t - x.t).map(b => { const v = val(b);
+          return `<tr class="mj-go" data-mjgo="1" data-k="${q(b.kk)}" data-id="${q(b.id)}" data-row="${b.row}"><td>Nr ${f(b.row + 1)}<br><span class="mu">${q(a.lab ? a.lab(b.kk) : b.kk)} · ${q(b.id)}</span></td><td class="ks">k${b.step} · ${f(b.stake)} zł</td><td>${b.res === 'win' ? '<span class="pos">✔ WIN</span>' : b.res === 'lost' ? '<span class="neg">✗</span>' : '<span class="mu">⏳</span>'}</td><td>${zl(v)} ›</td></tr>`; }).join('')}</tbody></table>`)
+      + `<div class="mu">Dotknij model albo zakład → TABELA tego modelu na wierszu zakładu. ✔ WIN = +2 × stawka (kurs 3) · ✗ przegrany = −stawka · ⏳ czeka na wynik albo model nie grał w tym wierszu (0 zł).</div></div>`;
   }
   function mount(el, k) { if (!el) return; el.querySelectorAll('.mj-sum').forEach(x => x.remove()); const h = sum(k); if (!h) return; const t = document.createElement('div'); t.innerHTML = h; el.appendChild(t.firstElementChild); }
   return { html, bets, bind, frameK, sum, mount };
