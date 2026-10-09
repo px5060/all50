@@ -130,7 +130,7 @@ window.__MJ = window.__MJ || (function () {
       + `<h2 style="margin-top:8px">Według kroku</h2><table><thead><tr><th>krok</th><th>zakł.</th><th>postawione zł</th><th>wynik zł</th></tr></thead><tbody>${kRows}</tbody></table>`
       + (k ? '' : `<h2 style="margin-top:8px">Wszystkie zakłady (najnowsze u góry) · dotknij → tabela modelu</h2><table><tbody>${allB.sort((x, y) => y.row - x.row || y.t - x.t).map(b => { const v = val(b);
           return `<tr class="mj-go" data-mjgo="1" data-k="${q(b.kk)}" data-id="${q(b.id)}" data-row="${b.row}"><td>Nr ${f(b.row + 1)}<br><span class="mu">${q(a.lab ? a.lab(b.kk) : b.kk)} · ${q(b.id)}</span></td><td class="ks">k${b.step} · ${f(b.stake)} zł</td><td>${b.res === 'win' ? '<span class="pos">✔ WIN</span>' : b.res === 'lost' ? '<span class="neg">✗</span>' : '<span class="mu">⏳</span>'}</td><td>${zl(v)} ›</td></tr>`; }).join('')}</tbody></table>`)
-      + `<div class="mu">Dotknij model albo zakład → TABELA tego modelu na wierszu zakładu. ✔ WIN = +2 × stawka (kurs 3) · ✗ przegrany = −stawka · ⏳ czeka na wynik albo model nie grał w tym wierszu (0 zł).</div></div>`;
+      + `<div class="mu">Zapisany zakład dodaje model do MOJE GRY. Dotknij model albo zakład → podświetlę ten model w MOJE GRY. ✔ WIN = +2 × stawka (kurs 3) · ✗ przegrany = −stawka · ⏳ czeka na wynik albo model nie grał w tym wierszu (0 zł).</div></div>`;
   }
   function mount(el, k) { if (!el) return; el.querySelectorAll('.mj-sum').forEach(x => x.remove()); const h = sum(k); if (!h) return; const t = document.createElement('div'); t.innerHTML = h; el.appendChild(t.firstElementChild); }
   return { html, bets, bind, frameK, sum, mount };
