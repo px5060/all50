@@ -57,9 +57,10 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
 - **MOJE → w grze** (RAZEM 50 i 60): druga podzakładka obok „moje gry”. Trafia tu model, którego ostatni zapisany zakład
   nie wszedł (przegrany krok < 8), a model usunięto z MOJE — progresja trwa, następny zakład to kolejny krok. Model zostaje
   do WIN albo BUST (potem w zwiniętej liście „Zakończone po moim przegranym zakładzie”: ✔ WIN bez mojego zakładu / ✖ BUST).
-  Grupy: **▼ TERAZ** (gra na następnym wierszu), **● NIEBAWEM**, **W GRZE** (kolejny krok później). Znacznik nad podzakładką
-  „w grze” i żółty znaczek na przycisku MOJE: ile modeli w grze gra niebawem; ▼ i świecenie MOJE także przy grze na następnym
-  wierszu. NIEBAWEM zależy od tabeli: 1T / 200 / 2T / TOP5 / TOP7 / BUST / SZUKAJ — TRIGGER już był i zakład za 2–3 wiersze
+  Grupy: **▼ TERAZ** (gra na następnym wierszu), **● NIEBAWEM** (na zielono), **W GRZE** (kolejny krok później). **Zielony numer
+  w kółku** na przycisku MOJE i nad podzakładką „w grze”: ile modeli w grze zagra niebawem kolejny krok (pomarańczowe ▼n i
+  świecenie MOJE — gra na następnym wierszu). Po wpisaniu kodu komunikat pokazuje zielony pasek „● W GRZE NIEBAWEM” (model,
+  mój kolejny krok, kiedy) i pomarańczowy „▼ W GRZE — … NA NASTĘPNYM WIERSZU”, z wibracją — żeby nie przegapić kolejnego kroku. NIEBAWEM zależy od tabeli: 1T / 200 / 2T / TOP5 / TOP7 / BUST / SZUKAJ — TRIGGER już był i zakład za 2–3 wiersze
   (albo TRIGGER na następnym wierszu da zakład najwyżej za 3 wiersze); TRÓJKA — w cyklu gry był 1. kod pary, jeszcze jeden
   i gra na następnym wierszu; PIKOFF / 2-SLOT — okno w grze czeka na kod BUILDUP (po nim sloty); MIX3 — okno w grze czeka na HIT.
   ✕ ukrywa model (wraca przy kolejnym przegranym zakładzie), „przywróć ukryte” cofa. Klucze: `t50razem_v1_moje_wgx`, `t50razem_v1_moje_sub`.

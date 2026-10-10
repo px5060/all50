@@ -76,12 +76,14 @@ table.stt td{padding:5px 4px;border-bottom:1px solid var(--ln)}table.stt td:last
 #loading{padding:30px 16px;text-align:center;color:var(--mu)}
 input[type=file]{display:none}
 .sw{display:flex;align-items:center;gap:8px;margin:8px 0}
-.msub{display:flex;gap:8px;margin:16px 0 10px}
+.msub{display:flex;gap:10px;margin:12px 4px 10px}
 .msub button{position:relative;flex:1;border:1px solid var(--ln);background:var(--p2);color:var(--tx);border-radius:14px;padding:8px 10px;font-size:13.5px;font-weight:700}
 .msub button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.msub .bdg{position:absolute;top:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:9px;padding:0 8px;font:800 11px/18px system-ui,sans-serif;border:1px solid #fff}
-.msub .bdg.soon{background:#FFD700;color:#000}
-.msub .bdg.now{background:#FF6600;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
+.msub .bdg{position:absolute;top:-9px;min-width:22px;height:22px;border-radius:11px;padding:0 5px;font:800 12px/19px system-ui,sans-serif;border:1.5px solid #fff;text-align:center}
+.msub .bdg.soon{left:-6px;background:#00B050;color:#fff}
+.msub .bdg.now{right:-6px;background:#FF6600;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
+#chips button b.soon.wgs{background:#00B050;color:#fff}
+.wgv .ug-st.wgs{background:rgba(0,176,80,.18);color:#b6f5cf;border:1.5px dashed #00B050}.wgv .ug-mc.wgsoon{border-left-color:#00B050}.wgv .ug-sh b.wgs{color:#5fd38a}
 .wgv .ug-mc{position:relative;margin-top:12px}
 .wgx{position:absolute;top:-10px;right:-6px;width:28px;height:28px;border-radius:50%;border:1px solid #c00000;background:#2a1a1f;color:#ff8a8a;font-weight:800;font-size:13px;line-height:26px;padding:0;z-index:2}
 .wgd{display:flex;gap:8px;align-items:center;background:#1b1f2a;border:1px solid #323a4d;border-radius:9px;padding:7px 9px;margin:5px 0;font-size:12.5px}
@@ -108,7 +110,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.16.0';
+const APP_VER = '1.16.1';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -561,10 +563,10 @@ function onReady() {
 function renderChips() {
   const L = gatherLines(), wg = wgStat();
   $('chips').innerHTML = [['gra', 'GRA'], ['moje', 'MOJE'], ...APPS.map(a => [a.k, a.short]), ['dane', 'DANE']].map(([k, t]) => {
-    const n = k === 'moje' ? MOJE.list().length : (L.find(x => x.a.k === k) || {}).bets || 0, sn = k === 'moje' ? (wg.soon ? [wg.soon] : []) : (L.find(x => x.a.k === k) || {}).soon || [];
+    const n = k === 'moje' ? MOJE.list().length : (L.find(x => x.a.k === k) || {}).bets || 0, sn = k === 'moje' ? [] : (L.find(x => x.a.k === k) || {}).soon || [], gs = k === 'moje' ? wg.soon : 0;
     if (k === 'moje' && cur === 'moje') lsSet(MOJE_SEEN, String(allCodes().length));   // jesteś w MOJE → zakład widziany
     const mb = k === 'moje' ? mojeBets() + wg.now : 0, glow = mb && k !== cur && lsGet(MOJE_SEEN, '') !== String(allCodes().length);
-    return `<button data-k="${k}" class="${k === cur ? 'on' : ''}${glow ? ' glow' : ''}${sn.length ? ' sn' : ''}">${t}${mb ? ' ▼' + mb : ''}${sn.length ? `<b class="soon">${sn.join(',')}</b>` : ''}${n ? `<i>${n}</i>` : ''}</button>`;
+    return `<button data-k="${k}" class="${k === cur ? 'on' : ''}${glow ? ' glow' : ''}${sn.length || gs ? ' sn' : ''}">${t}${mb ? ' ▼' + mb : ''}${sn.length ? `<b class="soon">${sn.join(',')}</b>` : ''}${gs ? `<b class="soon wgs">${gs}</b>` : ''}${n ? `<i>${n}</i>` : ''}</button>`;
   }).join('');
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => show(b.dataset.k));
   $('hdrN').innerHTML = `n=${fmtN(allCodes().length)}${added.length ? `<br>+${added.length}` : ''}`;
@@ -633,7 +635,7 @@ function flashCard(open) {
 let mojeSub = lsGet(MOJE.key + '_sub', 'gry') === 'wg' ? 'wg' : 'gry', wgDone = false;
 function mojeTabs(wg) {
   const op = wg.filter(x => x.st === 'open' && !x.gone), now = op.filter(x => x.soon.lvl === 2).length, soon = op.filter(x => x.soon.lvl === 1).length;
-  const bdg = now ? `<b class="bdg now">▼ ${now} teraz${soon ? ` · ● ${soon} niebawem` : ''}</b>` : soon ? `<b class="bdg soon">● ${soon} niebawem</b>` : '';
+  const bdg = (soon ? `<b class="bdg soon">${soon}</b>` : '') + (now ? `<b class="bdg now">▼${now}</b>` : '');
   return `<div class="msub"><button data-ms="gry" class="${mojeSub === 'gry' ? 'on' : ''}">moje gry · ${MOJE.list().length}</button><button data-ms="wg" class="${mojeSub === 'wg' ? 'on' : ''}">${bdg}w grze · ${op.length}</button></div>`;
 }
 function bindMojeTabs(host) { host.querySelectorAll('.msub button').forEach(b => b.onclick = () => { mojeSub = b.dataset.ms; lsSet(MOJE.key + '_sub', mojeSub); renderMoje(); window.scrollTo(0, 0); }); }
@@ -668,9 +670,11 @@ function renderWG(wg) {
     $('home').innerHTML = `<div class="ug wgv">${top}<div class="ug-none" style="text-align:left"><b>W GRZE — pusto.</b><br><br>Tu trafia model, na który zapisałeś zakład, ten zakład <b>nie wszedł</b> (przegrany krok), a model <b>usunąłeś z MOJE</b>. Progresja tego modelu trwa — zostaje tu do WIN albo BUST, z oznaczeniem, kiedy będzie kolejny krok.</div>${tail}</div>`;
   } else {
     UG.render($('home'), { N, all: true, sections, last: allCodes().slice(-8), top,
-      note: 'Modele z <b>przegranym zakładem</b>, usunięte z MOJE — progresja trwa, następny zakład to <b>kolejny krok</b>. Model zostaje tu do WIN albo BUST. ✕ = ukryj (wróci przy kolejnym przegranym zakładzie) · tapnij → tabela · przytrzymaj → statystyki, zapis zakładu, powrót do MOJE GRY.',
+      note: 'Modele z <b>przegranym zakładem</b>, usunięte z MOJE — progresja trwa, następny zakład to <b>kolejny krok</b>. Model zostaje tu do WIN albo BUST. <b style="color:#5fd38a">Zielony numer</b> (na MOJE i nad „w grze”) = ile modeli zagra niebawem kolejny krok. ✕ = ukryj (wróci przy kolejnym przegranym zakładzie) · tapnij → tabela · przytrzymaj → statystyki, zapis zakładu, powrót do MOJE GRY.',
       idleSub: 'Żaden model w grze nie gra na następnym wierszu.' });
-    const u = $('home').querySelector('.ug'); u.classList.add('wgv'); const t = document.createElement('div'); t.innerHTML = tail; while (t.firstChild) u.appendChild(t.firstChild);
+    const u = $('home').querySelector('.ug'); u.classList.add('wgv');
+    u.querySelectorAll('.ug-st').forEach(e => { if (/^● NIEBAWEM/.test(e.textContent)) { e.classList.add('wgs'); const m = e.closest('.ug-mc'); if (m) m.classList.add('wgsoon'); } });
+    u.querySelectorAll('.ug-sh b').forEach(e => { if (/^● NIEBAWEM/.test(e.textContent)) e.classList.add('wgs'); }); const t = document.createElement('div'); t.innerHTML = tail; while (t.firstChild) u.appendChild(t.firstChild);
     u.querySelectorAll('.ug-mc[data-mid]').forEach(el => {
       const x = act.find(z => z.k === el.dataset.app && z.id === el.dataset.mid); if (!x) return;
       const b = document.createElement('button'); b.className = 'wgx'; b.type = 'button'; b.textContent = '✕'; b.title = 'ukryj';
@@ -743,8 +747,11 @@ function addCode(c) {
   refresh();
   const L = gatherLines(), bets = L.reduce((s, x) => s + x.bets, 0), stake = L.reduce((s, x) => s + x.stake, 0);
   const nxt = bets ? `<div class="ap" style="color:#fff;background:#FF6600;border-radius:6px;padding:4px 6px">▼ NASTĘPNY KOD = GRA: ${L.filter(x => x.bets).map(x => `${x.a.short} ${x.bets}×`).join(' · ')} · ${fmtN(stake)} zł</div>` : '';
-  toast(`Nr ${fmtN(N)}: <b>${c}</b>${nxt}${parts.join('')}${bad.length ? `<div class="er">Ponowne przeliczenie: ${bad.join(', ')}</div>` : ''}`, bets ? 7000 : 4500);
-  if (navigator.vibrate) navigator.vibrate(bets ? [60, 60, 120] : 25);
+  const wg = wgStat(), wgt = x => { const sh = (APPS.find(a => a.k === x.k) || {}).short || x.k; return `${String(x.c.id).indexOf(sh) === 0 ? '' : esc(sh) + ' '}<b>${esc(x.c.id)}</b> k${x.step}`; };
+  const wgl = (wg.now ? `<div class="ap" style="color:#fff;background:#FF6600;border-radius:6px;padding:4px 6px">▼ W GRZE — mój kolejny krok NA NASTĘPNYM WIERSZU: ${wg.L.filter(x => x.soon.lvl === 2).map(wgt).join(' · ')}</div>` : '')
+    + (wg.soon ? `<div class="ap" style="color:#fff;background:#00B050;border-radius:6px;padding:4px 6px">● W GRZE NIEBAWEM (${wg.soon}): ${wg.L.filter(x => x.soon.lvl === 1).map(x => `${wgt(x)} — ${esc(x.soon.txt)}`).join('<br>')}</div>` : '');
+  toast(`Nr ${fmtN(N)}: <b>${c}</b>${nxt}${wgl}${parts.join('')}${bad.length ? `<div class="er">Ponowne przeliczenie: ${bad.join(', ')}</div>` : ''}`, bets || wg.now || wg.soon ? 7000 : 4500);
+  if (navigator.vibrate) navigator.vibrate(bets || wg.now ? [60, 60, 120] : wg.soon ? [40, 40, 40] : 25);
   if (lsGet(LS.autobk, '1') === '1' && added.length % 10 === 0) exportJSON(true);
 }
 function undo() {
