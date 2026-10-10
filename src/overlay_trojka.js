@@ -176,6 +176,9 @@
   window.T50 = {
     count: () => codes.length, last: () => codes[codes.length - 1], seedN: SEED.length / 3,
     sync, add, undo: undo1, lines, cards, note, go, render: () => F.render(F.view),
+    // MOJE ZAKŁADY / W GRZE: zakład = 3. kod (po parze i SPRAWDŹ). Etykieta „krok gry” stoi na SPRAWDŹ, wiersz „miss” jest pusty —
+    // przegrany krok, jeśli model grał tę próbę (SPRAWDŹ z etykietą kroku)
+    rowRes: (id, r) => { const x = UT.rowRes(id, r); if (x !== 'none' || r < 1) return x; const b = model.rowRole[r + 1]; return b && b.bk === 'miss' && UT.rowRes(id, r - 1) === 'lost' ? 'lost' : x; },
     selfTest: () => {
       const m = new V13Model(SEED.match(/.{3}/g));
       const got = MODELS.map(x => { const s = m.stats(x.name); return `${x.name}: ${s.games} gier, ${s.wins} W, PnL ${s.pnl}`; }).join(' · ');

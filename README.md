@@ -54,6 +54,16 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
   (domyślnie następny wiersz i krok / stawka z linii „GRA na następnym wierszu”). Wynik z tabeli modelu: ✔ WIN (+2 × stawka, kurs 3),
   ✗ przegrany, „czeka” (wiersz jeszcze nie padł), „model nie grał” (w tym wierszu model nie miał zakładu). Suma: postawione i wynik;
   podsumowanie także na karcie w MOJE. Wpisy usuwa ✕. Zapisany zakład dodaje model do MOJE GRY; dotknięcie zakładu (lista w oknie modelu, podsumowanie w STATY, „Wszystkie zakłady” w MOJE) → karta modelu w MOJE na chwilę w niebieskiej ramce. Zapis w telefonie (klucz `t50razem_v1_bets`).
+- **MOJE → w grze** (RAZEM 50 i 60): druga podzakładka obok „moje gry”. Trafia tu model, którego ostatni zapisany zakład
+  nie wszedł (przegrany krok < 8), a model usunięto z MOJE — progresja trwa, następny zakład to kolejny krok. Model zostaje
+  do WIN albo BUST (potem w zwiniętej liście „Zakończone po moim przegranym zakładzie”: ✔ WIN bez mojego zakładu / ✖ BUST).
+  Grupy: **▼ TERAZ** (gra na następnym wierszu), **● NIEBAWEM**, **W GRZE** (kolejny krok później). Znacznik nad podzakładką
+  „w grze” i żółty znaczek na przycisku MOJE: ile modeli w grze gra niebawem; ▼ i świecenie MOJE także przy grze na następnym
+  wierszu. NIEBAWEM zależy od tabeli: 1T / 200 / 2T / TOP5 / TOP7 / BUST / SZUKAJ — TRIGGER już był i zakład za 2–3 wiersze
+  (albo TRIGGER na następnym wierszu da zakład najwyżej za 3 wiersze); TRÓJKA — w cyklu gry był 1. kod pary, jeszcze jeden
+  i gra na następnym wierszu; PIKOFF / 2-SLOT — okno w grze czeka na kod BUILDUP (po nim sloty); MIX3 — okno w grze czeka na HIT.
+  ✕ ukrywa model (wraca przy kolejnym przegranym zakładzie), „przywróć ukryte” cofa. Klucze: `t50razem_v1_moje_wgx`, `t50razem_v1_moje_sub`.
+  TRÓJKA: zakład na 3. kodzie (po parze i SPRAWDŹ) zakończony „miss” liczy się teraz jako przegrany krok (wcześniej „model nie grał”).
 - **Podsumowanie MOJE ZAKŁADY** na dole zakładki STATY każdej tabeli: Model · zakł. (✔ WIN / ✗ przegrane / ⏳ czeka) · kroki (np. k2×2) ·
   postawione zł · wynik zł, wiersz Σ i tabela „Według kroku”. W zakładce MOJE ta sama tabela dla wszystkich tabel naraz.
 - **SZUKAJ** (zakładka-tabela): modele przeniesione z appek **SZUKAJ** i **SZUKAJ+**. W tamtej appce przytrzymaj kartę modelu →

@@ -75,6 +75,17 @@ table.stt td{padding:5px 4px;border-bottom:1px solid var(--ln)}table.stt td:last
 #loading{padding:30px 16px;text-align:center;color:var(--mu)}
 input[type=file]{display:none}
 .sw{display:flex;align-items:center;gap:8px;margin:8px 0}
+.msub{display:flex;gap:8px;margin:16px 0 10px}
+.msub button{position:relative;flex:1;border:1px solid var(--ln);background:var(--p2);color:var(--tx);border-radius:14px;padding:8px 10px;font-size:13.5px;font-weight:700}
+.msub button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.msub .bdg{position:absolute;top:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:9px;padding:0 8px;font:800 11px/18px system-ui,sans-serif;border:1px solid #fff}
+.msub .bdg.soon{background:#FFD700;color:#000}
+.msub .bdg.now{background:#FF6600;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
+.wgv .ug-mc{position:relative;margin-top:12px}
+.wgx{position:absolute;top:-10px;right:-6px;width:28px;height:28px;border-radius:50%;border:1px solid #c00000;background:#2a1a1f;color:#ff8a8a;font-weight:800;font-size:13px;line-height:26px;padding:0;z-index:2}
+.wgd{display:flex;gap:8px;align-items:center;background:#1b1f2a;border:1px solid #323a4d;border-radius:9px;padding:7px 9px;margin:5px 0;font-size:12.5px}
+.wgd>span{flex:1}.wgd .mu{color:#8b93a7;font-size:11.5px}.wgd .wgx{position:static;flex:0 0 auto;width:26px;height:26px;line-height:24px}
+.wgdef{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:8px 10px;margin:10px 0;font-size:12px;color:#c9cfdc}.wgdef b{color:#ffd700}.wgdef div{margin:3px 0}
 .ug-mc.bflash{outline:3px solid #2e9bff!important;outline-offset:2px;box-shadow:0 0 0 7px rgba(46,155,255,.35)!important}
 </style>
 </head>
@@ -96,7 +107,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.15.0';
+const APP_VER = '1.16.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -114,8 +125,10 @@ const MOJE = { key: 't50razem_v1_moje',
   // dotknięcie zapisanego zakładu → TABELA modelu na wierszu zakładu
   // dotknięcie zapisanego zakładu → MOJE: karta modelu na chwilę w niebieskiej ramce
   goBet(k, id, row) { if (!APPS.some(a => a.k === k)) return; if (k === 'szk' && !this.card(k, id)) { try { toast(`Model <b>${esc(id)}</b> usunięty z zakładki SZUKAJ`); } catch (e) {} return; }
-    // model w MOJE → ramka w MOJE; usunięty z MOJE → zakładka GRA i ramka na karcie modelu (zwinięte „Modele oczekujące” rozwijam)
-    const inMoje = this.has(k, id); flashMJ = { k, id, until: Date.now() + 2600 }; show(inMoje ? 'moje' : 'gra');
+    // model w MOJE → ramka w MOJE; usunięty z MOJE, ale w grze (przegrany zakład) → MOJE · w grze; inaczej GRA i ramka na karcie modelu
+    const inMoje = this.has(k, id), inWg = !inMoje && this.wgAll().some(x => x.k === k && x.id === id && x.st === 'open' && !x.gone);
+    if (inMoje || inWg) { mojeSub = inWg ? 'wg' : 'gry'; lsSet(MOJE.key + '_sub', mojeSub); }
+    flashMJ = { k, id, until: Date.now() + 2600 }; show(inMoje || inWg ? 'moje' : 'gra');
     setTimeout(() => { const c = flashCard(true); if (c) c.scrollIntoView({ block: 'center' }); else { flashMJ = null; goModel(k, id, row == null || isNaN(row) ? null : row + 1); } }, 60);
     setTimeout(() => document.querySelectorAll('#home .ug-mc.bflash').forEach(c => c.classList.remove('bflash')), 2650); },
   // model z zakładki SZUKAJ: usuń z RAZEM (lista w tabeli SZUKAJ + MOJE GRY); w appce SZUKAJ zostaje
@@ -131,9 +144,61 @@ const MOJE = { key: 't50razem_v1_moje',
   ensureFromBets() { const B = this.bets(); let ch = false; B.forEach(b => { if (b.my) return; if (APPS.some(a => a.k === b.k) && (b.k !== 'szk' || this.card(b.k, b.id))) this.addQuiet(b.k, b.id); b.my = 1; ch = true; }); if (ch) this.saveBets(B); },
   addBet(k, id, row, step, stake) { const a = this.bets(); a.push({ k, id, row, step, stake, t: Date.now(), my: 1 }); this.saveBets(a); this.addQuiet(k, id); try { toast(`Zapisano zakład <b>${esc(id)}</b>: Nr ${fmtN(row + 1)} · k${step} · ${stake} zł`); refresh(); } catch (e) {} },
   delBet(t) { this.saveBets(this.bets().filter(b => b.t !== t)); try { refresh(); } catch (e) {} },
+  track(k, id, from) { try { const fw = $('fr_' + k).contentWindow, T = fw.T50 || fw.T60; return T && T.track ? T.track(id, from) : fw.UT.track(id, from); } catch (e) { return null; } },
+  // W GRZE: ostatni zapisany zakład modelu przegrany (krok < 8), model usunięty z MOJE — progresja trwa, następny zakład = kolejny krok.
+  // st: 'open' (gra trwa) · 'win' / 'bust' (progresja zamknięta po moim zakładzie, i = wiersz). ✕ ukrywa wpis do następnego przegranego zakładu.
+  xkey() { return this.key + '_wgx'; },
+  wgKey: x => `${x.k}\u0001${x.id}\u0001${x.lb.t}`,
+  wgx() { try { const v = JSON.parse(localStorage.getItem(this.xkey()) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
+  wgSet(a) { try { localStorage.setItem(this.xkey(), JSON.stringify(a.slice(-300))); } catch (e) {} },
+  wgHide(list) { const a = this.wgx(), ks = list.map(x => this.wgKey(x)); this.wgSet(a.filter(v => !ks.includes(v)).concat(ks)); },
+  wgShow(list) { const ks = new Set(list.map(x => this.wgKey(x))); this.wgSet(this.wgx().filter(v => !ks.has(v))); },
+  wgAll() {
+    const N = allCodes().length, seen = new Set(), out = [], X = new Set(this.wgx()), CC = {};
+    const cardOf = (k, id) => { if (!(k in CC)) { try { CC[k] = [].concat(...W(k).cards((mid, er) => goModel(k, mid, er)).map(z => z.cards)); } catch (e) { CC[k] = []; } } return CC[k].find(x => (x.mid || x.id) === id) || null; };
+    this.bets().forEach(b => {
+      const key = b.k + '\u0001' + b.id; if (seen.has(key)) return; seen.add(key);
+      if (!APPS.some(a => a.k === b.k) || this.has(b.k, b.id)) return;
+      const L = this.betList(b.k, b.id), lb = L[L.length - 1];
+      if (!lb || lb.res !== 'lost') return;
+      const c = cardOf(b.k, b.id); if (!c) return;   // model usunięty z tabeli (SZUKAJ)
+      const x = { k: b.k, id: b.id, c, L, lb, st: 'open', i: null, step: lb.step + 1 };
+      if (lb.step >= 8) { x.st = 'bust'; x.i = lb.row; }
+      else { const t = this.track(b.k, b.id, lb.row); if (t) { x.i = t.i; x.st = t.i > lb.row && this.rowRes(b.k, b.id, t.i) === 'win' ? 'win' : 'bust'; } }
+      x.gone = X.has(this.wgKey(x));
+      x.soon = x.st === 'open' ? wgSoon(c, N) : { lvl: 0, txt: '' };
+      out.push(x);
+    });
+    return out;
+  },
 };
 window.__MOJE = MOJE;
 // MOJE z zakładem na następnym wierszu → przycisk MOJE świeci, dopóki nie wejdziesz w zakładkę (zapamiętane: liczba kodów przy wejściu)
+// ▼ TERAZ = gra na następnym wierszu · ● NIEBAWEM:
+//   tabele STEP → TRIGGER → zakład +off (1T, 200, 2T, TOP5, TOP7, BUST, SZUKAJ): TRIGGER już był i zakład za 2–3 wiersze,
+//     albo TRIGGER na następnym wierszu da zakład najwyżej za 3 wiersze;
+//   TRÓJKA: w cyklu gry był 1. kod pary — jeszcze jeden i gra na kolejnym wierszu;
+//   PIKOFF / 2-SLOT: okno w grze czeka na kod BUILDUP — po nim sloty z kolejnym krokiem; MIX3: okno w grze czeka na HIT.
+const X1 = LS.added.indexOf('t60') === 0 ? 'xx1' : 'x1x';
+function wgSoon(c, N) {
+  const L = c.lines, T = l => `${l.txt || ''} · ${l.sub || ''}`;
+  if (L.some(l => l.p === 1 || /następny wiersz: x1x = ✓ WIN/.test(T(l)))) return { lvl: 2, txt: 'gra na następnym wierszu' };
+  let n = 99, how = '';
+  L.forEach(l => {
+    const t = T(l); let m = null, x = 0;
+    if (l.p === 4 && (m = /gra za (\d+)/.exec(l.txt || ''))) { if (+m[1] < n) { n = +m[1]; how = `zakład za ${n} w. (Nr ${fmtN(N + n)}) — TRIGGER już był`; } }
+    else if (l.p === 3) {
+      x = /GRA NA NASTĘPNYM/.test(t) ? N + 2 : (m = /na Nr\s?(\d+)/.exec(t)) ? +m[1] : 0;
+      if (x && x - N < n) { n = x - N; how = `${String(l.txt || '').replace(/\s*→.*$/, '')} → zakład za ${n} w.`; }
+    }
+  });
+  if (n <= 3) return { lvl: 1, txt: how };
+  const ev = L.map(T).find(t => /następny wiersz: x1x = para|czeka na SPRAWDŹ|w grze.*po (xx1|x1x|HIT)/.test(t));
+  if (ev) { const m = /po (xx1|x1x|HIT)/.exec(ev);
+    return { lvl: 1, txt: m && m[1] === 'HIT' ? 'po najbliższym HIT → gra na następnym wierszu' : m && /w grze/.test(ev) ? `po najbliższym ${m[1]} (BUILDUP) → sloty z kolejnym krokiem` : `jeszcze jeden ${X1} (para / SPRAWDŹ) → gra na następnym wierszu` }; }
+  return { lvl: 0, txt: n < 99 ? how : 'kolejny krok nie wcześniej niż za kilka wierszy' };
+}
+function wgStat() { let L = []; try { L = MOJE.wgAll().filter(x => x.st === 'open' && !x.gone); } catch (e) {} return { L, now: L.filter(x => x.soon.lvl === 2).length, soon: L.filter(x => x.soon.lvl === 1).length }; }
 const MOJE_SEEN = 't50razem_v1_moje_seen';
 function mojeBets() {
   let n = 0;
@@ -493,11 +558,11 @@ function onReady() {
 
 // ---- nawigacja ----
 function renderChips() {
-  const L = gatherLines();
+  const L = gatherLines(), wg = wgStat();
   $('chips').innerHTML = [['gra', 'GRA'], ['moje', 'MOJE'], ...APPS.map(a => [a.k, a.short]), ['dane', 'DANE']].map(([k, t]) => {
-    const n = k === 'moje' ? MOJE.list().length : (L.find(x => x.a.k === k) || {}).bets || 0, sn = (L.find(x => x.a.k === k) || {}).soon || [];
+    const n = k === 'moje' ? MOJE.list().length : (L.find(x => x.a.k === k) || {}).bets || 0, sn = k === 'moje' ? (wg.soon ? [wg.soon] : []) : (L.find(x => x.a.k === k) || {}).soon || [];
     if (k === 'moje' && cur === 'moje') lsSet(MOJE_SEEN, String(allCodes().length));   // jesteś w MOJE → zakład widziany
-    const mb = k === 'moje' ? mojeBets() : 0, glow = mb && k !== cur && lsGet(MOJE_SEEN, '') !== String(allCodes().length);
+    const mb = k === 'moje' ? mojeBets() + wg.now : 0, glow = mb && k !== cur && lsGet(MOJE_SEEN, '') !== String(allCodes().length);
     return `<button data-k="${k}" class="${k === cur ? 'on' : ''}${glow ? ' glow' : ''}${sn.length ? ' sn' : ''}">${t}${mb ? ' ▼' + mb : ''}${sn.length ? `<b class="soon">${sn.join(',')}</b>` : ''}${n ? `<i>${n}</i>` : ''}</button>`;
   }).join('');
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => show(b.dataset.k));
@@ -564,8 +629,66 @@ function flashCard(open) {
   if (!c && L.length && open) { const wb = document.querySelector('#home .ug-wt'); if (wb) { wb.click(); L = all(); c = L.find(x => !x.closest('[hidden]')); } }   // karta w zwiniętych „Modele oczekujące”
   c = c || null; if (c) c.classList.add('bflash'); return c;
 }
+let mojeSub = lsGet(MOJE.key + '_sub', 'gry') === 'wg' ? 'wg' : 'gry', wgDone = false;
+function mojeTabs(wg) {
+  const op = wg.filter(x => x.st === 'open' && !x.gone), now = op.filter(x => x.soon.lvl === 2).length, soon = op.filter(x => x.soon.lvl === 1).length;
+  const bdg = now ? `<b class="bdg now">▼ ${now} teraz${soon ? ` · ● ${soon} niebawem` : ''}</b>` : soon ? `<b class="bdg soon">● ${soon} niebawem</b>` : '';
+  return `<div class="msub"><button data-ms="gry" class="${mojeSub === 'gry' ? 'on' : ''}">moje gry · ${MOJE.list().length}</button><button data-ms="wg" class="${mojeSub === 'wg' ? 'on' : ''}">${bdg}w grze · ${op.length}</button></div>`;
+}
+function bindMojeTabs(host) { host.querySelectorAll('.msub button').forEach(b => b.onclick = () => { mojeSub = b.dataset.ms; lsSet(MOJE.key + '_sub', mojeSub); renderMoje(); window.scrollTo(0, 0); }); }
+// W GRZE: modele z przegranym zakładem, usunięte z MOJE — kolejny krok progresji jeszcze przed nami
+function renderWG(wg) {
+  const N = allCodes().length, act = wg.filter(x => x.st === 'open' && !x.gone), done = wg.filter(x => x.st !== 'open' && !x.gone), hid = wg.filter(x => x.gone && x.st === 'open');
+  const mk = x => {
+    const a = APPS.find(z => z.k === x.k) || { short: x.k }, c = x.c, s = x.soon, lb = x.lb;
+    let wyn = 0; x.L.forEach(b => { wyn += b.res === 'win' ? 2 * b.stake : b.res === 'lost' ? -b.stake : 0; });
+    const lines = [];
+    if (s.lvl === 2) { if (!c.lines.some(l => l.p === 1)) lines.push({ p: 1, txt: `▼ TERAZ — mój kolejny krok k${x.step} na następnym wierszu`, sub: '' }); }
+    else if (s.lvl === 1) lines.push({ p: 2, act: true, txt: `● NIEBAWEM — ${s.txt}`, sub: `mój kolejny krok k${x.step}` });
+    else lines.push({ p: 0, act: true, txt: `w grze — mój kolejny krok k${x.step}`, sub: s.txt });
+    return { id: c.id, app: x.k, mid: x.id, rule: `${a.short}${c.rule ? ' · ' + c.rule : ''}`, lines: lines.concat(c.lines),
+      meta: [`✗ Nr ${fmtN(lb.row + 1)} · k${lb.step} · ${lb.stake} zł przegrany`, `${wyn >= 0 ? '+' : '−'}${fmtN(Math.abs(wyn))} zł`],
+      go: er => c.go(er), stats: c.stats };
+  };
+  const by = l => act.filter(x => x.soon.lvl === l).map(mk), sections = [];
+  [[2, '▼ TERAZ — kolejny krok na następnym wierszu'], [1, '● NIEBAWEM — kolejny krok wkrótce'], [0, 'W GRZE — kolejny krok później']].forEach(([l, nm]) => { const cs = by(l); if (cs.length) sections.push({ name: `${nm} · ${cs.length}`, cards: cs }); });
+  const NIEB = { t1: 'TRIGGER już był i zakład za 2–3 wiersze (albo TRIGGER na następnym wierszu da zakład najwyżej za 3 wiersze)',
+    trojka: `w cyklu gry był już 1. ${X1} pary — jeszcze jeden ${X1} i gra na następnym wierszu`, slot2: 'okno w grze czeka na x1x (BUILDUP) — po nim 2 wiersze to sloty z kolejnym krokiem',
+    pikoff: 'okno w grze czeka na xx1 (BUILDUP) — po nim 2 wiersze to sloty z kolejnym krokiem', mix3: 'okno w grze czeka na HIT — po nim gra na następnym wierszu' };
+  const fam = { t200: 't1', t2t: 't1', top5: 't1', top7: 't1', bust: 't1', szk: 't1' }, grp = {};
+  APPS.forEach(a => { const f = fam[a.k] || a.k; if (NIEB[f]) (grp[f] = grp[f] || []).push(a.short); });
+  const def = `<div class="wgdef"><b>● NIEBAWEM</b> — kiedy model w grze może zagrać kolejny krok:${Object.keys(grp).map(f => `<div><b>${esc(grp[f].join(' · '))}</b>: ${NIEB[f]}</div>`).join('')}<div><b>▼ TERAZ</b> (wszystkie tabele): gra na następnym wierszu.</div></div>`;
+  const doneH = done.length ? `<button class="ug-wt" type="button" id="wgDoneB">${wgDone ? '▴' : '▾'} Zakończone po moim przegranym zakładzie (${done.length})</button><div id="wgDoneL"${wgDone ? '' : ' hidden'}>${done.map((x, j) => {
+      const a = APPS.find(z => z.k === x.k) || { short: x.k }, own = x.i === x.lb.row;
+      return `<div class="wgd"><span><b>${esc(x.c.id)}</b> <span class="mu">${esc(a.short)}</span><br>${x.st === 'win' ? `<span class="ok">✔ WIN w Nr ${fmtN(x.i + 1)}</span> — bez mojego zakładu` : `<span class="er">✖ BUST${own ? ' na moim zakładzie' : ''} w Nr ${fmtN(x.i + 1)}</span>`}<br><span class="mu">mój ostatni: ✗ Nr ${fmtN(x.lb.row + 1)} · k${x.lb.step} · ${x.lb.stake} zł</span></span><button class="wgx" data-wd="${j}" title="usuń z listy">✕</button></div>`; }).join('')}<button class="btn" style="width:100%;margin-top:4px" id="wgDoneX">✕ Wyczyść zakończone</button></div>` : '';
+  const tail = (hid.length ? `<button class="btn" style="width:100%;margin:6px 0" id="wgBack">przywróć ukryte (${hid.length})</button>` : '') + doneH + def;
+  const top = mojeTabs(wg);
+  if (!sections.length) {
+    $('home').innerHTML = `<div class="ug wgv">${top}<div class="ug-none" style="text-align:left"><b>W GRZE — pusto.</b><br><br>Tu trafia model, na który zapisałeś zakład, ten zakład <b>nie wszedł</b> (przegrany krok), a model <b>usunąłeś z MOJE</b>. Progresja tego modelu trwa — zostaje tu do WIN albo BUST, z oznaczeniem, kiedy będzie kolejny krok.</div>${tail}</div>`;
+  } else {
+    UG.render($('home'), { N, all: true, sections, last: allCodes().slice(-8), top,
+      note: 'Modele z <b>przegranym zakładem</b>, usunięte z MOJE — progresja trwa, następny zakład to <b>kolejny krok</b>. Model zostaje tu do WIN albo BUST. ✕ = ukryj (wróci przy kolejnym przegranym zakładzie) · tapnij → tabela · przytrzymaj → statystyki, zapis zakładu, powrót do MOJE GRY.',
+      idleSub: 'Żaden model w grze nie gra na następnym wierszu.' });
+    const u = $('home').querySelector('.ug'); u.classList.add('wgv'); const t = document.createElement('div'); t.innerHTML = tail; while (t.firstChild) u.appendChild(t.firstChild);
+    u.querySelectorAll('.ug-mc[data-mid]').forEach(el => {
+      const x = act.find(z => z.k === el.dataset.app && z.id === el.dataset.mid); if (!x) return;
+      const b = document.createElement('button'); b.className = 'wgx'; b.type = 'button'; b.textContent = '✕'; b.title = 'ukryj';
+      b.addEventListener('pointerdown', e => e.stopPropagation());
+      b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); MOJE.wgHide([x]); toast(`Ukryto <b>${esc(x.c.id)}</b> z „w grze” — wróci przy kolejnym przegranym zakładzie`); refresh(); });
+      el.appendChild(b);
+    });
+  }
+  bindMojeTabs($('home'));
+  const db = $('wgDoneB'); if (db) db.onclick = () => { wgDone = !wgDone; $('wgDoneL').hidden = !wgDone; db.textContent = `${wgDone ? '▴' : '▾'} Zakończone po moim przegranym zakładzie (${done.length})`; };
+  $('home').querySelectorAll('[data-wd]').forEach(b => b.onclick = () => { MOJE.wgHide([done[+b.dataset.wd]]); refresh(); });
+  const dx = $('wgDoneX'); if (dx) dx.onclick = () => { MOJE.wgHide(done); refresh(); };
+  const bb = $('wgBack'); if (bb) bb.onclick = () => { MOJE.wgShow(hid); refresh(); };
+  flashCard();
+}
 function renderMoje() {
   MOJE.ensureFromBets();
+  const wg = MOJE.wgAll();
+  if (mojeSub === 'wg') return renderWG(wg);
   const L = MOJE.list(), N = allCodes().length, cards = [];
   L.forEach(g => {
     const a = APPS.find(x => x.k === g.k); if (!a) return;
@@ -587,10 +710,10 @@ function renderMoje() {
       meta: c ? c.meta : null, go: er => c ? c.go(er) : goModel(g.k, g.id, er), stats: c && c.stats ? c.stats : null });
   });
   if (!cards.length) {
-    $('home').innerHTML = `<div class="ug"><div class="ug-none" style="margin-top:8px;text-align:left"><b>MOJE GRY — pusto.</b><br><br>Przytrzymaj kartę modelu na GRA albo wiersz w TABELI modelu → w oknie statystyk <b>„▶ Gram / obserwuję — dodaj do MOJE GRY”</b>.<br><br>Model zostaje tu z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS). Usuwasz go tym samym przyciskiem.</div></div>`;
-    __MJ.mount($('home').firstElementChild, null); return;
+    $('home').innerHTML = `<div class="ug">${mojeTabs(wg)}<div class="ug-none" style="margin-top:8px;text-align:left"><b>MOJE GRY — pusto.</b><br><br>Przytrzymaj kartę modelu na GRA albo wiersz w TABELI modelu → w oknie statystyk <b>„▶ Gram / obserwuję — dodaj do MOJE GRY”</b>.<br><br>Model zostaje tu z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS). Usuwasz go tym samym przyciskiem.</div></div>`;
+    bindMojeTabs($('home')); __MJ.mount($('home').firstElementChild, null); return;
   }
-  UG.render($('home'), { N, all: true, sections: [{ name: `▶ MOJE GRY · ${cards.length}`, cards }], last: allCodes().slice(-8),
+  UG.render($('home'), { N, all: true, sections: [{ name: `▶ MOJE GRY · ${cards.length}`, cards }], last: allCodes().slice(-8), top: mojeTabs(wg), bindTop: bindMojeTabs,
     note: 'Przytrzymaj kartę → statystyki i „usuń z MOJE GRY” · tapnij → tabela modelu.', idleSub: 'Żaden z MOICH modeli nie gra na następnym wierszu.' });
   __MJ.mount($('home').querySelector('.ug') || $('home'), null);
   flashCard();
