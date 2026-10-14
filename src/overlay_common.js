@@ -46,16 +46,17 @@ window.__MJ = window.__MJ || (function () {
     const pop = t.closest('.ut-pop,.ug-pop,#statPop'); if (pop) pop.remove();
     a.goBet(t.dataset.k, t.dataset.id, t.dataset.row === '' || t.dataset.row == null ? null : +t.dataset.row);
   }, true);
-  const TXT = on => on ? '■ W MOJE GRY — usuń z listy' : '▶ Gram / obserwuję — dodaj do MOJE GRY';
+  const TXT = on => on ? '■ W aplikacji MOJE — usuń' : '▶ Gram — dodaj do aplikacji MOJE';
   const q = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/[<]/g, '&lt;');
   function html(k, id) {
     const a = api(); k = k || frameK(); if (!a || !k || id == null) return '';
     const on = a.has(k, String(id));
-    return `<button class="mj-b${on ? ' on' : ''}" data-mjk="${q(k)}" data-mjid="${q(id)}">${TXT(on)}</button><div class="mj-h"${on ? ' hidden' : ''}>Model trafi na zakładkę MOJE — z bieżącym stanem i wynikiem od chwili dodania (pierwszy WIN albo BUST / LOSS).</div>`
+    return `<button class="mj-b${on ? ' on' : ''}" data-mjk="${q(k)}" data-mjid="${q(id)}">${TXT(on)}</button><div class="mj-h"${on ? ' hidden' : ''}>Model trafi do aplikacji MOJE — tam go śledzisz (czekaj → za chwilę → graj), zapisujesz zakłady i widzisz LOST-y.</div>`
       + (k === 'szk' && a.szkDel ? `<button class="mj-x" data-mjid="${q(id)}">✕ Usuń ten model z RAZEM (zakładka SZUKAJ)</button>` : '');
   }
   // MOJE ZAKŁADY: lista + formularz (domyślnie: następny wiersz, krok i stawka z linii „GRA na następnym wierszu” karty modelu)
   function bets(k, id) {
+    return '';   // MOJE ZAKŁADY są teraz w aplikacji MOJE
     const a = api(); k = k || frameK(); if (!a || !a.betList || !k || id == null) return '';
     id = String(id);
     const L = a.betList(k, id), N = a.N(), c = a.card(k, id), l1 = c ? c.lines.find(l => l.p === 1) : null;
@@ -100,6 +101,7 @@ window.__MJ = window.__MJ || (function () {
 
   // MOJE ZAKŁADY — podsumowanie (dół STATY): k = tabela; bez k (powłoka) = wszystkie tabele
   function sum(k) {
+    return '';   // MOJE ZAKŁADY są teraz w aplikacji MOJE
     const a = api(); if (!a || !a.betList || !a.bets) return '';
     if (k === undefined) k = frameK();
     const all = a.bets().filter(b => !k || b.k === k), keys = [];
