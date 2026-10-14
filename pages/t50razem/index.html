@@ -110,7 +110,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.16.1';
+const APP_VER = '1.17.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -537,12 +537,26 @@ function layout() {
   $('frames').style.top = h + 'px';
   $('home').style.paddingTop = (h + 10) + 'px';
 }
+// ===== napisy na ekranie: BUST → LOST (tylko to, co widać; dane, zapisy i obliczenia bez zmian) =====
+function LOSTIFY(doc, keepNames) {   // keepNames: zostaw nazwę tabeli / modeli „BUST” z RAZEM T60 (2 = też sam napis „BUST”, np. zakładka tabeli)
+  try {
+    if (!doc || doc.__lost) return; doc.__lost = 1;
+    const RX = keepNames ? /\bBUST\b(?! 012| ·| [A-Z]\d[A-Z0-9])|\bbusty\b|\bBusty\b/g : /\bBUST\b|\bbusty\b|\bBusty\b/g;
+    const keep = v => keepNames === 2 && /^\s*BUST\s*$/.test(v);
+    const fix = n => { const pa = n.parentNode; if (pa && /^(SCRIPT|STYLE|TEXTAREA)$/.test(pa.nodeName)) return; const v = n.nodeValue; if (!v || !/BUST|usty/.test(v) || keep(v)) return; const f = v.replace(RX, m => m === 'BUST' ? 'LOST' : m === 'busty' ? 'losty' : 'Losty'); if (f !== v) n.nodeValue = f; };
+    const walk = r => { if (r.nodeType === 3) return fix(r); if (r.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA)$/.test(r.nodeName)) return; const w = doc.createTreeWalker(r, 4); let n; while ((n = w.nextNode())) fix(n); };
+    const root = doc.body || doc.documentElement; walk(root);
+    new doc.defaultView.MutationObserver(ms => ms.forEach(m => m.type === 'characterData' ? fix(m.target) : m.addedNodes.forEach(walk)))
+      .observe(root, { childList: true, subtree: true, characterData: true });
+  } catch (e) {}
+}
 function buildFrames() {
+  LOSTIFY(document, false);
   writeAppKeys();
   for (const a of APPS) {
     const f = document.createElement('iframe');
     f.id = 'fr_' + a.k; f.title = a.name;
-    f.addEventListener('load', () => { ready++; if (ready === APPS.length) onReady(); }, { once: true });
+    f.addEventListener('load', () => { LOSTIFY(f.contentDocument, false); ready++; if (ready === APPS.length) onReady(); }, { once: true });
     f.srcdoc = a.html;
     $('frames').appendChild(f);
   }
