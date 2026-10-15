@@ -9,7 +9,7 @@
 <link rel="icon" href="icon-192.png">
 <title>T50 RAZEM</title>
 <style>
-:root{--bg:#12151c;--p1:#1b1f2a;--p2:#242a38;--ln:#323a4d;--tx:#e8ebf2;--mu:#8b93a7;--acc:#ff6600}
+:root{--bg:#12151c;--p1:#1b1f2a;--p2:#242a38;--ln:#323a4d;--tx:#e8ebf2;--mu:#8b93a7;--acc:#e07a35}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow-x:hidden}
 #top{position:fixed;left:0;right:0;top:0;z-index:20;background:var(--p1);border-bottom:1px solid var(--ln)}
@@ -30,12 +30,12 @@ html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui
 #chips::-webkit-scrollbar{display:none}
 #chips button{flex:0 0 auto;border:1px solid var(--ln);background:var(--p2);color:var(--tx);border-radius:14px;padding:4px 9px;font-size:12px;font-weight:600;position:relative}
 #chips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-#chips button.glow{background:#FF6600;border-color:#fff;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
-@keyframes mjg{from{box-shadow:0 0 0 0 #ff660000}to{box-shadow:0 0 10px 3px #ff6600}}
+#chips button.glow{background:#e07a35;border-color:#fff;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
+@keyframes mjg{from{box-shadow:0 0 0 0 #e07a3500}to{box-shadow:0 0 10px 3px #e07a35}}
 #chips button.sn{padding-left:22px}
 #chips button b.soon{position:absolute;top:-3px;left:-3px;min-width:16px;height:16px;border-radius:8px;background:#FFD700;color:#000;font:700 10px/16px system-ui;padding:0 4px;border:1px solid #fff}
-#chips button i{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:8px;background:#FF6600;color:#fff;font:700 10px/16px system-ui;font-style:normal;padding:0 4px;border:1px solid #fff}
-#chips button.on i{background:#fff;color:#FF6600}
+#chips button i{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:8px;background:#e07a35;color:#fff;font:700 10px/16px system-ui;font-style:normal;padding:0 4px;border:1px solid #fff}
+#chips button.on i{background:#fff;color:#e07a35}
 #home{padding:10px 10px 30px}
 #frames{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bg)}
 #frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:var(--bg)}
@@ -44,10 +44,10 @@ html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui
 .card h2{margin:0 0 8px;font-size:14px;color:var(--acc);letter-spacing:.4px}
 .sum{display:flex;justify-content:space-between;align-items:center;background:var(--p2);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:10px}
 .sum .big{font-weight:800;font-size:14px}.sum>span:last-child{text-align:right}
-.sum .bet{color:#fff;background:#FF6600;border-radius:8px;padding:4px 9px;font-weight:800;white-space:nowrap;display:inline-block}
+.sum .bet{color:#fff;background:#e07a35;border-radius:8px;padding:4px 9px;font-weight:800;white-space:nowrap;display:inline-block}
 .sum .mu{color:var(--mu)}
 .ah{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px}
-.ah b{font-size:14px}.ah span{font-size:12px;color:var(--mu)}.ah span.g{color:#ff9a4d;font-weight:700}
+.ah b{font-size:14px}.ah span{font-size:12px;color:var(--mu)}.ah span.g{color:#eaa06c;font-weight:700}
 .sech{font-size:11px;color:var(--mu);margin:6px 0 3px;letter-spacing:.4px}
 .nxl{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:baseline;border-radius:8px;padding:6px 8px;margin:3px 0;cursor:pointer;border:1px solid transparent}
 .nxl .id{font-weight:800;font-size:12.5px;min-width:46px}
@@ -55,8 +55,8 @@ html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.35 system-ui
 .nxl .s{grid-column:2;font-size:11.5px;opacity:.85;overflow-wrap:anywhere}
 .nxl .m{grid-column:2;font-size:11px;opacity:.75;margin-top:2px}
 .nxl .go{float:right;opacity:.6;font-size:11px}
-.p1{background:#FF6600;color:#fff;border:2px solid #fff;font-size:14px}
-.p2{background:rgba(255,102,0,.18);color:#ffcfa8;border:1.5px dashed #FF6600}
+.p1{background:#e07a35;color:#fff;border:2px solid #fff;font-size:14px}
+.p2{background:rgba(224,122,53,.18);color:#ffcfa8;border:1.5px dashed #e07a35}
 .p3{background:#DEEBF7;color:#1F4E78}
 .p4{background:#7030A0;color:#fff}
 .p5{background:var(--p2);color:#ffc896}
@@ -71,7 +71,7 @@ table.stt td{padding:5px 4px;border-bottom:1px solid var(--ln)}table.stt td:last
 .small{font-size:12px;color:var(--mu)}
 #toast{position:fixed;left:10px;right:10px;bottom:16px;z-index:50;background:#0b0d12f2;border:1px solid var(--ln);border-radius:12px;padding:10px 12px;font-size:13px;display:none;max-height:55vh;overflow:auto;box-shadow:0 6px 24px #0009}
 #toast.on{display:block}
-#toast .ap{color:#ff9a4d;font-weight:700;margin-top:6px}
+#toast .ap{color:#eaa06c;font-weight:700;margin-top:6px}
 #loading{padding:30px 16px;text-align:center;color:var(--mu)}
 input[type=file]{display:none}
 .sw{display:flex;align-items:center;gap:8px;margin:8px 0}
@@ -80,7 +80,7 @@ input[type=file]{display:none}
 .msub button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .msub .bdg{position:absolute;top:-9px;min-width:22px;height:22px;border-radius:11px;padding:0 5px;font:800 12px/19px system-ui,sans-serif;border:1.5px solid #fff;text-align:center}
 .msub .bdg.soon{left:-6px;background:#00B050;color:#fff}
-.msub .bdg.now{right:-6px;background:#FF6600;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
+.msub .bdg.now{right:-6px;background:#e07a35;color:#fff;animation:mjg .8s ease-in-out infinite alternate}
 #chips button b.soon.wgs{background:#00B050;color:#fff}
 .wgv .ug-st.wgs{background:rgba(0,176,80,.18);color:#b6f5cf;border:1.5px dashed #00B050}.wgv .ug-mc.wgsoon{border-left-color:#00B050}.wgv .ug-sh b.wgs{color:#5fd38a}
 .wgv .ug-mc{position:relative;margin-top:12px}
@@ -109,7 +109,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.18.0';
+const APP_VER = '1.18.1';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -219,18 +219,18 @@ window.__MJ = window.__MJ || (function () {
   const api = () => { try { return window.__MOJE || (window.parent !== window && window.parent.__MOJE) || null; } catch (e) { return null; } };
   const frameK = () => { try { return window.frameElement ? window.frameElement.id.replace(/^fr_/, '') : null; } catch (e) { return null; } };
   const st = document.createElement('style');
-  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #ff6600;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}'
+  st.textContent = '.mj-b{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:9px;border:0;background:#7030A0;color:#fff;font-weight:700;font-size:14px;cursor:pointer}.mj-b.on{background:#242a38;border:1px solid #e07a35;color:#ffb27a}.mj-h{font-size:11.5px;color:#8b93a7;margin-bottom:6px}'
     + '.mj-bets{margin:8px 0;padding:8px;border:1px solid #323a4d;border-radius:9px;background:#161a24}.mj-lb{font-size:12px;font-weight:700;color:#ffb27a;margin-bottom:4px}'
     + '.mj-r{display:flex;gap:6px;align-items:center;font-size:12.5px;padding:3px 0;border-bottom:1px solid #2a3142}.mj-r span:first-child{flex:1}.mj-r .pos{color:#5fd38a}.mj-r .neg{color:#ff8a8a}'
     + '.mj-del{background:none;border:0;color:#8b93a7;font-size:14px;padding:0 4px;cursor:pointer}'
     + '.mj-f{display:flex;gap:5px;align-items:flex-end;margin-top:6px;flex-wrap:wrap}.mj-f label{display:flex;flex-direction:column;font-size:10.5px;color:#8b93a7}'
     + '.mj-f input{width:64px;padding:6px;border-radius:7px;border:1px solid #323a4d;background:#12151c;color:#e8ebf2;font-size:15px;font-weight:700}.mj-f .mj-nr{width:84px}'
     + '.mj-x{display:block;width:100%;margin:4px 0;padding:9px;border-radius:9px;border:1px solid #c00000;background:#2a1a1f;color:#ff8a8a;font-weight:700;font-size:13.5px;cursor:pointer}'
-    + '.mj-save{flex:1;min-width:110px;padding:9px;border-radius:8px;border:0;background:#FF6600;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}'
+    + '.mj-save{flex:1;min-width:110px;padding:9px;border-radius:8px;border:0;background:#e07a35;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer}'
     + '.mj-sum{margin:8px 0;padding:7px 8px;border:1px solid #7030A0;border-radius:10px;background:#1b1f2a;color:#fff;font:12px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.mj-sum h2{font-size:13px;margin:0 0 5px;color:#ffb27a}'
     + '.mj-sum table{width:100%!important;border-collapse:collapse;table-layout:auto!important}.mj-sum th,.mj-sum td{width:auto!important;max-width:none!important;overflow:visible!important;position:static!important}.mj-sum th,.mj-sum td{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif!important;text-transform:none!important;letter-spacing:0!important;background:none!important;color:#fff!important;font-size:12px}.mj-sum th{color:#8b93a7!important;font-size:10.5px}.mj-sum td .pos{color:#5fd38a!important}.mj-sum td .neg{color:#ff8a8a!important}.mj-sum td .mu{color:#8b93a7!important}.mj-sum td.ks{color:#c9cfdc!important;font-size:11px}.mj-sum th{text-transform:none;letter-spacing:0;font-size:10.5px;color:#8b93a7;font-weight:600;text-align:right;padding:3px 3px;border-bottom:1px solid #323a4d}.mj-sum td{padding:3px 3px;border-bottom:1px solid #2a3142;text-align:right;white-space:nowrap}'
     + '.mj-sum th:first-child,.mj-sum td:first-child{text-align:left}.mj-sum th{white-space:normal!important}.mj-sum td:first-child{white-space:normal!important}.mj-sum td.ks{white-space:normal;text-align:left;font-size:11px;color:#c9cfdc;min-width:70px}.mj-sum th.ks{text-align:left}.mj-sum .pos{color:#5fd38a;font-weight:700}.mj-sum .neg{color:#ff8a8a;font-weight:700}.mj-sum tr.s td{font-weight:800;border-top:1px solid #7030A0}.mj-sum .mu{color:#8b93a7;font-size:10.5px;margin-top:5px}';
-  st.textContent += '.mj-go{cursor:pointer}.mj-sum tr.mj-go:active td,.mj-r .mj-go:active{background:rgba(255,102,0,.25)!important}.mj-r .mj-go{text-decoration:underline dotted #8b93a7}';
+  st.textContent += '.mj-go{cursor:pointer}.mj-sum tr.mj-go:active td,.mj-r .mj-go:active{background:rgba(224,122,53,.25)!important}.mj-r .mj-go{text-decoration:underline dotted #8b93a7}';
   document.head.appendChild(st);
   // dotknięcie zakładu / wiersza podsumowania → TABELA modelu na wierszu zakładu (powłoka: MOJE.goBet)
   document.addEventListener('click', e => {
@@ -337,13 +337,13 @@ window.UG = (function () {
   const css = `
 .ug{color:#e8ebf2;font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 .ug-ban{border-radius:10px;padding:9px 12px;margin-bottom:8px;font-weight:700}
-.ug-ban.bet{background:#ff6600;color:#fff}.ug-ban.idle{background:#242a38;color:#e8ebf2;font-weight:500}
+.ug-ban.bet{background:#e07a35;color:#fff}.ug-ban.idle{background:#242a38;color:#e8ebf2;font-weight:500}
 .ug-ban .big{font-size:16px}.ug-ban .sub{font-weight:500;font-size:12px;margin-top:3px;opacity:.95}
 .ug-note{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:12.5px;color:#c9cfdc}
 .ug-note b{color:#e8ebf2}
 .ug-sec{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:8px;margin-bottom:10px}
 .ug-sh{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 6px;font-size:13px}
-.ug-sh b{font-size:14px}.ug-sh .g{font-weight:800;color:#ff9a4d}.ug-sh .m{color:#8b93a7;font-size:12px}
+.ug-sh b{font-size:14px}.ug-sh .g{font-weight:800;color:#eaa06c}.ug-sh .m{color:#8b93a7;font-size:12px}
 .ug-mc{border-left:5px solid #323a4d;background:#242a38;border-radius:8px;padding:7px 9px;margin-bottom:6px;cursor:pointer}
 .ug-mc{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:pan-y}.ug-mc.hold{filter:brightness(1.3);transition:filter .45s}
 .ug-hint{color:#8b93a7;font-size:11px;margin:-2px 2px 6px}
@@ -352,15 +352,15 @@ window.UG = (function () {
 .ug-none{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:10px 12px;margin-bottom:8px;color:#8b93a7;font-size:13px}
 .ug-wt{display:block;width:100%;margin:2px 0 10px;padding:11px 12px;border-radius:10px;border:1px dashed #3a4358;background:#1b1f2a;color:#9fc4ff;font-weight:700;font-size:13.5px;text-align:left}
 .ug-wl .ug-sec{opacity:.9}
-.ug-mc.b1{border-left-color:#ff6600}.ug-mc.b2{border-left-color:#ff9a4d}.ug-mc.b3{border-left-color:#2e75b6}.ug-mc.b4{border-left-color:#7030a0}
+.ug-mc.b1{border-left-color:#e07a35}.ug-mc.b2{border-left-color:#eaa06c}.ug-mc.b3{border-left-color:#2e75b6}.ug-mc.b4{border-left-color:#7030a0}
 .ug-mc .h{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
 .ug-mc .id{font-weight:800;font-size:15px;white-space:nowrap}
 .ug-mc .rule{color:#8b93a7;font-size:11.5px;text-align:right}
-.ug-mc .go{color:#ff9a4d;font-size:11px;margin-left:6px;font-weight:700;white-space:nowrap;padding:2px 0 2px 6px}
+.ug-mc .go{color:#eaa06c;font-size:11px;margin-left:6px;font-weight:700;white-space:nowrap;padding:2px 0 2px 6px}
 .ug-st{margin-top:5px;padding:6px 8px;border-radius:7px;font-weight:700;font-size:13px}
 .ug-st .s{display:block;font-weight:500;font-size:11.5px;opacity:.85;margin-top:1px}
-.ug-st.p1{background:#ff6600;color:#fff;box-shadow:0 0 0 2px #fff inset;font-size:14px}
-.ug-st.p2{background:rgba(255,102,0,.18);color:#ffcfa8;border:1.5px dashed #ff6600}
+.ug-st.p1{background:#e07a35;color:#fff;box-shadow:0 0 0 2px #fff inset;font-size:14px}
+.ug-st.p2{background:rgba(224,122,53,.18);color:#ffcfa8;border:1.5px dashed #e07a35}
 .ug-st.p3{background:#DEEBF7;color:#1F4E78}
 .ug-st.p4{background:#7030A0;color:#fff}
 .ug-st.p5{background:#1b1f2a;color:#ffc896;font-weight:600}
@@ -371,13 +371,13 @@ window.UG = (function () {
 .ug-last{display:flex;gap:5px;flex-wrap:wrap;margin:6px 2px 10px;color:#8b93a7;font-size:12px;align-items:center}
 .ug-last b{color:#e8ebf2;background:#242a38;border-radius:5px;padding:2px 6px;font-variant-numeric:tabular-nums}
 .ug-pop{position:fixed;inset:0;z-index:300;background:#000a;display:flex;align-items:flex-end}
-.ug-pop .sh{width:100%;max-height:80vh;overflow:auto;background:#1b1f2a;border-top:2px solid #ff6600;border-radius:14px 14px 0 0;padding:12px 14px 22px;color:#e8ebf2;font:14px/1.4 system-ui,sans-serif}
+.ug-pop .sh{width:100%;max-height:80vh;overflow:auto;background:#1b1f2a;border-top:2px solid #e07a35;border-radius:14px 14px 0 0;padding:12px 14px 22px;color:#e8ebf2;font:14px/1.4 system-ui,sans-serif}
 .ug-pop h3{margin:0 0 2px;font-size:17px}.ug-pop .hs{color:#8b93a7;font-size:12px;margin-bottom:8px}
 .ug-pop .x{float:right;background:#242a38;border:1px solid #323a4d;color:#e8ebf2;border-radius:8px;padding:4px 10px;font-size:15px}
 .ug-pop .ug-st{cursor:default}.ug-pop .ug-st.j{cursor:pointer}
 .ug-pop .ug-st .jr{float:right;font-size:11px;opacity:.85}
 .ug-pop .meta{color:#8b93a7;font-size:12.5px;margin-top:10px;display:flex;justify-content:space-between}
-.ug-pop .gobtn{margin-top:12px;width:100%;padding:11px;border-radius:9px;border:0;background:#ff6600;color:#fff;font-weight:700;font-size:15px}`;
+.ug-pop .gobtn{margin-top:12px;width:100%;padding:11px;border-radius:9px;border:0;background:#e07a35;color:#fff;font-weight:700;font-size:15px}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   const lineHtml = (l, pop) => `<div class="ug-st p${l.p}${pop && l.er ? ' j' : ''}"${l.er ? ` data-er="${l.er}"` : ''}>${pop && l.er ? `<span class="jr">Nr ${l.er} ›<\/span>` : ''}${esc(l.txt)}${l.sub ? `<span class="s">${esc(l.sub)}<\/span>` : ''}<\/div>`;
@@ -762,9 +762,9 @@ function addCode(c) {
   const bad = checkSync();
   refresh();
   const L = gatherLines(), bets = L.reduce((s, x) => s + x.bets, 0), stake = L.reduce((s, x) => s + x.stake, 0);
-  const nxt = bets ? `<div class="ap" style="color:#fff;background:#FF6600;border-radius:6px;padding:4px 6px">▼ NASTĘPNY KOD = GRA: ${L.filter(x => x.bets).map(x => `${x.a.short} ${x.bets}×`).join(' · ')} · ${fmtN(stake)} zł</div>` : '';
+  const nxt = bets ? `<div class="ap" style="color:#fff;background:#e07a35;border-radius:6px;padding:4px 6px">▼ NASTĘPNY KOD = GRA: ${L.filter(x => x.bets).map(x => `${x.a.short} ${x.bets}×`).join(' · ')} · ${fmtN(stake)} zł</div>` : '';
   const wg = wgStat(), wgt = x => { const sh = (APPS.find(a => a.k === x.k) || {}).short || x.k; return `${String(x.c.id).indexOf(sh) === 0 ? '' : esc(sh) + ' '}<b>${esc(x.c.id)}</b> k${x.step}`; };
-  const wgl = (wg.now ? `<div class="ap" style="color:#fff;background:#FF6600;border-radius:6px;padding:4px 6px">▼ W GRZE — mój kolejny krok NA NASTĘPNYM WIERSZU: ${wg.L.filter(x => x.soon.lvl === 2).map(wgt).join(' · ')}</div>` : '')
+  const wgl = (wg.now ? `<div class="ap" style="color:#fff;background:#e07a35;border-radius:6px;padding:4px 6px">▼ W GRZE — mój kolejny krok NA NASTĘPNYM WIERSZU: ${wg.L.filter(x => x.soon.lvl === 2).map(wgt).join(' · ')}</div>` : '')
     + (wg.soon ? `<div class="ap" style="color:#fff;background:#00B050;border-radius:6px;padding:4px 6px">● W GRZE NIEBAWEM (${wg.soon}): ${wg.L.filter(x => x.soon.lvl === 1).map(x => `${wgt(x)} — ${esc(x.soon.txt)}`).join('<br>')}</div>` : '');
   toast(`Nr ${fmtN(N)}: <b>${c}</b>${nxt}${wgl}${parts.join('')}${bad.length ? `<div class="er">Ponowne przeliczenie: ${bad.join(', ')}</div>` : ''}`, bets || wg.now || wg.soon ? 7000 : 4500);
   if (navigator.vibrate) navigator.vibrate(bets || wg.now ? [60, 60, 120] : wg.soon ? [40, 40, 40] : 25);
