@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-themable>
+<script>try { if (localStorage.getItem('px_theme') === 'day') document.documentElement.dataset.theme = 'day'; } catch (e) {}</script>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -91,6 +92,7 @@ input[type=file]{display:none}
 .wgdef{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:8px 10px;margin:10px 0;font-size:12px;color:#c9cfdc}.wgdef b{color:#ffd700}.wgdef div{margin:3px 0}
 .ug-mc.bflash{outline:3px solid #2e9bff!important;outline-offset:2px;box-shadow:0 0 0 7px rgba(46,155,255,.35)!important}
 #appbar{display:flex;gap:2px;flex-wrap:wrap;padding:3px 0;min-width:0}#appbar::-webkit-scrollbar{display:none}#appbar a,#appbar b{flex:none;font:700 10.5px/1 system-ui,sans-serif;border-radius:6px;padding:5px 3px;text-decoration:none;color:#e8ebf2;border:1.5px solid;background:transparent}#appbar b{color:#fff;border-color:transparent}#appbar a{transition:transform .15s}#appbar a.big{transform:scale(1.45);background:#2b3245;position:relative;z-index:5;box-shadow:0 0 0 2px #fff6}
+:root[data-theme=day]{filter:invert(1) hue-rotate(180deg)}#appbar .thm{flex:none;border:1.5px solid #888;border-radius:6px;background:transparent;padding:2px 4px;font-size:13px;line-height:1;cursor:pointer}
 </style>
 </head>
 <body>
@@ -113,6 +115,12 @@ input[type=file]{display:none}
   const el = document.getElementById('appbar'), here = location.pathname.replace(/index\.html$/, '');
   if (el) el.innerHTML = [...A.filter(([u]) => here.endsWith(u)), ...A.filter(([u]) => !here.endsWith(u))].map(([u, l, c]) => here.endsWith(u) ? `<b style="background:${c}">${l}</b>` : `<a href="${u}" style="border-color:${c}">${l}</a>`).join('');
   // 1. dotknięcie powiększa przycisk, 2. dotknięcie powiększonego otwiera aplikację (żeby nie przełączyć przez przypadek)
+  // dzień / noc — wspólne ustawienie MOJE, SZUKAJ i RAZEM (pamiętane w telefonie)
+  if (el && document.documentElement.hasAttribute('data-themable')) {
+    const tb = document.createElement('button'), root = document.documentElement, upd = () => { tb.textContent = root.dataset.theme === 'day' ? '🌙' : '☀️'; tb.title = root.dataset.theme === 'day' ? 'tryb nocny' : 'tryb dzienny'; };
+    tb.className = 'thm'; upd(); el.appendChild(tb);
+    tb.onclick = () => { const d = root.dataset.theme === 'day' ? 'night' : 'day'; if (d === 'day') root.dataset.theme = 'day'; else delete root.dataset.theme; try { localStorage.setItem('px_theme', d); } catch (e) {} upd(); };
+  }
   if (el) el.addEventListener('click', e => {
     const a = e.target.closest('a'); if (!a) return;
     if (a.classList.contains('big')) return;
@@ -128,7 +136,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.18.4';
+const APP_VER = '1.19.0';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
