@@ -97,6 +97,7 @@ input[type=file]{display:none}
 .nx-g{margin-top:6px;border-radius:8px;padding:4px 8px;background:#0003;border-left:5px solid #2e7d4f}.nx-h{font-size:14px}.nx-h span{opacity:.8;font-size:12px}.nx-h .nx-r{display:block;opacity:.9;font-size:12px}
 .nx-i{display:flex;align-items:center;gap:6px;flex-wrap:wrap;white-space:nowrap;padding:3px 0;border-top:1px solid #ffffff33}.nx-b{border:1.5px solid #fff;background:#ffffff26;color:#fff;border-radius:7px;padding:1px 7px;font-size:14px;cursor:pointer}.nx-ok{white-space:nowrap;font-size:11px;font-weight:800;background:#1f8a4c;border-radius:6px;padding:1px 6px}
 .nx-all{display:block;width:100%;margin:4px 0 2px;border:1.5px solid #fff;background:#ffffff26;color:#fff;border-radius:8px;padding:5px;font-weight:800;font-size:13px;cursor:pointer}
+.nx-v{font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;background:#0004}.nx-v.g{color:#7dffaa}.nx-v.o{color:#ffe066}.nx-v.x{color:#ffb0b0}
 #appbar .nxb{font-weight:800;color:#e8ebf2;white-space:nowrap;font-size:12px}#appbar .nxb.on{background:#c97a45;border-color:#c97a45;color:#fff}
 :root[data-theme=day]{filter:invert(1) hue-rotate(180deg)}#appbar .thm{flex:none;border:1.5px solid #888;border-radius:6px;background:transparent;padding:2px 4px;font-size:13px;line-height:1;cursor:pointer}
 </style>
@@ -779,7 +780,7 @@ function nxtList() {
   AA.forEach(a => { let cs = []; try { cs = [].concat(...W(a.k).cards(() => {}).map(s => s.cards)); } catch (e) {}
     cs.forEach(c => c.lines.forEach(l => { if (l.p !== 1) return;
       const step = l.k || +((String(l.txt).match(/(?:krok(?: gry)?|K|k)\s?=?\s?(\d+)/) || [])[1]) || 0;
-      out.push({ a, id: String(c.mid || c.id), lab: c.id, step, stake: l.stake || 0 }); })); });
+      out.push({ a, id: String(c.mid || c.id), lab: c.id, step, stake: l.stake || 0, v: (/^(GRAĆ|REZ|ODRZ)\b/.exec(c.rule || '') || [])[1] || '' }); })); });
   return { N, out };
 }
 const nxSaved = (x, N) => MOJE.bets().some(b => b.k === x.a.k && b.id === x.id && b.row === N);
@@ -801,7 +802,7 @@ function nxtFill() {
   const grp = A => { const a = A[0][0].a, s = A.reduce((t, [x]) => t + x.stake, 0), free = A.filter(([x]) => !nxSaved(x, N)); d._grp[a.k] = free.map(([, i]) => String(i));
     return `<div class="nx-g"><div class="nx-h"><b>${esc(a.short)}</b> <span>${esc(a.name)}</span> · ${A.length} · <b>${fmtN(s)} zł</b><span class="nx-r">trafi: +${fmtN(2 * s)} · nie: −${fmtN(s)}</span></div>
       ${free.length > 1 ? `<button class="nx-all" data-ng="${esc(a.k)}">💰 zapisz zakład na wszystkie ${free.length} (${fmtN(free.reduce((t, [x]) => t + x.stake, 0))} zł)</button>` : ''}
-      ${A.map(([x, i]) => `<div class="nx-i">${nxSaved(x, N) ? '<span class="nx-ok">✓ zapisany</span>' : `<button class="nx-b" data-nb="${i}">💰</button>`}<b>${esc(x.lab)}</b> · k${x.step || '?'} — <b>${fmtN(x.stake)} zł</b></div>`).join('')}</div>`; };
+      ${A.map(([x, i]) => `<div class="nx-i">${nxSaved(x, N) ? '<span class="nx-ok">✓ zapisany</span>' : `<button class="nx-b" data-nb="${i}">💰</button>`}<b>${esc(x.lab)}</b>${x.v ? ` <span class="nx-v ${x.v === 'GRAĆ' ? 'g' : x.v === 'ODRZ' ? 'x' : 'o'}">${x.v}</span>` : ''} · k${x.step || '?'} — <b>${fmtN(x.stake)} zł</b></div>`).join('')}</div>`; };
   d.innerHTML = `<div class="nx-hd">GRAJ Nr ${fmtN(N + 1)}</div>
     <div class="nx-s">${out.length ? `${out.length} zakład(y) · wszystkie razem <b>${fmtN(sum)} zł</b> · trafi: <b>+${fmtN(2 * sum)} zł</b> · nie: <b>−${fmtN(sum)} zł</b>` : `na Nr ${fmtN(N + 1)} nie gra żaden model w tabelach RAZEM`}</div>
     ${out.length ? `<div class="nx-l">${G.map(grp).join('')}</div>` : ''}<div class="nx-x">💰 = zapisz zakład (→ MOJE ZAKŁADY tutaj i w aplikacji MOJE) · dotknij poza przyciskiem, żeby zamknąć</div>`;
