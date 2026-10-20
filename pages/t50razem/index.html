@@ -92,6 +92,13 @@ input[type=file]{display:none}
 .wgdef{background:#1b1f2a;border:1px solid #323a4d;border-radius:10px;padding:8px 10px;margin:10px 0;font-size:12px;color:#c9cfdc}.wgdef b{color:#ffd700}.wgdef div{margin:3px 0}
 .ug-mc.bflash{outline:3px solid #2e9bff!important;outline-offset:2px;box-shadow:0 0 0 7px rgba(46,155,255,.35)!important}
 #appbar{display:flex;gap:2px;flex-wrap:wrap;padding:3px 0;min-width:0}#appbar::-webkit-scrollbar{display:none}#appbar a,#appbar b{flex:none;font:700 10.5px/1 system-ui,sans-serif;border-radius:6px;padding:5px 3px;text-decoration:none;color:#e8ebf2;border:1.5px solid;background:transparent}#appbar b{color:#fff;border-color:transparent}#appbar a{transition:transform .15s}#appbar a.big{transform:scale(1.45);background:#2b3245;position:relative;z-index:5;box-shadow:0 0 0 2px #fff6}
+.nxpop{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translate(-50%,-140%);transition:transform .3s;z-index:60;width:min(94vw,560px);border-radius:12px;padding:10px 14px;color:#fff;background:#c97a45;box-shadow:0 8px 30px #000a;cursor:pointer;font:14px/1.35 system-ui,sans-serif}.nxpop.in{transform:translate(-50%,0)}
+.nx-hd{font-size:22px;font-weight:900}.nx-s{font-size:13.5px;margin-top:2px}.nx-l{margin-top:6px;font-size:12.5px;max-height:60vh;overflow:auto}.nx-x{font-size:11px;opacity:.8;margin-top:5px;text-align:right}
+.nx-g{margin-top:6px;border-radius:8px;padding:4px 8px;background:#0003;border-left:5px solid #ffffff66}.nx-g.g{border-left-color:#5fd38a}.nx-g.o{border-left-color:#FFD700}.nx-g.x{border-left-color:#ff6b6b}.nx-p{font-size:11px;opacity:.85;margin-left:4px}.nx-t{font-size:10.5px;font-weight:800;border-radius:5px;padding:0 4px;background:#2e7d4f}.nx-h{font-size:14px}.nx-h span{opacity:.8;font-size:12px}.nx-h .nx-r{display:block;opacity:.9;font-size:12px}
+.nx-i{display:flex;align-items:center;gap:6px;flex-wrap:wrap;white-space:nowrap;padding:3px 0;border-top:1px solid #ffffff33}.nx-b{border:1.5px solid #fff;background:#ffffff26;color:#fff;border-radius:7px;padding:1px 7px;font-size:14px;cursor:pointer}.nx-ok{white-space:nowrap;font-size:11px;font-weight:800;background:#1f8a4c;border-radius:6px;padding:1px 6px}
+.nx-all{display:block;width:100%;margin:4px 0 2px;border:1.5px solid #fff;background:#ffffff26;color:#fff;border-radius:8px;padding:5px;font-weight:800;font-size:13px;cursor:pointer}
+.nx-v{font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;background:#0004}.nx-v.g{color:#7dffaa}.nx-v.o{color:#ffe066}.nx-v.x{color:#ffb0b0}
+#appbar .nxb{font-weight:800;color:#e8ebf2;white-space:nowrap;font-size:12px}#appbar .nxb.on{background:#c97a45;border-color:#c97a45;color:#fff}
 :root[data-theme=day]{filter:invert(1) hue-rotate(180deg)}#appbar .thm{flex:none;border:1.5px solid #888;border-radius:6px;background:transparent;padding:2px 4px;font-size:13px;line-height:1;cursor:pointer}
 </style>
 </head>
@@ -136,7 +143,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.19.0';
+const APP_VER = '1.20.1';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -767,7 +774,53 @@ function renderMoje() {
   flashCard();
 }
 function renderHome() { if (homeView === 'dane') renderDane(); else if (homeView === 'moje') renderMoje(); else renderGraHome(); }
-function refresh() { renderChips(); if (!APPS.some(a => a.k === cur)) renderHome(); }
+// ===== pasek: 💰 = zakłady na następny wiersz ze wszystkich tabel RAZEM (wybrany BET), w grupach wg tabeli, z zapisem do MOJE ZAKŁADY =====
+function nxtList() {
+  const N = MOJE.N(), out = [], AA = typeof VAPPS === 'function' ? VAPPS() : APPS;
+  AA.forEach(a => { let cs = []; try { cs = [].concat(...W(a.k).cards(() => {}).map(s => s.cards)); } catch (e) {}
+    cs.forEach(c => c.lines.forEach(l => { if (l.p !== 1) return;
+      const step = l.k || +((String(l.txt).match(/(?:krok(?: gry)?|K|k)\s?=?\s?(\d+)/) || [])[1]) || 0;
+      out.push({ a, c, id: String(c.mid || c.id), lab: c.id, step, stake: l.stake || 0 }); })); });
+  return { N, out };
+}
+const nxSaved = (x, N) => MOJE.bets().some(b => b.k === x.a.k && b.id === x.id && b.row === N);
+function nxtPop() {
+  const old = $('nxPop'); if (old) { old.remove(); return; }
+  const d = document.createElement('div'); d.id = 'nxPop'; d.className = 'nxpop';
+  d.onclick = e => {
+    const b = e.target.closest('[data-nb],[data-ng]'); if (!b) return d.remove();
+    e.stopPropagation(); const { N, out } = nxtList(), ids = b.dataset.nb !== undefined ? [b.dataset.nb] : (d._grp[b.dataset.ng] || []);
+    out.forEach((x, i) => { if (ids.includes(String(i)) && !nxSaved(x, N) && x.step > 0) MOJE.addBet(x.a.k, x.id, N, x.step, x.stake); });
+    nxtFill(); nxtUpd();
+  };
+  document.body.appendChild(d); nxtFill(); setTimeout(() => d.classList.add('in'), 10);
+}
+// ocena modelu (pkt z 9) ze statystyk tabeli — liczona po jednym modelu (bootstrap), zapamiętana do następnego kodu
+const NXC = new Map();
+const nxKey = (x, N) => `${x.a.k}|${x.id}|${N}`;
+function nxScore() {
+  const d = $('nxPop'); if (!d) return; const { N, out } = nxtList(), x = out.find(y => !NXC.has(nxKey(y, N))); if (!x) return;
+  let v = null; try { const r = (x.c.stats ? x.c.stats() : []).find(r => /^Ocena \(pkt/.test(r[0])); const m = r && /(\d+)\/9/.exec(String(r[1])); v = m ? +m[1] : null; } catch (e) {}
+  NXC.set(nxKey(x, N), v); nxtFill();
+}
+function nxtFill() {
+  const d = $('nxPop'); if (!d) return;
+  const { N, out } = nxtList(), sum = out.reduce((a, x) => a + x.stake, 0); d._grp = {};
+  const sc = x => NXC.has(nxKey(x, N)) ? NXC.get(nxKey(x, N)) : undefined;
+  if (out.some(x => sc(x) === undefined)) setTimeout(nxScore, 30);
+  const G = [['GRAĆ', 'g', v => v >= 7, '7–9 pkt'], ['REZERWA', 'o', v => v >= 5 && v < 7, '5–6 pkt'], ['ODRZUĆ', 'x', v => v !== null && v !== undefined && v < 5, 'poniżej 5 pkt'], ['bez oceny', 'n', v => v === null, ''], ['liczę ocenę…', 'q', v => v === undefined, '']];
+  const grp = ([nm, c, f, pk]) => { const A = out.map((x, i) => [x, i]).filter(([x]) => f(sc(x))); if (!A.length) return ''; const s = A.reduce((t, [x]) => t + x.stake, 0), free = A.filter(([x]) => !nxSaved(x, N)); d._grp[c] = free.map(([, i]) => String(i));
+    return `<div class="nx-g ${c}"><div class="nx-h"><b>${nm}</b>${pk ? ` <span>(${pk})</span>` : ''} · ${A.length} · <b>${fmtN(s)} zł</b><span class="nx-r">trafi: +${fmtN(2 * s)} · nie: −${fmtN(s)}</span></div>
+      ${free.length > 1 ? `<button class="nx-all" data-ng="${c}">💰 zapisz zakład na wszystkie ${free.length} (${fmtN(free.reduce((t, [x]) => t + x.stake, 0))} zł)</button>` : ''}
+      ${A.map(([x, i]) => `<div class="nx-i">${nxSaved(x, N) ? '<span class="nx-ok">✓ zapisany</span>' : `<button class="nx-b" data-nb="${i}">💰</button>`}<span class="nx-t">${esc(x.a.short)}</span><b>${esc(x.lab)}</b> · k${x.step || '?'} — <b>${fmtN(x.stake)} zł</b>${typeof sc(x) === 'number' ? ` <span class="nx-p">${sc(x)}/9</span>` : ''}</div>`).join('')}</div>`; };
+  const q = out.filter(x => sc(x) === undefined).length;
+  d.innerHTML = `<div class="nx-hd">GRAJ Nr ${fmtN(N + 1)}</div>
+    <div class="nx-s">${out.length ? `${out.length} zakład(y) · wszystkie razem <b>${fmtN(sum)} zł</b> · trafi: <b>+${fmtN(2 * sum)} zł</b> · nie: <b>−${fmtN(sum)} zł</b>${q ? `<br>oceniam modele: ${out.length - q}/${out.length}…` : ''}` : `na Nr ${fmtN(N + 1)} nie gra żaden model w tabelach RAZEM`}</div>
+    ${out.length ? `<div class="nx-l">${G.map(grp).join('')}</div>` : ''}<div class="nx-x">💰 = zapisz zakład (→ MOJE ZAKŁADY tutaj i w aplikacji MOJE) · ocena = pkt z 9 ze statystyk modelu · dotknij poza przyciskiem, żeby zamknąć</div>`;
+}
+function nxtUpd() { const b = $('nxtBtn'); if (!b) return; let s = 0; try { s = nxtList().out.reduce((a, x) => a + x.stake, 0); } catch (e) {} b.textContent = s ? `💰 ${fmtN(s)}` : '💰'; b.classList.toggle('on', s > 0); }
+{ const el = $('appbar'); if (el) { const b = document.createElement('button'); b.id = 'nxtBtn'; b.className = 'thm nxb'; b.title = 'ile postawić na następnym wierszu'; b.textContent = '💰'; b.onclick = nxtPop; el.insertBefore(b, el.querySelector('.thm')); setInterval(() => { nxtUpd(); }, 2500); } }
+function refresh() { try { nxtUpd(); nxtFill(); } catch (e) {} renderChips(); if (!APPS.some(a => a.k === cur)) renderHome(); }
 
 // ---- wpis / cofnij ----
 let toastT = null;
