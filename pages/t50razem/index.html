@@ -97,7 +97,7 @@ input[type=file]{display:none}
 .nx-g{margin-top:6px;border-radius:8px;padding:4px 8px;background:#0003;border-left:5px solid #ffffff66}.nx-g.g{border-left-color:#5fd38a}.nx-g.o{border-left-color:#FFD700}.nx-g.x{border-left-color:#ff6b6b}.nx-p{font-size:11px;opacity:.85;margin-left:4px}.nx-t{font-size:10.5px;font-weight:800;border-radius:5px;padding:0 4px;background:#2e7d4f}.nx-h{font-size:14px}.nx-h span{opacity:.8;font-size:12px}.nx-h .nx-r{display:block;opacity:.9;font-size:12px}
 .nx-i{display:flex;align-items:center;gap:6px;flex-wrap:wrap;white-space:nowrap;padding:3px 0;border-top:1px solid #ffffff33}.nx-b{border:1.5px solid #fff;background:#ffffff26;color:#fff;border-radius:7px;padding:1px 7px;font-size:14px;cursor:pointer}.nx-ok{white-space:nowrap;font-size:11px;font-weight:800;background:#1f8a4c;border-radius:6px;padding:1px 6px}
 .nx-undo{background:#0003!important;border-style:dashed!important}.nx-u{font-size:13px}
-.nx-i[data-nk]{cursor:pointer}.nx-rel{background:#d6eaff;color:#0d2a4a;border-radius:6px;box-shadow:inset 4px 0 #4a9be8;padding-left:8px}.nx-rel .nx-b{border-color:#0d2a4a;color:#0d2a4a;background:#ffffff80}.nx-rl{font-size:11px;font-weight:800;background:#9fd0ff;color:#0d2a4a;border-radius:6px;padding:0 5px}.nx-rh{margin-top:6px;font-size:12px;background:#9fd0ff33;border:1px solid #9fd0ff99;border-radius:8px;padding:4px 8px;white-space:normal}.nx-st{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}.nx-st td{padding:3px 4px;border-top:1px solid #ffffff33;vertical-align:top}.nx-st td:last-child{text-align:right;font-weight:700}
+.nx-i[data-nk]{cursor:pointer;transition:transform .15s}.nx-i.big{transform:scale(1.08);transform-origin:left center;position:relative;z-index:3;border-radius:6px;box-shadow:0 0 0 2px #fff,0 3px 10px #0007;background:#ffffff38}.nx-i.nx-rel.big{background:#d6eaff}.nx-rel{background:#d6eaff;color:#0d2a4a;border-radius:6px;box-shadow:inset 4px 0 #4a9be8;padding-left:8px}.nx-rel .nx-b{border-color:#0d2a4a;color:#0d2a4a;background:#ffffff80}.nx-rl{font-size:11px;font-weight:800;background:#9fd0ff;color:#0d2a4a;border-radius:6px;padding:0 5px}.nx-rh{margin-top:6px;font-size:12px;background:#9fd0ff33;border:1px solid #9fd0ff99;border-radius:8px;padding:4px 8px;white-space:normal}.nx-st{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}.nx-st td{padding:3px 4px;border-top:1px solid #ffffff33;vertical-align:top}.nx-st td:last-child{text-align:right;font-weight:700}
 .nx-all{display:block;width:100%;margin:4px 0 2px;border:1.5px solid #fff;background:#ffffff26;color:#fff;border-radius:8px;padding:5px;font-weight:800;font-size:13px;cursor:pointer}
 .nx-v{font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;background:#0004}.nx-v.g{color:#7dffaa}.nx-v.o{color:#ffe066}.nx-v.x{color:#ffb0b0}
 #appbar .nxb{font-weight:800;color:#e8ebf2;white-space:nowrap;font-size:12px}#appbar .nxb.on{background:#c97a45;border-color:#c97a45;color:#fff}
@@ -145,7 +145,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.20.4';
+const APP_VER = '1.20.5';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -791,10 +791,10 @@ function nxtPop() {
   const old = $('nxPop'); if (old) { old.remove(); return; }
   const d = document.createElement('div'); d.id = 'nxPop'; d.className = 'nxpop';
   d.onclick = e => {
-    if (e.target.closest('[data-nback]')) { e.stopPropagation(); d._st = null; return nxtFill(); }
+    if (e.target.closest('[data-nback]')) { e.stopPropagation(); d._st = null; d._big = null; return nxtFill(); }
     if (e.target.closest('[data-ngo]')) { e.stopPropagation(); const x = d._st; d.remove(); if (x) goModel(x.a.k, x.id); return; }
     const b = e.target.closest('[data-nb],[data-ng],[data-nu],[data-nug]');
-    if (!b) { const m = e.target.closest('[data-nk]'); if (!m) return d.remove(); e.stopPropagation(); const x = nxtList().out[+m.dataset.nk]; if (x) { let rows = []; try { rows = x.c.stats ? x.c.stats() || [] : []; } catch (e) {} d._st = Object.assign({}, x, { rows }); } return nxtFill(); }   // dotknięcie modelu → jego statystyki w okienku
+    if (!b) { const m = e.target.closest('[data-nk]'); if (!m) return d.remove(); e.stopPropagation(); if (!m.classList.contains('big')) { d.querySelectorAll('.nx-i.big').forEach(x => x.classList.remove('big')); m.classList.add('big'); d._big = m.dataset.nk; return; }  const x = nxtList().out[+m.dataset.nk]; if (x) { let rows = []; try { rows = x.c.stats ? x.c.stats() || [] : []; } catch (e) {} d._st = Object.assign({}, x, { rows }); } return nxtFill(); }   // dotknięcie modelu → jego statystyki w okienku
     e.stopPropagation(); const { N, out } = nxtList();
     if (b.dataset.nu !== undefined || b.dataset.nug !== undefined) {   // ↶ cofnięcie zapisanych zakładów na następny wiersz; model dodany do MOJE tylko przez 💰 też wraca
       const ids = b.dataset.nu !== undefined ? [b.dataset.nu] : (d._sav[b.dataset.nug] || []);
@@ -847,7 +847,8 @@ function nxtFill() {
   d.innerHTML = `<div class="nx-hd">GRAJ Nr ${fmtN(N + 1)}</div>
     <div class="nx-s">${out.length ? `${out.length} zakład(y) · wszystkie razem <b>${fmtN(sum)} zł</b> · trafi: <b>+${fmtN(2 * sum)} zł</b> · nie: <b>−${fmtN(sum)} zł</b>${q ? `<br>oceniam modele: ${out.length - q}/${out.length}…` : ''}` : `na Nr ${fmtN(N + 1)} nie gra żaden model w tabelach RAZEM`}</div>
     ${RS.length ? `<div class="nx-rh">🔗 spokrewnione (≥90% wspólnych wierszy w historii — grają prawie zawsze to samo): ${RS.join(' · ')}</div>` : ''}
-    ${out.length ? `<div class="nx-l">${G.map(grp).join('')}</div>` : ''}<div class="nx-x">💰 = zapisz zakład (→ MOJE ZAKŁADY tutaj i w aplikacji MOJE) · ocena = pkt z 9 ze statystyk modelu · niebieskie 🔗 = spokrewnione · dotknij model → statystyki · poza listą → zamknij</div>`;
+    ${out.length ? `<div class="nx-l">${G.map(grp).join('')}</div>` : ''}<div class="nx-x">💰 = zapisz zakład (→ MOJE ZAKŁADY tutaj i w aplikacji MOJE) · ocena = pkt z 9 ze statystyk modelu · niebieskie 🔗 = spokrewnione · dotknij model → powiększ, jeszcze raz → statystyki · poza listą → zamknij</div>`;
+  if (d._big != null) { const r = d.querySelector(`.nx-i[data-nk="${d._big}"]`); if (r) r.classList.add('big'); }   // powiększony model zostaje po odświeżeniu listy
 }
 function nxtUpd() { const b = $('nxtBtn'); if (!b) return; let s = 0; try { s = nxtList().out.reduce((a, x) => a + x.stake, 0); } catch (e) {} b.textContent = s ? `💰 ${fmtN(s)}` : '💰'; b.classList.toggle('on', s > 0); }
 { const el = $('appbar'); if (el) { const b = document.createElement('button'); b.id = 'nxtBtn'; b.className = 'thm nxb'; b.title = 'ile postawić na następnym wierszu'; b.textContent = '💰'; b.onclick = nxtPop; el.insertBefore(b, el.querySelector('.thm')); setInterval(() => { nxtUpd(); }, 2500); } }
