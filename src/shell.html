@@ -144,7 +144,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.20.5';
+const APP_VER = '1.20.6';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -354,7 +354,7 @@ window.__MJ = window.__MJ || (function () {
       return `<tr class="mj-go" data-mjgo="1" data-k="${q(kk)}" data-id="${q(id)}" data-row="${lastRow}"><td>${lab}<b>${q(id)}</b>${gone ? ' <span class="mu">(usunięty)</span>' : ''}</td><td>${r.n}${r.w ? ` <span class="pos">✔${r.w}</span>` : ''}${r.l ? ` <span class="neg">✗${r.l}</span>` : ''}${r.c ? ` <span class="mu">⏳${r.c}</span>` : ''}</td><td class="ks">${ks}</td><td>${f(r.put)}</td><td>${zl(r.wyn)}</td></tr>`;
     }).join('');
     const head = `MOJE ZAKŁADY — podsumowanie${k ? '' : ' (wszystkie tabele)'}`;
-    if (!all.length) return `<div class="mj-sum"><h2>${head}</h2><div class="mu">Brak zapisanych zakładów${k ? ' w tej tabeli' : ''}. Zakład zapisujesz w oknie statystyk modelu (przytrzymaj kartę na GRA albo wiersz w TABELI) → MOJE ZAKŁADY → „Zapisz zakład”.</div></div>`;
+    if (!all.length) return `<div class="mj-sum"><h2>${head}</h2><div class="mu">Brak zapisanych zakładów${k ? ' w tej tabeli' : ''}. Zakład zapisujesz w oknie statystyk modelu (dotknij kartę na GRA albo przytrzymaj wiersz w TABELI) → MOJE ZAKŁADY → „Zapisz zakład”.</div></div>`;
     const kRows = Object.keys(KS).sort((p, q) => p - q).map(s => { const z = KS[s]; return `<tr><td>k${s}</td><td>${z.n}${z.w ? ` <span class="pos">✔${z.w}</span>` : ''}</td><td>${f(z.put)}</td><td>${zl(z.wyn)}</td></tr>`; }).join('');
     return `<div class="mj-sum"><h2>${head}</h2><table><thead><tr><th>Model</th><th>zakł.</th><th class="ks">kroki</th><th>postawione zł</th><th>wynik zł</th></tr></thead><tbody>${rows}`
       + `<tr class="s"><td>Σ</td><td>${T.n}${T.w ? ` <span class="pos">✔${T.w}</span>` : ''}${T.l ? ` <span class="neg">✗${T.l}</span>` : ''}${T.c ? ` <span class="mu">⏳${T.c}</span>` : ''}</td><td></td><td>${f(T.put)}</td><td>${zl(T.wyn)}</td></tr></tbody></table>`
@@ -461,7 +461,7 @@ window.UG = (function () {
       ? `<div class="ug-ban bet"><div class="big">▼ NASTĘPNY WIERSZ Nr ${fmt(NX)} = GRA<\/div><div class="sub">${bets.length} × · razem ${fmt(sum)} zł · ${bets.map(b => esc(b.id)).join(' · ')}<\/div><\/div>`
       : `<div class="ug-ban idle"><div><b>Bez gry na Nr ${fmt(NX)}<\/b>${cond ? ` · gra w toku: ${cond}` : ''}<\/div>${cfg.idleSub ? `<div class="sub">${esc(cfg.idleSub)}<\/div>` : ''}<\/div>`;
     if (cfg.note) h += `<div class="ug-note">${cfg.note}<\/div>`;
-    h += `<div class="ug-hint">Tapnij kartę → tabela modelu · przytrzymaj → statystyki modelu<\/div>`;
+    h += `<div class="ug-hint">Dotknij kartę → statystyki modelu · przytrzymaj → tabela modelu<\/div>`;
     // tylko okna po START: gra na następnym wierszu (p1), gra w toku (p2, p4 bez „START”, BUST czeka na zamknięcie, act);
     // modele bez triggera i okna przed START (przygotowanie, ★ START za 1) → zwinięta lista „Modele oczekujące” pod spodem
     // linia okna po START; karta grająca pokazuje tylko takie linie, jej okna przed START idą do „Modele oczekujące”
@@ -499,22 +499,22 @@ window.UG = (function () {
     if (cfg.bindTop) cfg.bindTop(host);
     const wb = host.querySelector('.ug-wt');
     if (wb) wb.onclick = () => { wOpen = !wOpen; host.querySelector('.ug-wl').hidden = !wOpen; wb.textContent = `${wOpen ? '▴' : '▾'} Modele oczekujące (${nWait}) — przed START / bez triggera`; };
-    // tapnięcie karty / linii / strzałki → TABELA (linia z Nr → ten wiersz); przytrzymanie karty → okno ze wszystkimi etykietami
+    // dotknięcie karty → STATYSTYKI (okno ze wszystkimi etykietami); przytrzymanie karty / linii → TABELA (linia z Nr → ten wiersz)
     host.querySelectorAll('.ug-mc').forEach(el => {
       const c = idx[+el.dataset.c];
-      let t = null, long = false, x0 = 0, y0 = 0;
+      let t = null, long = false, x0 = 0, y0 = 0, er0;
       const cancel = () => { clearTimeout(t); t = null; el.classList.remove('hold'); };
       el.addEventListener('pointerdown', e => {
-        long = false; x0 = e.clientX; y0 = e.clientY; el.classList.add('hold');
-        t = setTimeout(() => { long = true; el.classList.remove('hold'); if (navigator.vibrate) navigator.vibrate(25); popup(c); }, 450);
+        long = false; x0 = e.clientX; y0 = e.clientY; el.classList.add('hold'); const s0 = e.target.closest('.ug-st[data-er]'); er0 = s0 ? +s0.dataset.er : undefined;
+        t = setTimeout(() => { long = true; el.classList.remove('hold'); if (navigator.vibrate) navigator.vibrate(25); c.go(er0); }, 450);
       });
       el.addEventListener('pointermove', e => { if (t && (Math.abs(e.clientX - x0) > 10 || Math.abs(e.clientY - y0) > 10)) cancel(); });
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => el.addEventListener(ev, cancel));
       el.addEventListener('contextmenu', e => e.preventDefault());
       el.addEventListener('click', e => {
         if (long) { long = false; e.preventDefault(); return; }
-        const st = e.target.closest('.ug-st[data-er]');
-        c.go(st ? +st.dataset.er : undefined);
+        
+        popup(c);
       });
     });
   }
