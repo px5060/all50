@@ -145,7 +145,7 @@ input[type=file]{display:none}
 
 <script>
 "use strict";
-const APP_VER = '1.20.6';
+const APP_VER = '1.20.7';
 const LS = { added: 't50razem_v1_added', autobk: 't50razem_v1_autobk', lastbk: 't50razem_v1_lastbk', lastimp: 't50razem_v1_lastimp' };
 // ---- MOJE GRY: modele dodane przyciskiem w oknie statystyk (karta GRA / wiersz TABELI); start = liczba kodów w chwili dodania ----
 const MOJE = { key: 't50razem_v1_moje',
@@ -536,7 +536,14 @@ let added = [];
 (function () { const s = lsGet(LS.added, ''); if (/^(\d{3})*$/.test(s)) for (let i = 0; i < s.length; i += 3) added.push(s.substr(i, 3)); })();
 const allCodes = () => seedArr.concat(added);
 window.__allCodes = allCodes;   // tabela SZUKAJ czyta ciąg z powłoki
-function saveAdded() { if (!lsSet(LS.added, added.join(''))) alert('BŁĄD zapisu pamięci telefonu — zrób eksport JSON!'); }
+// skąd kod: wspólny dziennik „codesrc_v1_t50 / _t60” (wszystkie aplikacje na px5060.github.io) — {i: numer w dopisanych kodach, c: kod, a: aplikacja, t: czas}; MOJE pokazuje znaczek aplikacji przy ostatnim kodzie
+function codeSrcLog(t, oldS, newS, a) {
+  if (!newS || newS.length <= oldS.length || newS.indexOf(oldS) !== 0) return;
+  const k = 'codesrc_v1_' + t; let L; try { L = JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { L = []; } if (!Array.isArray(L)) L = [];
+  const now = Date.now(); for (let j = oldS.length; j + 3 <= newS.length; j += 3) L.push({ i: j / 3, c: newS.substr(j, 3), a, t: now });
+  try { localStorage.setItem(k, JSON.stringify(L.slice(-300))); } catch (e) {}
+}
+function saveAdded() { const o = lsGet(LS.added, ''), s = added.join(''); if (!lsSet(LS.added, s)) alert('BŁĄD zapisu pamięci telefonu — zrób eksport JSON!'); else codeSrcLog(LS.added.slice(0, 3), /^(\d{3})*$/.test(o) ? o : '', s, 'R50'); }
 // Kody dopisane w innej appce na tej domenie (SZUKAJ / BUST, druga kopia RAZEM — ten sam klucz) → wczytaj, zanim cokolwiek zapiszesz.
 // Bez tego RAZEM otwarty w tle nadpisywał listę swoją starą kopią i „czyścił” kody dopisane gdzie indziej.
 function syncAdded(quiet) {
