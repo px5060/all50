@@ -565,9 +565,14 @@ window.UG = (function () {
 
   // przytrzymanie karty → STATYSTYKI modelu (jak SZUKAJ / BUST) + wszystkie etykiety
   function statsHtml(c) {
-    let rows = [];
+    let rows = [], G = null;
+    try { window.top.__relG = null; } catch (e) {}
     try { rows = c.stats ? c.stats() || [] : []; } catch (e) {}
-    return rows.length ? `<div class="ug-lb">Statystyki modelu</div><table class="ug-stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : '';
+    try { G = window.top.__relG; } catch (e) {}
+    // ostatnie 20 cykli modelu (z tej samej oceny): W1…W8 = WIN na kroku, LOST = przegrany krok 8 — najnowszy z prawej
+    const L = G && G.length && G[0].K != null ? Array.from(G).sort((a, b) => a.er - b.er).slice(-20) : [];
+    const cyc = L.length ? `<div class="ug-lb">Ostatnie ${L.length} cykli (najnowszy z prawej)</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin:2px 0 6px">${L.map(g => `<b style="font-size:12px;border-radius:4px;padding:1px 5px;color:#fff;background:${g.K >= 9 ? '#8a1f1f' : '#2b6b45'}">${g.K >= 9 ? 'LOST' : 'W' + g.K}</b>`).join('')}</div>` : '';
+    return rows.length ? `<div class="ug-lb">Statystyki modelu</div><table class="ug-stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>` + cyc : '';
   }
   function popup(c) {
     const p = document.createElement('div'); p.className = 'ug-pop';
