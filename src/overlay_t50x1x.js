@@ -74,7 +74,7 @@
     },
     stats: mi => {
       const r = results[mi], s = computeStats(r, codes.length), rr = rankingRow(r, codes), z = window.__t50zl;
-      try { window.top.__relG = r.d.map(x => ({ er: x.w_ZAKLAD - 1 })); } catch (e) {}   // wiersze zakładów — pokrewieństwo w 💰
+      try { window.top.__relG = r.d.filter(x => x.wynik === 'WIN' || x.wynik === 'BUST').map(x => ({ er: x.w_ZAKLAD - 1, K: x.wynik === 'WIN' ? x.krok : 9 })); } catch (e) {}   // zamknięcia cykli (krok WIN / 9 = LOST) — pokrewieństwo w 💰 i ostatnie cykle w statystykach
       return [['Ocena (pkt z 9)', window.__ocena(computeStats(r, codes.length, { mc: true }).score)], ['Zakłady / cykle', `${s.zakl} / ${s.cykle}`], ['WIN / BUST', `${s.W} / ${s.B}`], ['Trafienie', `${s.hit.toFixed(1)} %`],
         ['Bilans', z(s.P)], ['Max seria przegranych', s.ml], ['Max wyłożone', `${s.maxwyl} zł`],
         ['WIN na krokach k1…k8', [1, 2, 3, 4, 5, 6, 7, 8].map(j => s['wk' + j]).join(' · ')], ['BUST przy K6 / K7', `${s.k6} / ${s.k7}`],
