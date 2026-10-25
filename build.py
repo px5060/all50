@@ -133,6 +133,27 @@ self.addEventListener('fetch', e => {
 });
 """
 
+TOAST = r"""<script>/* offline: po starcie krótka informacja, że appka jest pobrana do pracy bez internetu */
+(function () {
+  if (!('serviceWorker' in navigator) || !('caches' in window)) return;
+  function pokaz(t) {
+    const d = document.createElement('div'); d.textContent = t;
+    d.style.cssText = 'position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:99999;max-width:92vw;text-align:center;background:#1e7d3a;color:#fff;padding:8px 14px;border-radius:18px;font:600 13px system-ui,-apple-system,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.45);pointer-events:none;transition:opacity .5s';
+    document.body.appendChild(d); setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 600); }, 3500);
+  }
+  const url = location.origin + location.pathname;
+  navigator.serviceWorker.ready.then(async () => {
+    for (let i = 0; i < 30; i++) {
+      for (const k of await caches.keys()) if (await (await caches.open(k)).match(url, { ignoreSearch: true })) {
+        pokaz(navigator.onLine ? '✓ Pobrane — działa też bez internetu' : '📴 Bez internetu — działa z pamięci telefonu'); return;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }).catch(() => {});
+})();
+</script>
+"""
+
 
 def build_pages(shell):
     import shutil
@@ -141,7 +162,7 @@ def build_pages(shell):
     h = h.replace('<title>', '<link rel="manifest" href="t50razem.webmanifest">\n<link rel="icon" href="t50razem-192.png">\n'
                   '<link rel="apple-touch-icon" href="t50razem-192.png">\n<title>', 1)
     i = h.rindex('</body>')
-    h = h[:i] + "<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('t50razem-sw.js', { scope: './' }).catch(() => {});</script>\n" + h[i:]
+    h = h[:i] + "<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('t50razem-sw.js', { scope: './' }).catch(() => {});</script>\n" + TOAST + h[i:]
     (PAGES / 'index.html').write_text(h)
     (PAGES / 't50razem.webmanifest').write_text(json.dumps(MANIFEST, ensure_ascii=False, indent=1))
     (PAGES / 't50razem-sw.js').write_text(SW)
