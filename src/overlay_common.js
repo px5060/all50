@@ -440,10 +440,12 @@ window.UT = (function () {
   function znacz(mi) {
     const N = A.N(), top = Math.max(N, A.last ? A.last(mi) : N);
     let c = null; for (let j = top; j >= Math.max(0, N - 600) && !c; j--) c = chainAt(mi, j);
-    if (!c) return '';
-    const bust = /BUST/.test(c.title || ''), z = [], add = (a, ty) => (a || []).forEach(j => z.push([j, ty]));
-    add(c.step, 's'); add(c.trig, 't'); add(c.play, 'k'); add(c.win, 'w'); add(c.loss, bust ? 'b' : 'k'); add((c.pre || []).filter(j => j >= N), 'n');   // zakład do gry = wiersz, który jeszcze nie padł
-    return z.sort((x, y) => x[0] - y[0]).slice(-80).map(([j, ty]) => `${j + 1}:${ty}`).join(',');
+    const z = [], add = (a, ty) => (a || []).forEach(j => z.push([j, ty]));
+    if (c) { const bust = /BUST/.test(c.title || ''); add(c.step, 's'); add(c.trig, 't'); add(c.play, 'k'); add(c.win, 'w'); add(c.loss, bust ? 'b' : 'k'); const pn = (c.pre || []).filter(j => j >= N); if (pn.length) add([Math.max(...pn)], 'n'); }   // zakład do gry = ostatni wiersz łańcucha, który jeszcze nie padł (bez wiersza START przed nim)
+    // zakład z ekranu GRA (jak „GRAJ TERAZ” / „gra za N”): następny wiersz albo za 2–3 wiersze — nawet gdy łańcuch go nie ma
+    try { const m = A.models()[mi]; if (betNow([m])[0]) add([N], 'n'); (soonNow([m])[0] || []).forEach(d => add([N - 1 + d], 'n')); } catch (e) {}
+    const by = new Map(); z.forEach(([j, ty]) => { if (!by.has(j) || ty === 'n') by.set(j, ty); });
+    return [...by].sort((x, y) => x[0] - y[0]).slice(-80).map(([j, ty]) => `${j + 1}:${ty}`).join(',');
   }
   window.addEventListener('message', e => { const h = e.data && e.data.zeszytH; if (h) document.querySelectorAll('iframe.ut-pgz').forEach(f => { if (f.contentWindow === e.source) f.style.height = Math.max(200, h) + 'px'; }); });
   function zeszytSw(p, mi) {   // okno statystyk: 📊 Statystyki ⇄ 📓 Zeszyt — bieżąca gra (ramka ZESZYTU)
