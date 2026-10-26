@@ -449,6 +449,7 @@ window.UT = (function () {
   }
   window.addEventListener('message', e => { const h = e.data && e.data.zeszytH; if (h) document.querySelectorAll('iframe.ut-pgz').forEach(f => { if (f.contentWindow === e.source) f.style.height = Math.max(200, h) + 'px'; }); });
   function zeszytSw(p, mi) {   // okno statystyk: 📊 Statystyki ⇄ 📓 Zeszyt — bieżąca gra (ramka ZESZYTU)
+    if (!A && window.UT && window.UT.A) A = window.UT.A; if (!A) return;
     let zn = ''; try { zn = znacz(mi); } catch (e) {} if (!zn) return;
     const sh = p.querySelector('.sh'), hs = sh.querySelector('.hs'), tg = document.createElement('div'), zb = document.createElement('div');
     tg.className = 'ut-zw'; tg.innerHTML = '<button class="on" data-zw="s">📊 Statystyki</button><button data-zw="z">📓 Zeszyt — bieżąca gra</button>';
@@ -531,7 +532,7 @@ window.UT = (function () {
     if (segs.some(t => kindOf(t) === 'play' || kindOf(t) === 'loss' || /pudło|LOSS|BUST|przegran|✗/.test(t))) return 'lost';
     return 'none';
   }
-  return { render, open, S, popup, statsPop, track, rowRes, znacz: mi => { if (!A && window.UT.A) A = window.UT.A; return A ? znacz(mi) : ''; } };
+  return { render, open, S, popup, statsPop, track, rowRes, zeszytSw: (p, mi) => zeszytSw(p, mi), znacz: mi => { if (!A && window.UT.A) A = window.UT.A; return A ? znacz(mi) : ''; } };
 })();
 
 // ===== UG — wspólny ekran GRA (wzór PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
@@ -608,6 +609,10 @@ window.UG = (function () {
     p.querySelector('.gobtn').onclick = () => { p.remove(); c.go(); };
     p.querySelectorAll('.ug-st.j').forEach(el => el.onclick = () => { p.remove(); c.go(+el.dataset.er); });
     document.body.appendChild(p);
+    try {   // 📊 Statystyki ⇄ 📓 Zeszyt — jak w oknie z TABELI
+      const U = window.UT, Ad = U && U.A, key = String(c.mid || c.id);
+      const mi = Ad ? Ad.models().findIndex(m => m.id === key || key.endsWith('·' + m.id)) : -1; if (mi >= 0) U.zeszytSw(p, mi);
+    } catch (e) {}
   }
 
   // kolejność: w karcie linie wg pilności; karty i sekcje — najpierw GRA na następnym wierszu
