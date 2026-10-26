@@ -441,11 +441,22 @@ window.UT = (function () {
     const N = A.N(), top = Math.max(N, A.last ? A.last(mi) : N);
     let c = null; for (let j = top; j >= Math.max(0, N - 600) && !c; j--) c = chainAt(mi, j);
     const z = [], add = (a, ty) => (a || []).forEach(j => z.push([j, ty]));
-    if (c) { const bust = /BUST/.test(c.title || ''); add(c.step, 's'); add(c.trig, 't'); add(c.play, 'k'); add(c.win, 'w'); add(c.loss, bust ? 'b' : 'k'); const pn = (c.pre || []).filter(j => j >= N); if (pn.length) add([Math.max(...pn)], 'n'); }   // zakład do gry = ostatni wiersz łańcucha, który jeszcze nie padł (bez wiersza START przed nim)
+    if (c) { const bust = /BUST/.test(c.title || ''); add(c.step, 's'); add(c.trig, 't'); add(c.play, 'k'); add(c.win, 'w'); add(c.loss, bust ? 'b' : 'k'); const pn = (c.pre || []).filter(j => j >= N); if (pn.length) add([Math.max(...pn)], 'n'); add((c.pre || []).filter(j => j < N), 'h'); }   // zakład do gry = ostatni wiersz łańcucha, który jeszcze nie padł (bez wiersza START przed nim)
     // zakład z ekranu GRA (jak „GRAJ TERAZ” / „gra za N”): następny wiersz albo za 2–3 wiersze — nawet gdy łańcuch go nie ma
     try { const m = A.models()[mi]; if (betNow([m])[0]) add([N], 'n'); (soonNow([m])[0] || []).forEach(d => add([N - 1 + d], 'n')); } catch (e) {}
     const by = new Map(); z.forEach(([j, ty]) => { if (!by.has(j) || ty === 'n') by.set(j, ty); });
-    return [...by].sort((x, y) => x[0] - y[0]).slice(-80).map(([j, ty]) => `${j + 1}:${ty}`).join(',');
+    // opis jak w kolumnie GRA tabeli: ✗ K2 (pudło), ○ K3 (bez rozstrzygnięcia), HIT ▼ K3 (następny wiersz gra), ▶ K3 16 zł (zakład do gry)
+    const tx = j => { const q = A.cell(mi, j) || {}, g = q.gra; return [g ? (g.full && g.full.length ? g.full.join(' | ') : String(g.t)) + ' ' + (g.sub || '') : '', q.stan ? String(q.stan.t) : '']; };
+    const kOf = t => { const m = /krok(?: gry)? (\d+)\/\d+|\bK(\d+)\b/.exec(t); return m ? 'K' + (m[1] || m[2]) : ''; };
+    const lab = (j, ty) => { let t = '', st = ''; try { [t, st] = tx(j); } catch (e) {} const k = kOf(t), zl = (/(\d+) zł/.exec(t) || [])[1];
+      if (ty === 's') return ['s', 'STEP']; if (ty === 't') return ['t', 'TRIGGER'];
+      if (ty === 'h') return ['t', `${/HIT/.test(st) ? 'HIT ' : ''}▼ ${k || 'GRA'}`];
+      if (ty === 'k') return /bez rozstrzygnięcia/.test(t) ? ['o', `○ ${k}`.trim()] : ['k', `✗ ${k}`.trim()];
+      if (ty === 'w') return ['w', `WIN ${k}`.trim()]; if (ty === 'b') return ['b', 'BUST'];
+      if (!k) { try { const W = window.T60 || window.T50, m = A.models()[mi], it = [].concat(...W.lines().sections.map(s => s.items)).find(it => { const id = String(it.id); return (id === m.id || id.endsWith('·' + m.id)) && it.p <= 2; });   // opis z ekranu GRA (np. „GRA HIT · krok gry 3/8 · 16 zł”)
+        if (it) { const t2 = `${it.txt} ${it.sub || ''}`, k2 = kOf(t2), z2 = (/(\d+) zł/.exec(t2) || [])[1]; return ['n', `▶ ${k2 || 'GRA'}${z2 ? ` ${z2} zł` : ''}`]; } } catch (e) {} }
+      return ['n', `▶ ${k || 'GRA'}${zl ? ` ${zl} zł` : ''}`]; };
+    return [...by].sort((x, y) => x[0] - y[0]).slice(-80).map(([j, ty]) => { const [t2, l] = lab(j, ty); return `${j + 1}:${t2}:${encodeURIComponent(l)}`; }).join(',');
   }
   window.addEventListener('message', e => { const h = e.data && e.data.zeszytH; if (h) document.querySelectorAll('iframe.ut-pgz').forEach(f => { if (f.contentWindow === e.source) f.style.height = Math.max(200, h) + 'px'; }); });
   function zeszytSw(p, mi) {   // okno statystyk: 📊 Statystyki ⇄ 📓 Zeszyt — bieżąca gra (ramka ZESZYTU)
