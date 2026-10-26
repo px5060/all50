@@ -206,7 +206,9 @@ window.UT = (function () {
 .ut-pop table,.ut-pop td{background:transparent!important;border:0!important;text-align:left!important;font:13px/1.4 system-ui,sans-serif!important;color:#e8ebf2!important}.ut-pop td{padding:4px 2px!important;border-bottom:1px solid #323a4d!important}.ut-pop td:first-child{color:#8b93a7!important;width:38%}
 .ut th{text-transform:none!important;letter-spacing:0!important;font-size:12px!important}
 .ut-pop .mh{font-weight:800;margin-top:10px}
-.ut-pop .go{margin-top:12px;width:100%;padding:10px;border-radius:9px;border:0;background:#c97a45;color:#fff;font-weight:700;font-size:14px}`;
+.ut-pop .go{margin-top:12px;width:100%;padding:10px;border-radius:9px;border:0;background:#c97a45;color:#fff;font-weight:700;font-size:14px}
+.ut-zw{display:flex;gap:6px;margin:4px 0 8px}.ut-zw button{flex:1;padding:8px 6px;border-radius:9px;border:1px solid #323a4d;background:#242a38;color:#e8ebf2;font-weight:700;font-size:13px}.ut-zw button.on{background:#b8902e;border-color:#b8902e;color:#fff}
+.ut-pgz{display:block;width:100%;height:640px;border:0;border-radius:10px;margin:6px 0;background:#12151c}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   const NEU = 'background:#F4F5F7;color:#9aa0ad';
@@ -434,6 +436,26 @@ window.UT = (function () {
     box.querySelector('#utHlX').onclick = () => { S.hl = null; applyHl(h, mi); };
   }
   // ---- STATYSTYKI modelu (przytrzymanie wiersza) ----
+  // ZESZYT (?znacz=): bieżąca gra modelu = łańcuch zakładu z ostatnim zdarzeniem — STEP s, TRIGGER t, gra bez wygranej / przegrana k, WIN w, BUST b, następny / zakład n
+  function znacz(mi) {
+    const N = A.N(), top = Math.max(N, A.last ? A.last(mi) : N);
+    let c = null; for (let j = top; j >= Math.max(0, N - 600) && !c; j--) c = chainAt(mi, j);
+    if (!c) return '';
+    const bust = /BUST/.test(c.title || ''), z = [], add = (a, ty) => (a || []).forEach(j => z.push([j, ty]));
+    add(c.step, 's'); add(c.trig, 't'); add(c.play, 'k'); add(c.win, 'w'); add(c.loss, bust ? 'b' : 'k'); add((c.pre || []).filter(j => j >= N), 'n');   // zakład do gry = wiersz, który jeszcze nie padł
+    return z.sort((x, y) => x[0] - y[0]).slice(-80).map(([j, ty]) => `${j + 1}:${ty}`).join(',');
+  }
+  window.addEventListener('message', e => { const h = e.data && e.data.zeszytH; if (h) document.querySelectorAll('iframe.ut-pgz').forEach(f => { if (f.contentWindow === e.source) f.style.height = Math.max(200, h) + 'px'; }); });
+  function zeszytSw(p, mi) {   // okno statystyk: 📊 Statystyki ⇄ 📓 Zeszyt — bieżąca gra (ramka ZESZYTU)
+    let zn = ''; try { zn = znacz(mi); } catch (e) {} if (!zn) return;
+    const sh = p.querySelector('.sh'), hs = sh.querySelector('.hs'), tg = document.createElement('div'), zb = document.createElement('div');
+    tg.className = 'ut-zw'; tg.innerHTML = '<button class="on" data-zw="s">📊 Statystyki</button><button data-zw="z">📓 Zeszyt — bieżąca gra</button>';
+    hs.after(tg); zb.style.display = 'none'; tg.after(zb);
+    const reszta = [...sh.children].filter(e => e !== tg && e !== zb && e !== hs && e.tagName !== 'H3' && !e.classList.contains('x') && e.id !== 'utStX');
+    tg.onclick = e => { const b = e.target.closest('[data-zw]'); if (!b) return; const z = b.dataset.zw === 'z';
+      tg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); reszta.forEach(x => x.style.display = z ? 'none' : ''); zb.style.display = z ? '' : 'none';
+      if (z && !zb.firstChild) zb.innerHTML = `<div class="hs">STEP, TRIGGER, gra i zakład na kartach ZESZYTU, z nazwami meczów. ◀ ▶ — inne karty.</div><iframe class="ut-pgz" src="/zeszyt/?znacz=${zn}" title="bieżąca gra na zeszycie"></iframe>`; };
+  }
   function statsPop(mi, ri) {
     const models = A.models(), id = models[mi] ? models[mi].id : '', rows = A.stats ? A.stats(mi) || [] : [];
     // przytrzymany wiersz: wszystkie jego etykiety (GRA + Stan/Rola) nad statystykami
@@ -448,6 +470,7 @@ window.UT = (function () {
     p.onclick = e => { if (e.target === p || e.target.classList.contains('x') || e.target.id === 'utStX') p.remove(); };
     document.body.appendChild(p);
     if (window.__MJ) __MJ.bind(p, A.descTxt ? A.descTxt(mi) : '');
+    zeszytSw(p, mi);
   }
 
   function popup(i) {
@@ -506,7 +529,7 @@ window.UT = (function () {
     if (segs.some(t => kindOf(t) === 'play' || kindOf(t) === 'loss' || /pudło|LOSS|BUST|przegran|✗/.test(t))) return 'lost';
     return 'none';
   }
-  return { render, open, S, popup, statsPop, track, rowRes };
+  return { render, open, S, popup, statsPop, track, rowRes, znacz: mi => { if (!A && window.UT.A) A = window.UT.A; return A ? znacz(mi) : ''; } };
 })();
 
 // ===== UG — wspólny ekran GRA (wzór PIKOFF): baner + karta na model + okno ze wszystkimi etykietami =====
