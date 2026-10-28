@@ -96,12 +96,13 @@ def analiza(m, X, tabela, cel, mc=400):
     alph, tpos = ALPH[tabela], TPOS[cel]
     ev = []
     res = run(m, X, tpos, alph, ev=ev)
-    cyc, bs = [], 0
-    for bp, w, k in ev:                       # cykle: (krok WIN 1–8 albo 9 = LOST, Nr rozliczenia)
+    cyc, seria = [], []
+    for bp, w, k in ev:                       # cykle: (krok WIN 1–8 albo 9 = LOST, Nr rozliczenia); seria = zakłady bieżącego cyklu
+        seria.append((bp + 1, k, w))
         if w:
-            cyc.append((k, bp + 1))
+            cyc.append((k, bp + 1)); seria = []
         elif k == 8:
-            cyc.append((9, bp + 1))
+            cyc.append((9, bp + 1)); seria = []
     k = (res[3] if res[0] == 'PEND' else res[1][3]) + 1
     reach = [c for c in cyc if c[0] >= k]
     h = len(cyc) // 2
@@ -111,7 +112,9 @@ def analiza(m, X, tabela, cel, mc=400):
                od_kroku=(sum(c[0] <= 8 for c in reach), len(reach)),
                polowy=[(sum(c[0] <= 8 for c in r), len(r)) for r in ([c for c in cyc[:h] if c[0] >= k], [c for c in cyc[h:] if c[0] >= k])],
                po_lost=[('L' if cyc[i + 1][0] == 9 else f'W{cyc[i + 1][0]}') for i, c in enumerate(cyc) if c[0] == 9 and i + 1 < len(cyc)],
-               po_lost_teraz=bool(cyc) and cyc[-1][0] == 9, realnie=1 - (1 - p) ** (9 - k), do_limitu=sum(ST[k - 1:]))
+               po_lost_teraz=bool(cyc) and cyc[-1][0] == 9, realnie=1 - (1 - p) ** (9 - k), do_limitu=sum(ST[k - 1:]),
+               seria=[f'k{k_} Nr {nr} pudło' for nr, k_, w in seria],
+               ost10=[('L' if c[0] == 9 else f'W{c[0]}') + f'@{c[1]}' for c in cyc[-10:]])
     N = len(X)
     if res[0] == 'PEND':
         out['zaklad'] = f'zakład ustawiony: Nr {res[2] + 1}'
