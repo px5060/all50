@@ -8,6 +8,7 @@ const kody = f => { const s = fs.readFileSync(f, 'utf8'); if (s.trim()[0] === '{
 const [, , fModele, f50, f60] = process.argv;
 const MODELE = JSON.parse(fs.readFileSync(fModele, 'utf8'));
 const CEL = { '2/3xx': ['2', '3'], '1xx': ['1'], x1x: ['x1x'], xx1: ['xx1'] };
+const SZCZ = !!process.env.SZCZEGOLY;   // jeden model: ostatnie gry, kroki tej gry, cały plan do limitu
 
 function raport(E, C, def, czestosc) {
   const n = C.length, B = E.buildBook(n), BB = E.buildBook(n + 400), M = E.liczModel(C, B, E.modDef(def)), N = E.modNum(M), t = M.teraz, L = M.limit;
@@ -23,6 +24,9 @@ function raport(E, C, def, czestosc) {
   const plan = []; let s = k, on = false;
   if (!t.gra) ui++;
   while (s <= L && units[ui]) { for (const r of w) { if (t.gra && !on && r !== t.r) continue; on = true; plan.push(`k${s} ${E.STAWKI[s - 1]} zł Nr ${units[ui].rows[r - 1].nr}`); if (++s > L) break; } ui++; }
+  const keyNr = key => { const [a, b, c] = key.split('.').map(Number); return BB.cards[a].parts[b][c - 1].nr; };
+  const seria = t.gra && M.otw ? M.otw.pol.flatMap(h => h.rs).flatMap(o => o.s.map(st => `k${st} Nr ${keyNr(o.key)} pudło`)) : [];
+  const ost10 = M.gry.slice(-10).map(g => `${g.s > L ? 'L' : 'W'}${g.s}@${nrOf(g)}`);
   const left = L - k + 1, real = left > 0 ? 1 - (1 - czestosc) ** left : 0;
   return {
     nazwa: M.nazwa, gier: N.G.length, lost: N.bust, max: N.max, lostNr: M.gry.filter(g => g.s > L).map(nrOf).slice(-3),
@@ -30,7 +34,8 @@ function raport(E, C, def, czestosc) {
       : `CZEKA — start od k1, jeśli na Nr ${warunek.join(', ') || '(ta połowa/strona już z trafieniem → następna)'} nie będzie trafienia`,
     od_kroku: `${win(reach)}/${reach.length}`, polowy: `${win(gry.slice(0, h).filter(x => x >= k))}/${gry.slice(0, h).filter(x => x >= k).length} · ${win(gry.slice(h).filter(x => x >= k))}/${gry.slice(h).filter(x => x >= k).length}`,
     po_lost: poLost.join(' '), realnie: `${Math.round(real * 100)}%`,
-    do_limitu: E.STAWKI.slice(k - 1, L).reduce((a, b) => a + b, 0), plan: plan.length > 5 ? [...plan.slice(0, 4), '…', plan[plan.length - 1]] : plan,
+    do_limitu: E.STAWKI.slice(k - 1, L).reduce((a, b) => a + b, 0), seria, ost10,
+    plan: plan.length > 5 && !SZCZ ? [...plan.slice(0, 4), '…', plan[plan.length - 1]] : plan,
   };
 }
 for (const [grupa, f, plik] of [['ZESZYT T50', 'silnik.js', f50], ['ZESZYT T60', 'silnik60.js', f60]]) {
@@ -44,6 +49,7 @@ for (const [grupa, f, plik] of [['ZESZYT T50', 'silnik.js', f50], ['ZESZYT T60',
     const cz = C.filter(c => grupa === 'ZESZYT T50' ? c[poz] === '1' : (c[0] !== '0' && def.cel.includes(c[0])) || (c[1] === '1' && def.cel.includes('x1x')) || (c[2] === '1' && def.cel.includes('xx1'))).length / C.length;
     const r = raport(E, C, def, cz);
     console.log(`${m.wybor ? '★ ' : '  '}${r.nazwa} | ${r.teraz} | historia od tego kroku ${r.od_kroku} (połowy ${r.polowy}) · realnie ${r.realnie} | gier ${r.gier}, LOST ${r.lost}${r.lostNr.length ? ' (Nr ' + r.lostNr.join(', ') + ')' : ''} | po LOST: ${r.po_lost || '—'} | do limitu ${r.do_limitu} zł${m.uwaga ? ' | ' + m.uwaga : ''}`);
+    if (SZCZ) console.log(`      ostatnie gry: ${r.ost10.join(' ')}\n      ta gra: ${r.seria.join(', ') || '—'}`);
     console.log(`      ${r.plan.join(' → ')}`);
   }
 }

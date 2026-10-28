@@ -13,6 +13,30 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    → dla każdego modelu z `MODELE.json`: krok i stawka teraz, najbliższy zakład (Nr albo warunek), historia zamknięcia od obecnego
    kroku (i obie połowy historii), realna szansa do limitu, LOST-y, po LOST, ile do limitu.
 4. Screeny użytkownika: nowe modele dopisać do `MODELE.json` (i sprawdzić, że WIN / LOST / „ostatnie” / krok zgadzają się z kartą).
+5. Do propozycji z pul: `pip install numba numpy` (raz na sesję), potem `propozycje.py` (niżej).
+
+## Sesja jednego modelu (prośba użytkownika)
+
+Użytkownik sam wyszukuje modele; dla każdego nowego modelu zakłada **osobną sesję** i prowadzimy go **do WIN albo do LOST**.
+
+- Start: `python3 analiza/narzedzia/model.py "<model>" --t50 … --t60 …`, np. `"L 3911 t50 x1x"`, `"S+ 4539 t60 x1x"`, `"R MIX3 T1+5"`,
+  `"Z50 6·11·27 k10"`, `"Z50 XX+ 1·2·14 +bok k10"`, `"Z60 xx1 16·27 k10"` (`×2` = po 2 pustych, `×0` = od razu).
+  Sprawdzić zgodność z kartą ze screena (WIN / LOST / ostatnie / krok). Podać krótko: jak gra, historia (WIN / LOST, ostatnie cykle),
+  od obecnego kroku zamykał X z Y, realnie %, po LOST, **ta seria** (przegrane kroki z Nr), **najbliższy zakład** (Nr albo warunek, krok,
+  stawka), ile najwyżej do limitu. ZESZYT: cały plan kroków z Nr i stawkami.
+- Po każdych nowych kodach: co padło na wierszu zakładu, WIN / pudło, następny krok, Nr (albo warunek), stawka. Zakłady użytkownika
+  (podane w rozmowie) liczyć osobno od kroków modelu — mogą się różnić.
+- Koniec: WIN albo LOST modelu, wynik serii (z zakładów użytkownika), zamknięcie sesji. Model po WIN może wrócić w nowej sesji.
+
+## Propozycje modeli (z własnej inicjatywy)
+
+Użytkownik prosi, żeby **samemu proponować modele, które właśnie się pojawiły i mają potencjał**. Przy nowych kodach (a w sesji jednego
+modelu — krótko na końcu, jeśli coś mocnego) uruchomić:
+`python3 analiza/narzedzia/propozycje.py --t50 … --t60 … [--kroki 2-4] [--po-lost] [--top 6]`
+— całe pule SZUKAJ / SZUKAJ+ / SZUKAJ LOST (kryteria aplikacji: min. cykli, max LOST wg przedziałów) na krokach `--kroki`, ułożone wg
+zamknięcia od obecnego kroku (≥ 20 przypadków), z najbliższym zakładem; ZESZYT T50 / T60 (min. 100 gier, ≤ 2 LOST): GRA teraz i CZEKA.
+Pokazać **2–4 na grupę, po jednej linii** (model · krok · stawka · Nr/warunek · historia od kroku · realnie), bez wykładu. Szczegóły
+wybranego: `model.py`.
 
 ## Jak odpowiadać (prośby użytkownika)
 
@@ -73,6 +97,9 @@ analiza/PROJEKT.md          ten opis (czytać na starcie)
 analiza/MODELE.json         modele ze screenów (wybor = aktualnie polecany), bez zakładów
 analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
+analiza/narzedzia/model.py    jeden model w szczegółach (sesja jednego modelu)
+analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
+analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
 analiza/narzedzia/zeszyt.js   ZESZYT T50 / T60 silnikami aplikacji: stan, plan kroków z Nr i stawkami
 analiza/narzedzia/karty.py    obraz „jak screen” z kart użytkownika (spec JSON)
