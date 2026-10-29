@@ -47,6 +47,13 @@ zamknięcia od obecnego kroku (≥ 20 przypadków), z najbliższym zakładem; ZE
 Pokazać **2–4 na grupę, po jednej linii** (model · krok · stawka · Nr/warunek · historia od kroku · realnie), bez wykładu. Szczegóły
 wybranego: `model.py`.
 
+**Dodawanie do telefonu (📥 Od Claude, MOJE 1.34.0+).** Gdy użytkownik zechce model (albo poprosi „dodaj”), zamiast przepisywania ręcznie:
+`python3 analiza/narzedzia/od_claude.py moje|bank S+ t60 xx1 5070 [--uwaga "…"]` albo `… zeszyt t50 6,11,27 --limit 10` /
+`… zeszyt t60 1,5,11 --cel x1x --limit 9`, potem commit i push `od_claude.json` do `../px5060/kody` (repo dodane do sesji z prawem zapisu;
+przed pushem `git pull --rebase`, bo MOJE pisze tam `stan.json`). Telefon pokaże okienko na TERAZ — model trafia do MOJE / BANK / ZESZYTU
+dopiero po „＋ Dodaj”. `od_claude.py lista` pokazuje decyzje z telefonu (stan.json), `wyczysc` usuwa załatwione. Narzędzie pomija modele,
+które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów się tak nie ustawia.
+
 ## Jak odpowiadać (prośby użytkownika)
 
 - Po polsku, **krótko**: „daj modele, analizę zachowaj dla siebie”. Długie wyliczenia tylko na prośbę.
@@ -108,6 +115,7 @@ analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
 analiza/narzedzia/model.py    jeden model w szczegółach (sesja jednego modelu)
 analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopia w GitHub) → modele, BANK, ZESZYT, zakłady, MODELE.json
+analiza/narzedzia/od_claude.py   propozycje modeli dla telefonu: od_claude.json w repo z kodami → MOJE „📥 Od Claude” (Dodaj / Odrzuć)
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
