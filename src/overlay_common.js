@@ -594,12 +594,33 @@ window.UG = (function () {
 .ug-pop .ug-st{cursor:default}.ug-pop .ug-st.j{cursor:pointer}
 .ug-pop .ug-st .jr{float:right;font-size:11px;opacity:.85}
 .ug-pop .meta{color:#8b93a7;font-size:12.5px;margin-top:10px;display:flex;justify-content:space-between}
-.ug-pop .gobtn{margin-top:12px;width:100%;padding:11px;border-radius:9px;border:0;background:#c97a45;color:#fff;font-weight:700;font-size:15px}`;
+.ug-pop .gobtn{margin-top:12px;width:100%;padding:11px;border-radius:9px;border:0;background:#c97a45;color:#fff;font-weight:700;font-size:15px}
+.ug-pop .ugq{cursor:pointer;transition:transform .15s;position:relative}.ug-pop .ugq.big{transform:scale(1.5);z-index:3;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+.ug-pop .ugpo{font-size:12.5px;color:#8b93a7;margin:4px 0 8px;line-height:1.5}.ug-pop .ugpo b.t{color:#e8ebf2}.ug-pop .ugpo .roz{display:flex;flex-wrap:wrap;gap:6px 12px;margin:5px 0}.ug-pop .ugpo .roz span{font-weight:800;color:#e8ebf2}.ug-pop .ugpo .sq2{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.ug-pop .ugpo i{font-style:normal;font-size:12px;font-weight:700;border-radius:4px;padding:1px 5px;color:#fff;background:#2b6b45;margin-right:3px}.ug-pop .ugpo i.l{background:#8a1f1f}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   const lineHtml = (l, pop) => `<div class="ug-st p${l.p}${pop && l.er ? ' j' : ''}"${l.er ? ` data-er="${l.er}"` : ''}>${pop && l.er ? `<span class="jr">Nr ${l.er} ›</span>` : ''}${esc(l.txt)}${l.sub ? `<span class="s">${esc(l.sub)}</span>` : ''}</div>`;
   const metaHtml = m => m ? `<div class="meta"><span>${esc(m[0])}</span><span class="${/^\+/.test(m[1]) ? 'pos' : /^[−-]/.test(m[1]) ? 'neg' : ''}">${esc(m[1])}</span></div>` : '';
 
+  // kwadraciki ostatnich cykli: 1. dotknięcie powiększa, 2. pokazuje, co było po takim wyniku (ile razy W1, W2… / LOST) — jak w ZESZYCIE
+  let ugSeq = [];
+  const ugTx = v => v === 9 ? 'LOST' : 'W' + v, ugI = v => `<i${v === 9 ? ' class="l"' : ''}>${ugTx(v)}</i>`;
+  function ugPo(v) {
+    const nx = [], cnt = {}, ile = ugSeq.filter(x => x === v).length;
+    ugSeq.forEach((x, i) => { if (x === v && i + 1 < ugSeq.length) nx.push(ugSeq[i + 1]); });
+    if (!nx.length) return `<b class="t">Po ${ugTx(v)}</b>: to był ostatni cykl — następnego jeszcze nie było.`;
+    nx.forEach(x => { cnt[x] = (cnt[x] || 0) + 1; });
+    const roz = Object.entries(cnt).map(([k, c]) => [+k, c]).sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+    return `<b class="t">Po ${ugTx(v)}</b> (${ile}× w historii${ile > nx.length ? ', ostatni jeszcze bez następnego' : ''}) następny cykl — najczęściej:<div class="roz">${roz.map(([k, c]) => `<span>${ugI(k)}× ${c}</span>`).join('')}</div>kolejno (ostatnie, od najstarszego):<div class="sq2">${nx.slice(-15).map(ugI).join('')}</div>`;
+  }
+  document.addEventListener('click', e => {
+    const q = e.target.closest('.ugq[data-ui]'); if (!q) return;
+    const v = ugSeq[+q.dataset.ui], box = q.parentNode.nextElementSibling; if (v == null || !box) return;
+    if (!q.classList.contains('big')) { q.parentNode.querySelectorAll('.big').forEach(x => x.classList.remove('big')); q.classList.add('big');
+      box.innerHTML = `<b class="t">${ugTx(v)}</b> — dotknij jeszcze raz: jak układały się następne cykle po ${ugTx(v)}.`; return; }
+    box.innerHTML = ugPo(v);
+  });
   // przytrzymanie karty → STATYSTYKI modelu (jak SZUKAJ / BUST) + wszystkie etykiety
   function statsHtml(c) {
     let rows = [], G = null;
@@ -607,8 +628,9 @@ window.UG = (function () {
     try { rows = c.stats ? c.stats() || [] : []; } catch (e) {}
     try { G = window.top.__relG; } catch (e) {}
     // ostatnie 20 cykli modelu (z tej samej oceny): W1…W8 = WIN na kroku, LOST = przegrany krok 8 — najnowszy z prawej
-    const L = G && G.length && G[0].K != null ? Array.from(G).sort((a, b) => a.er - b.er).slice(-20) : [];
-    const cyc = L.length ? `<div class="ug-lb">Ostatnie ${L.length} cykli (najnowszy z prawej)</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin:2px 0 6px">${L.map(g => `<b style="font-size:12px;border-radius:4px;padding:1px 5px;color:#fff;background:${g.K >= 9 ? '#8a1f1f' : '#2b6b45'}">${g.K >= 9 ? 'LOST' : 'W' + g.K}</b>`).join('')}</div>` : '';
+    const AG = G && G.length && G[0].K != null ? Array.from(G).sort((a, b) => a.er - b.er) : [], L = AG.slice(-20);
+    ugSeq = AG.map(g => g.K >= 9 ? 9 : g.K);   // wszystkie cykle — do kwadracików (co było po takim wyniku)
+    const cyc = L.length ? `<div class="ug-lb">Ostatnie ${L.length} cykli (najnowszy z prawej)</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin:2px 0 6px">${L.map((g, j) => `<b class="ugq" data-ui="${AG.length - L.length + j}" style="font-size:12px;border-radius:4px;padding:1px 5px;color:#fff;background:${g.K >= 9 ? '#8a1f1f' : '#2b6b45'}">${g.K >= 9 ? 'LOST' : 'W' + g.K}</b>`).join('')}</div><div class="ugpo">Dotknij kwadracika — powiększy się; dotknij go jeszcze raz — zobaczysz, co było po takim wyniku (ile razy W1, W2… i LOST).</div>` : '';
     return rows.length ? `<div class="ug-lb">Statystyki modelu</div><table class="ug-stt">${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>` + cyc : '';
   }
   function popup(c) {
