@@ -99,7 +99,7 @@ def main():
     for k in pyt:
         print(f"   ? P{nr[k]} w MOJE ({moje[sk(pool[k])]}) nie spełnia kryteriów: {int(cyc[k])} cykli, {int(bu[k])} LOST — zostaje, zapytać użytkownika")
     if a.zapisz:
-        P['pool'] = [pool[k] for k in zost]; P['nr'] = [nr[k] for k in zost]; P['przyciete'] = {'kryteria': a.kryteria, 'wypadlo': len(wyp), 'w_moje_zostawione': [nr[k] for k in pyt]}
+        P['pool'] = [pool[k] for k in zost]; P['nr'] = [nr[k] for k in zost]; P['przyciete'] = {'kryteria': a.kryteria, 'wypadlo': len(wyp), 'w_moje_zostawione': len(pyt)}
         json.dump(P, open(pf, 'w'), ensure_ascii=False, separators=(',', ':'))
         print(f'   zapisano {pf}: {len(P["pool"])} modeli, numery P{min(P["nr"])}–P{max(P["nr"])}')
 
