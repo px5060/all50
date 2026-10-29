@@ -96,7 +96,7 @@ def run(m, X, tpos, alph, state=None, stop=False, ev=None):
     return ('STATE', (st, cnt, tc, bs, i))
 
 
-def analiza(m, X, tabela, cel, mc=400, do_k=8):
+def analiza(m, X, tabela, cel, mc=400, do_k=8, okno=3):
     """Historia, stan teraz, zamknięcie od obecnego kroku do kroku do_k (zakładany krok gry, domyślnie limit k8), po LOST i najbliższy zakład.
     Wiersze jako Nr (od 1)."""
     alph, tpos = ALPH[tabela], TPOS[cel]
@@ -116,6 +116,7 @@ def analiza(m, X, tabela, cel, mc=400, do_k=8):
     out = dict(cykle=len(cyc), win=sum(c[0] <= 8 for c in cyc), lost_nr=[c[1] for c in cyc if c[0] == 9],
                ostatnie=['L' if c[0] == 9 else f'W{c[0]}' for c in cyc[-3:]], k=k, stawka=ST[k - 1],
                od_kroku=(sum(c[0] <= do_k for c in reach), len(reach)), do_k=do_k,
+               w_oknie=(sum(c[0] <= min(k + okno - 1, do_k) for c in reach), len(reach)), okno=(k, min(k + okno - 1, do_k)),   # wygrana w najbliższych `okno` krokach
                polowy=[(sum(c[0] <= do_k for c in r), len(r)) for r in ([c for c in cyc[:h] if c[0] >= k], [c for c in cyc[h:] if c[0] >= k])],
                po_lost=[('L' if cyc[i + 1][0] == 9 else f'W{cyc[i + 1][0]}') for i, c in enumerate(cyc) if c[0] == 9 and i + 1 < len(cyc)],
                po_lost_teraz=bool(cyc) and cyc[-1][0] == 9, realnie=1 - (1 - p) ** max(0, do_k - k + 1), do_limitu=sum(ST[k - 1:do_k]),

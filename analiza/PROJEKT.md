@@ -78,9 +78,10 @@ które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów
 ## Kryteria wyboru (ustalone)
 
 1. **Główne kryterium — duży nacisk (prośba użytkownika): historyczna szansa wygranej modelu od kroku, na którym jest teraz, do kroku
-   zakładanego** (do którego użytkownik chce grać, np. „do k6”; bez tego SZUKAJ k8, ZESZYT limit modelu) — np. 99 z 99, przy ≥ ok. 20–30
-   przypadkach. Dotyczy SZUKAJ / S+ / LOST i ZESZYTU. Wybór i kolejność **przede wszystkim** wg tego; przy każdym modelu podawać
-   „wygrana kX→kN w historii: w/r (%)”. Narzędzia: `--do-kroku N` w `propozycje.py` i `stan.py` (ZESZYT też: zeszyt_skan.js / DO_KROKU).
+   zakładanego** — użytkownik: **do k8** (SZUKAJ / S+ / LOST; ZESZYT — do limitu modelu), np. 99 z 99, przy ≥ ok. 20–30 przypadkach.
+   Druga miara (też pokazywać, rozstrzyga przy równej): **wygrana w najbliższych 3 krokach od obecnego** (np. k4–k6). Wybór i kolejność
+   **przede wszystkim** wg tego; przy każdym modelu: „wygrana kX→k8 w historii: w/r (%) · w 3 krokach (kX–kX+2): w/r (%)”.
+   Narzędzia: `--do-kroku N` (inny krok, gdy użytkownik poprosi) i `--okno 3` w `propozycje.py` i `stan.py` (ZESZYT: zeszyt_skan.js / DO_KROKU, OKNO).
 2. **Realna szansa** = 1 − (1 − p)^(kroki do zakładanego kroku), p = zwykła częstość celu — drugorzędna: przy równej historii wyżej model
    z większą liczbą kroków przed sobą. (Sprawdzenie na późniejszych kodach: historia słabo się utrzymuje — fakt do jednego zdania, gdy pyta.)
 3. Odpadają: słaba historia od obecnego kroku (k7–k8: 25–88%), cele rzadkie (2/3xx), XX+ w T50 (25%).
