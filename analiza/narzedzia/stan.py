@@ -18,6 +18,8 @@ def main():
     ap.add_argument('--t50'); ap.add_argument('--t60'); ap.add_argument('--stan')
     ap.add_argument('--modele', default=os.path.join(TU, '..', 'MODELE.json'))
     ap.add_argument('--grupa'); ap.add_argument('--tylko-wybor', action='store_true')
+    ap.add_argument('--do-kroku', type=int, default=0, help='zakładany krok gry: historia wygranej do tego kroku (SZUKAJ domyślnie k8, ZESZYT — limit modelu)')
+    ap.add_argument('--okno', type=int, default=3, help='druga miara: wygrana w najbliższych N krokach od obecnego')
     a = ap.parse_args()
     if a.stan: a.t50, a.t60 = a.t50 or a.stan, a.t60 or a.stan   # stan.json z MOJE (☁ Kopia w GitHub) = obie tabele
     M = json.load(open(a.modele))
@@ -43,16 +45,16 @@ def main():
             else:
                 tabela, cel, mdl = m['tabela'], m['cel'], S.model(m['app'], m['tabela'], m['cel'], m['nr'])
                 nazwa = f"{m['app']} P{m['nr']} {cel}"
-            r = S.analiza(mdl, X[tabela], tabela, cel)
-            print(f"{gw}{nazwa} | k{r['k']} {r['stawka']} zł | {r.get('zaklad', '')} | od tego kroku {pct(*r['od_kroku'])} "
+            r = S.analiza(mdl, X[tabela], tabela, cel, do_k=a.do_kroku or 8, okno=a.okno)
+            print(f"{gw}{nazwa} | k{r['k']} {r['stawka']} zł | {r.get('zaklad', '')} | wygrana do k{r['do_k']} w historii {pct(*r['od_kroku'])} · w {a.okno} krokach (k{r['okno'][0]}–k{r['okno'][1]}) {pct(*r['w_oknie'])} "
                   f"(połowy {pct(*r['polowy'][0])} · {pct(*r['polowy'][1])}) · realnie {100 * r['realnie']:.0f}% | WIN {r['win']} LOST {len(r['lost_nr'])}"
-                  f"{' (ost. Nr ' + str(r['lost_nr'][-1]) + ')' if r['lost_nr'] else ''} | {'PO LOST · ' if r['po_lost_teraz'] else ''}po LOST: {' '.join(r['po_lost']) or '—'} | do k8 {r['do_limitu']} zł{uw}")
+                  f"{' (ost. Nr ' + str(r['lost_nr'][-1]) + ')' if r['lost_nr'] else ''} | {'PO LOST · ' if r['po_lost_teraz'] else ''}po LOST: {' '.join(r['po_lost']) or '—'} | do k{r['do_k']} {r['do_limitu']} zł{uw}")
     if (a.t50 or a.t60) and (not a.grupa or a.grupa.startswith('ZESZYT')):
         mod = a.modele
         if a.tylko_wybor or a.grupa:
             sel = {g: [m for m in v if (not a.tylko_wybor or m.get('wybor'))] for g, v in M.items() if g.startswith('ZESZYT') and (not a.grupa or g == a.grupa)}
             mod = os.path.join(tempfile.gettempdir(), 'modele_wybor.json'); json.dump(sel, open(mod, 'w'))
-        subprocess.run(['node', os.path.join(TU, 'zeszyt.js'), mod, a.t50 or '', a.t60 or ''], check=False)
+        subprocess.run(['node', os.path.join(TU, 'zeszyt.js'), mod, a.t50 or '', a.t60 or ''], check=False, env={**os.environ, 'DO_KROKU': str(a.do_kroku or ''), 'OKNO': str(a.okno)})
 
 
 if __name__ == '__main__':

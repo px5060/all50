@@ -52,9 +52,9 @@ Użytkownik sam wyszukuje modele; dla każdego nowego modelu zakłada **osobną 
 
 Użytkownik prosi, żeby **samemu proponować modele, które właśnie się pojawiły i mają potencjał**. Przy nowych kodach (a w sesji jednego
 modelu — krótko na końcu, jeśli coś mocnego) uruchomić:
-`python3 analiza/narzedzia/propozycje.py --t50 … --t60 … [--kroki 2-4] [--po-lost] [--top 6]`
+`python3 analiza/narzedzia/propozycje.py --t50 … --t60 … [--kroki 2-4] [--do-kroku N] [--po-lost] [--top 6]`
 — całe pule SZUKAJ / SZUKAJ+ / SZUKAJ LOST (kryteria aplikacji: min. cykli, max LOST wg przedziałów) na krokach `--kroki`, ułożone wg
-zamknięcia od obecnego kroku (≥ 20 przypadków), z najbliższym zakładem; ZESZYT T50 / T60 (min. 100 gier, ≤ 2 LOST): GRA teraz i CZEKA.
+historycznej wygranej od obecnego kroku do zakładanego (`--do-kroku`; ≥ 20 przypadków), z najbliższym zakładem; ZESZYT T50 / T60 (min. 100 gier, ≤ 2 LOST): GRA teraz i CZEKA.
 Pokazać **2–4 na grupę, po jednej linii** (model · krok · stawka · Nr/warunek · historia od kroku · realnie), bez wykładu. Szczegóły
 wybranego: `model.py`.
 
@@ -77,9 +77,13 @@ które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów
 
 ## Kryteria wyboru (ustalone)
 
-1. Najwyższy **% zamknięcia gry w historii modelu od kroku, na którym jest teraz** (np. 99 z 99), przy ≥ ok. 20–30 przypadkach.
-2. **Realna szansa** = 1 − (1 − p)^(kroki do limitu), p = zwykła częstość celu. Sprawdzenie na późniejszych kodach pokazało, że liczy się
-   liczba kroków do limitu, a nie historia — więc przy równej historii wyżej model z większą liczbą kroków przed sobą.
+1. **Główne kryterium — duży nacisk (prośba użytkownika): historyczna szansa wygranej modelu od kroku, na którym jest teraz, do kroku
+   zakładanego** — użytkownik: **do k8** (SZUKAJ / S+ / LOST; ZESZYT — do limitu modelu), np. 99 z 99, przy ≥ ok. 20–30 przypadkach.
+   Druga miara (też pokazywać, rozstrzyga przy równej): **wygrana w najbliższych 3 krokach od obecnego** (np. k4–k6). Wybór i kolejność
+   **przede wszystkim** wg tego; przy każdym modelu: „wygrana kX→k8 w historii: w/r (%) · w 3 krokach (kX–kX+2): w/r (%)”.
+   Narzędzia: `--do-kroku N` (inny krok, gdy użytkownik poprosi) i `--okno 3` w `propozycje.py` i `stan.py` (ZESZYT: zeszyt_skan.js / DO_KROKU, OKNO).
+2. **Realna szansa** = 1 − (1 − p)^(kroki do zakładanego kroku), p = zwykła częstość celu — drugorzędna: przy równej historii wyżej model
+   z większą liczbą kroków przed sobą. (Sprawdzenie na późniejszych kodach: historia słabo się utrzymuje — fakt do jednego zdania, gdy pyta.)
 3. Odpadają: słaba historia od obecnego kroku (k7–k8: 25–88%), cele rzadkie (2/3xx), XX+ w T50 (25%).
 4. „Po LOST” liczyć jak inne (sprawdzenie: bez różnicy). Jeden model = jedna kopia; dwa modele na tym samym wierszu = podwójna stawka
    na jeden mecz (mówić o tym).

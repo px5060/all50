@@ -1,8 +1,9 @@
 """Propozycje modeli z całych pul (jak ekran GRA w SZUKAJ / SZUKAJ+ / SZUKAJ LOST): modele w kryteriach aplikacji
-(min. cykli, max LOST wg przedziałów z puli), teraz na krokach --kroki, ułożone wg zamknięcia w historii od obecnego kroku
-(min. --min przypadków), potem realna szansa. Dla najlepszych: najbliższy zakład. ZESZYT T50 / T60: zeszyt_skan.js.
+(min. cykli, max LOST wg przedziałów z puli), teraz na krokach --kroki, ułożone wg HISTORYCZNEJ SZANSY WYGRANEJ od obecnego kroku do
+zakładanego kroku gry --do-kroku (prośba użytkownika: główne kryterium; SZUKAJ domyślnie k8, ZESZYT — limit modelu; min. --min przypadków),
+potem realna szansa. Dla najlepszych: najbliższy zakład. ZESZYT T50 / T60: zeszyt_skan.js.
 Wymaga numba (pip install numba numpy).
-Użycie: python3 propozycje.py --t50 T50.json --t60 T60.json (albo --stan stan.json) [--kroki 2-4] [--top 6] [--po-lost] [--bez-zeszytu]"""
+Użycie: python3 propozycje.py --t50 T50.json --t60 T60.json (albo --stan stan.json) [--kroki 2-4] [--do-kroku 6] [--top 6] [--po-lost] [--bez-zeszytu]"""
 import argparse, json, os, subprocess, sys
 import numpy as np
 from numba import njit, prange
@@ -98,11 +99,11 @@ def limit_lost(cyk, rules):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--t50'); ap.add_argument('--t60'); ap.add_argument('--stan'); ap.add_argument('--kroki', default='2-4'); ap.add_argument('--top', type=int, default=6)
+    ap.add_argument('--t50'); ap.add_argument('--t60'); ap.add_argument('--stan'); ap.add_argument('--kroki', default='2-4'); ap.add_argument('--top', type=int, default=6); ap.add_argument('--do-kroku', type=int, default=0); ap.add_argument('--okno', type=int, default=3)
     ap.add_argument('--min', type=int, default=20); ap.add_argument('--po-lost', action='store_true'); ap.add_argument('--bez-zeszytu', action='store_true')
     a = ap.parse_args()
     if a.stan: a.t50, a.t60 = a.t50 or a.stan, a.t60 or a.stan   # stan.json z MOJE (☁ Kopia w GitHub) = obie tabele
-    k0, k1 = map(int, a.kroki.split('-'))
+    k0, k1 = map(int, a.kroki.split('-')); L = min(a.do_kroku or 8, 8)   # zakładany krok gry (SZUKAJ: najwyżej k8)
     for tabela, plik, cele in (('t50', a.t50, ['x1x']), ('t60', a.t60, ['x1x', 'xx1'])):
         if not plik:
             continue
@@ -114,23 +115,24 @@ def main():
                 for i, o in enumerate(O):
                     cyk = int(o[:9].sum()); lost = int(o[8]); k = int(o[9]) + 1
                     lim = limit_lost(cyk, P['rules'])
-                    if cyk < P['minCyc'] or lim is None or lost > lim or not (k0 <= k <= k1) or (a.po_lost and not o[11]):
+                    if cyk < P['minCyc'] or lim is None or lost > lim or not (k0 <= k <= min(k1, L)) or (a.po_lost and not o[11]):
                         continue
-                    reach = int(o[k - 1:9].sum()); w = int(o[k - 1:8].sum())
+                    reach = int(o[k - 1:9].sum()); w = int(o[k - 1:L].sum())   # wygrane na krokach k…L / gry, które doszły do k
+                    w3 = int(o[k - 1:min(k - 1 + a.okno, L)].sum())   # druga miara: wygrana w najbliższych --okno krokach
                     if reach < a.min:
                         continue
-                    kand.append((w / reach, 1 - (1 - p[cel]) ** (9 - k), reach, app, NR[i], cel, k, w, int(o[10]), bool(o[11]), cyk, lost,
+                    kand.append((w / reach, 1 - (1 - p[cel]) ** (L - k + 1), reach, app, NR[i], cel, k, w, w3, int(o[10]), bool(o[11]), cyk, lost,
                                  json.dumps([cel] + list(P['pool'][i][1:5]) + [P['pool'][i][5] if len(P['pool'][i]) > 5 else 1,
                                                                              P['pool'][i][6] if len(P['pool'][i]) > 6 else ''])))
-        kand.sort(key=lambda r: (-r[0], -r[1], -r[2], ['S+', 'S', 'L'].index(r[3])))
+        kand.sort(key=lambda r: (-r[0], -r[8] / r[2], -r[1], -r[2], ['S+', 'S', 'L'].index(r[3])))   # do kroku, potem w oknie, realna szansa
         seen = set(); kand = [r for r in kand if not (r[-1] in seen or seen.add(r[-1]))]   # ten sam model w SZUKAJ i SZUKAJ+ — raz
         print(f"\n=== MOJE {tabela.upper()} — propozycje z pul (kody do Nr {len(X)}, kroki k{k0}–k{k1}{', po LOST' if a.po_lost else ''}; w kryteriach: {len(kand)}) ===")
-        for hist, real, reach, app, nr, cel, k, w, ph, pl, cyk, lost, _ in kand[:a.top]:
+        for hist, real, reach, app, nr, cel, k, w, w3, ph, pl, cyk, lost, _ in kand[:a.top]:
             r = S.analiza(S.model(app, tabela, cel, nr), X, tabela, cel, mc=200)
-            print(f"  {app} P{nr} {cel} | k{k} {S.ST[k - 1]} zł | od k{k}: {w}/{reach} ({100 * hist:.0f}%) · realnie {100 * real:.0f}% | cykli {cyk}, LOST {lost}"
+            print(f"  {app} P{nr} {cel} | k{k} {S.ST[k - 1]} zł | wygrana k{k}→k{L} w historii: {w}/{reach} ({100 * hist:.0f}%) · w {a.okno} krokach (k{k}–k{min(k + a.okno - 1, L)}): {w3}/{reach} ({100 * w3 / reach:.0f}%) · realnie {100 * real:.0f}% | cykli {cyk}, LOST {lost}"
                   f"{' | PO LOST' if pl else ''} | {r.get('zaklad', '')}")
     if not a.bez_zeszytu and (a.t50 or a.t60):
-        subprocess.run(['node', os.path.join(TU, 'zeszyt_skan.js'), a.t50 or '', a.t60 or '', str(a.top), str(a.min)], check=False)
+        subprocess.run(['node', os.path.join(TU, 'zeszyt_skan.js'), a.t50 or '', a.t60 or '', str(a.top), str(a.min), str(a.do_kroku or 0), str(a.okno)], check=False)
 
 
 if __name__ == '__main__':
