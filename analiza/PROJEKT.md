@@ -12,6 +12,9 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    `pobierz.sh` ściąga `../px5060/kody/stan.json`, a narzędzia biorą `--stan ../px5060/kody/stan.json` zamiast `--t50/--t60`.
    `python3 analiza/narzedzia/moje_stan.py ../px5060/kody/stan.json` — co jest w telefonie (modele z krokiem, BANK, ZESZYT, ostatnie
    zakłady); `--modele-json PLIK` odtwarza listy do formatu `MODELE.json`. Zakładów z `stan.json` **nie** przenosić do tego (publicznego) repo.
+   Poprawki kodów (cofnięty i wpisany na nowo kod, zmiana w ZESZYCIE) MOJE wysyła sama: `moje_stan.py` pokazuje je na górze
+   („⚠ W TYM ZAPISIE …”, dziennik `moje_v1_kodzm`, kody z bazy poprawione w ZESZYCIE) — wtedy przelicz modele, które grały na tym Nr,
+   i nie opieraj się na wcześniejszych wynikach z tamtym kodem. Historia zapisów: `git -C ../px5060/kody log --oneline` („poprawka T50 Nr …”).
    Bez tego repo — jak dotąd:
    Użytkownik dołącza najnowsze eksporty kodów: **T50** z RAZEM (`v13_…kod.json`, `"app": "v13_troika"`, pole `codes`) i **T60**
    z RAZEM (`xx1_pikoff_…_n…json`, `"kind": "xx1_pikoff"`, pole `codes`). Zawsze sprawdzić, że stare kody są początkiem nowych.

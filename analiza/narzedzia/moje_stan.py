@@ -1,5 +1,5 @@
 """Co jest w telefonie — z pliku stan.json, który MOJE (☁ Kopia w GitHub, od 1.33.0) wysyła do prywatnego repo (np. px5060/kody):
-kody T50 / T60, modele w MOJE (z krokiem i fazą), BANK, ZESZYT T50 / T60, ostatnie zakłady. --modele-json PLIK: lista w formacie
+kody T50 / T60, poprawki kodów, modele w MOJE (z krokiem i fazą), BANK, ZESZYT T50 / T60, ostatnie zakłady. --modele-json PLIK: lista w formacie
 analiza/MODELE.json (odtworzenie list z telefonu do narzędzi; „wybor” ustawić ręcznie).
 Użycie: python3 moje_stan.py ../px5060/kody/stan.json [--zaklady 15] [--modele-json /tmp/MODELE_z_telefonu.json]"""
 import argparse, json, re
@@ -23,6 +23,15 @@ def czas(ms):
     return datetime.fromtimestamp(ms / 1000).strftime('%d.%m %H:%M') if ms else '?'
 
 
+def popr(z):
+    T = z.get('t', '').upper()
+    if z.get('cof'):
+        return f"{T}: cofnięte Nr {z['cof'][0]}–{z['cof'][1]}"
+    if z.get('starsze'):
+        return f"{T}: zmiana w kodach przed Nr {z['starsze']}"
+    return f"{T} Nr {z.get('nr')}: {z.get('bylo')}→{z.get('jest')}{' (ZESZYT, kod z bazy)' if z.get('zeszyt') else ''}"
+
+
 def zeszyt_nazwa(m, t60):
     w = '·'.join(map(str, sorted(m.get('w', []))))
     if t60:
@@ -40,10 +49,22 @@ def main():
     ap.add_argument('stan'); ap.add_argument('--zaklady', type=int, default=15); ap.add_argument('--modele-json')
     a = ap.parse_args()
     d = json.load(open(a.stan)); S = d.get('storage', {})
-    print(f"stan z telefonu: zapisano {d.get('zapisano', '?')} · MOJE {d.get('wersja', '?')}")
+    u = d.get('urzadzenie') or {}
+    print(f"stan z telefonu: zapisano {d.get('zapisano', '?')} · MOJE {d.get('wersja', '?')}{' · ' + u['nazwa'] if u.get('nazwa') else ''}")
     for t in ('t50', 't60'):
         k = d[t]['kody']; n = d[t]['n']
         print(f"  {t.upper()}: Nr {n} · ostatnie: " + ' '.join(f"{n - 5 + i}:{k[3 * (n - 6 + i):3 * (n - 5 + i)]}" for i in range(6)))
+    # poprawki kodów (MOJE 1.33.0+): zmiany w tym zapisie, dziennik moje_v1_kodzm, poprawki kodów z bazy w ZESZYCIE
+    for z in d.get('zmiany', []):
+        print(f"  ⚠ W TYM ZAPISIE: {popr(z)} — przelicz modele grające na tym Nr")
+    dz = jl(S.get('moje_v1_kodzm', '[]'), [])
+    if dz:
+        print('  poprawki kodów (ostatnie): ' + ' | '.join(f"{czas(z.get('czas'))} {popr(z)}" for z in dz[-8:]))
+    for t in ('t50', 't60'):
+        P = jl(S.get('zeszyt_v1_poprawki_' + t, '{}'), {})
+        if P:
+            print(f"  {t.upper()} kody z bazy poprawione w ZESZYCIE (liczy je tylko ZESZYT, MOJE/RAZEM/SZUKAJ starym kodem): "
+                  + ', '.join(f"Nr {nr}: {d[t]['kody'][3 * (int(nr) - 1):3 * int(nr)]}→{v}" for nr, v in sorted(P.items(), key=lambda x: int(x[0]))))
     # modele w MOJE (lista policzona przez MOJE)
     for t in ('t50', 't60'):
         L = [m for m in d.get('modele', []) if m.get('tabela') == t]
