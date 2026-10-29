@@ -32,7 +32,8 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    Sprawdzić przed PR: stara pula = początek nowej. **Co 200 kodów** (zmiana: ok. raz w miesiącu; nie co 100). Po liczeniu **przyciąć**:
    `przytnij.py --repo <repo> --cel x1x|xx1 --stan … [--kryteria domyslne|moje] --zapisz` — model, który na całym ciągu nie spełnia kryteriów
    SZUKAJ, wypada (zostaje dziura w numeracji, lista `nr`); **model z MOJE (listy, BANK, zakłady) nie wypada bez pytania** — narzędzie go
-   zostawia i wypisuje „? P… w MOJE …”: zapytać użytkownika, po zgodzie `--usun P…`.
+   zostawia i wypisuje „? P… w MOJE …”: zapytać użytkownika, po zgodzie `--usun P…`. Przytnij zapisuje w puli `zmiana` (dodano / usunięto względem puli
+   sprzed odświeżenia) — appki SZUKAJ / S+ / LOST pokazują raz pasek „📦 Nowa pula modeli …” (prośba użytkownika). `search.py` przenosi listę `nr`.
 
 ## Sesja jednego modelu (prośba użytkownika)
 

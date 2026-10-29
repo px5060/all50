@@ -100,8 +100,16 @@ def main():
         print(f"   ? P{nr[k]} w MOJE ({moje[sk(pool[k])]}) nie spełnia kryteriów: {int(cyc[k])} cykli, {int(bu[k])} LOST — zostaje, zapytać użytkownika")
     if a.zapisz:
         P['pool'] = [pool[k] for k in zost]; P['nr'] = [nr[k] for k in zost]; P['przyciete'] = {'kryteria': a.kryteria, 'wypadlo': len(wyp), 'w_moje_zostawione': len(pyt)}
+        # komunikat w appce: zmiana względem puli sprzed odświeżenia (przed — zapisuje search.py; bez niego tylko to przycięcie)
+        pr = P.get('przed')
+        if pr:
+            stare = sum(1 for n in P['nr'] if n <= pr['max'])
+            P['zmiana'] = {'dodano': len(P['nr']) - stare, 'usunieto': pr['n'] - stare, 'od': pr['max'] + 1, 'seedN_przed': pr.get('seedN'), 'seedN': P['seedN']}
+        else:
+            P['zmiana'] = {'dodano': 0, 'usunieto': len(wyp), 'od': None, 'seedN_przed': P['seedN'], 'seedN': P['seedN']}
         json.dump(P, open(pf, 'w'), ensure_ascii=False, separators=(',', ':'))
-        print(f'   zapisano {pf}: {len(P["pool"])} modeli, numery P{min(P["nr"])}–P{max(P["nr"])}')
+        z = P['zmiana']
+        print(f'   zapisano {pf}: {len(P["pool"])} modeli, numery P{min(P["nr"])}–P{max(P["nr"])} · komunikat w appce: dodano {z["dodano"]}, usunięto {z["usunieto"]}')
 
 
 if __name__ == '__main__':
