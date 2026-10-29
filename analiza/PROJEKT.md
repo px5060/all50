@@ -23,13 +23,16 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    kroku (i obie połowy historii), realna szansa do limitu, LOST-y, po LOST, ile do limitu.
 4. Screeny użytkownika: nowe modele dopisać do `MODELE.json` (i sprawdzić, że WIN / LOST / „ostatnie” / krok zgadzają się z kartą).
 5. Do propozycji z pul: `pip install numba numpy` (raz na sesję), potem `propozycje.py` (niżej).
-6. **Pule SZUKAJ co 100 nowych kodów (prośba użytkownika).** `python3 analiza/narzedzia/pule.py --stan ../px5060/kody/stan.json` —
-   na ilu kodach liczona jest każda pula (S / S+ / LOST, T50 / T60, x1x / xx1) i ile przybyło. Przy „← do odświeżenia” (≥ 100) **zaproponować**
+6. **Pule SZUKAJ co 200 nowych kodów (prośba użytkownika).** `python3 analiza/narzedzia/pule.py --stan ../px5060/kody/stan.json` —
+   na ilu kodach liczona jest każda pula (S / S+ / LOST, T50 / T60, x1x / xx1) i ile przybyło. Przy „← do odświeżenia” (≥ 200) **zaproponować**
    odświeżenie (jedno zdanie); po zgodzie: repo SZUKAJ do sesji z prawem zapisu, `pule.py --przygotuj --repo <katalog z klonami>`
    (`szukaj/dopisane.txt` = kody od końca `seed_<t>.txt` do Nr z telefonu), w każdym repo `search.py … 6000000 7 --stale` (S, LOST) albo
    `search.py …` (S+, zawsze dopisuje), `build_szukaj.py`, podbić wersję appki, PR-y — scalane po „scal”. **Stałe numery P**: stara pula
    zostaje na początku w tej samej kolejności, nowe modele dostają kolejne numery (P… w MOJE, MODELE.json i analizie się nie zmieniają).
-   Sprawdzić przed PR: stara pula = początek nowej.
+   Sprawdzić przed PR: stara pula = początek nowej. **Co 200 kodów** (zmiana: ok. raz w miesiącu; nie co 100). Po liczeniu **przyciąć**:
+   `przytnij.py --repo <repo> --cel x1x|xx1 --stan … [--kryteria domyslne|moje] --zapisz` — model, który na całym ciągu nie spełnia kryteriów
+   SZUKAJ, wypada (zostaje dziura w numeracji, lista `nr`); **model z MOJE (listy, BANK, zakłady) nie wypada bez pytania** — narzędzie go
+   zostawia i wypisuje „? P… w MOJE …”: zapytać użytkownika, po zgodzie `--usun P…`.
 
 ## Sesja jednego modelu (prośba użytkownika)
 
@@ -85,7 +88,7 @@ które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów
 - **SZUKAJ / SZUKAJ+ / SZUKAJ LOST** (`narzedzia/szukaj.py`, 1:1 z `szukaj*/szukaj/engine.py`): model `[typ, STEP, x, TRIGGER, off, tn, STEP2]`,
   STEP ×x pod rząd → [STEP2 raz] → TRIGGER ×tn → zakład na ostatnim TRIGGER + off. Wzorzec `p → q` = dwa kolejne kody, `∪` = lub,
   `x` = dowolna cyfra. Progresja K8 trwała 8 · 8 · 16 · 32 · 64 · 128 · 256 · 512 zł, kurs 3,0, przegrany k8 = LOST („BUST” w kodzie).
-  Nazwa **P{n} = pula[n − 1]**; T60 ma osobne pule dla x1x i xx1. Literki na karcie MOJE: S = SZUKAJ, S+ = SZUKAJ+, L = SZUKAJ LOST, R = RAZEM.
+  Nazwa **P{n} = pula[n − 1]**, a w puli przyciętej (pole `nr`) — model z numerem n z listy `nr` (numery się nie przesuwają; `szukaj.model()` to obsługuje); T60 ma osobne pule dla x1x i xx1. Literki na karcie MOJE: S = SZUKAJ, S+ = SZUKAJ+, L = SZUKAJ LOST, R = RAZEM.
 - **MOJE BANK +3 / +5**: bank gra pierwsze 3 (5) zakłady cyklu modelu, bez limitu (k9 1024, k10 2048 …). Karta BANK pokazuje stawkę
   banku, nie modelu — przy grze krokiem modelu przenieść model do TERAZ.
 - **RAZEM T60**: MIX3 T1+5 (HIT = 101/201/301, STEP = 100/200/300, inne kody się nie liczą; po cyklu M = 1 gramy cykl o 5 dalej);
@@ -123,7 +126,8 @@ analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, Z
 analiza/narzedzia/model.py    jeden model w szczegółach (sesja jednego modelu)
 analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopia w GitHub) → modele, BANK, ZESZYT, zakłady, MODELE.json
 analiza/narzedzia/od_claude.py   propozycje modeli dla telefonu: od_claude.json w repo z kodami → MOJE „📥 Od Claude” (Dodaj / Odrzuć)
-analiza/narzedzia/pule.py        pule SZUKAJ / S+ / LOST a kody z telefonu: ile przybyło od przeliczenia (co 100 → odświeżyć), --przygotuj
+analiza/narzedzia/pule.py        pule SZUKAJ / S+ / LOST a kody z telefonu: ile przybyło od przeliczenia (co 200 → odświeżyć), --przygotuj
+analiza/narzedzia/przytnij.py    po odświeżeniu: wypadają modele poza kryteriami SZUKAJ (lista nr, stałe numery P); modele z MOJE — pytać
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład

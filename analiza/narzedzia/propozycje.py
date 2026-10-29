@@ -110,7 +110,7 @@ def main():
         for app in ('S', 'S+', 'L'):
             for cel in cele:
                 path = os.path.join(S.katalog(), (S.REPO[app] + ('' if '{}' in S.REPO[app] else '{}')).format(tabela[1:]), 'szukaj', f'pool_{tabela}_{cel}.json')
-                P = json.load(open(path)); O = skan(P['pool'], X, tabela, cel)
+                P = json.load(open(path)); O = skan(P['pool'], X, tabela, cel); NR = P.get('nr') or range(1, len(P['pool']) + 1)
                 for i, o in enumerate(O):
                     cyk = int(o[:9].sum()); lost = int(o[8]); k = int(o[9]) + 1
                     lim = limit_lost(cyk, P['rules'])
@@ -119,7 +119,7 @@ def main():
                     reach = int(o[k - 1:9].sum()); w = int(o[k - 1:8].sum())
                     if reach < a.min:
                         continue
-                    kand.append((w / reach, 1 - (1 - p[cel]) ** (9 - k), reach, app, i + 1, cel, k, w, int(o[10]), bool(o[11]), cyk, lost,
+                    kand.append((w / reach, 1 - (1 - p[cel]) ** (9 - k), reach, app, NR[i], cel, k, w, int(o[10]), bool(o[11]), cyk, lost,
                                  json.dumps([cel] + list(P['pool'][i][1:5]) + [P['pool'][i][5] if len(P['pool'][i]) > 5 else 1,
                                                                              P['pool'][i][6] if len(P['pool'][i]) > 6 else ''])))
         kand.sort(key=lambda r: (-r[0], -r[1], -r[2], ['S+', 'S', 'L'].index(r[3])))

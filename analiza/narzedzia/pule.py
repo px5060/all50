@@ -1,10 +1,11 @@
 """Pule SZUKAJ / SZUKAJ+ / SZUKAJ LOST a kody z telefonu: na ilu kodach liczona jest każda pula i ile kodów przybyło od tego czasu.
-Prośba użytkownika: odświeżać pule co 100 nowych kodów (na starcie sesji sprawdzić i zaproponować; liczy search.py w repo appki).
-Użycie:  python3 pule.py [--stan ../px5060/kody/stan.json] [--repo KATALOG] [--prog 100]
+Prośba użytkownika: odświeżać pule co 200 nowych kodów (ok. raz w miesiącu) (na starcie sesji sprawdzić i zaproponować; liczy search.py w repo appki).
+Użycie:  python3 pule.py [--stan ../px5060/kody/stan.json] [--repo KATALOG] [--prog 200]
          python3 pule.py --przygotuj --repo /home/user   → szukaj/dopisane.txt w każdym repo (kody od końca bazy seed_<t>.txt do Nr z telefonu)
 Odświeżenie (stałe numery P — stara pula zostaje na początku, nowe modele na końcu):
   SZUKAJ i LOST:  cd <repo>/szukaj && python3 search.py t50|t60 x1x|xx1 6000000 7 --stale && python3 build_szukaj.py t50|t60
-  SZUKAJ+:        cd <repo>/szukaj && python3 search.py t50|t60 x1x|xx1 && python3 build_szukaj.py t50|t60   (zawsze dopisuje na koniec)"""
+  SZUKAJ+:        cd <repo>/szukaj && python3 search.py t50|t60 x1x|xx1 && python3 build_szukaj.py t50|t60   (zawsze dopisuje na koniec)
+Potem przytnij.py (modele poza kryteriami wypadają, modele z MOJE — zapytać) i dopiero build_szukaj.py."""
 import argparse, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import szukaj as S
@@ -16,7 +17,7 @@ CELE = {'t50': ['x1x'], 't60': ['x1x', 'xx1']}
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--stan', default=os.path.join(S.katalog(), 'kody', 'stan.json')); ap.add_argument('--repo', default=S.katalog())
-    ap.add_argument('--prog', type=int, default=100); ap.add_argument('--przygotuj', action='store_true')
+    ap.add_argument('--prog', type=int, default=200); ap.add_argument('--przygotuj', action='store_true')
     a = ap.parse_args()
     st = json.load(open(a.stan)); doz = []
     print(f"kody z telefonu: T50 Nr {st['t50']['n']} · T60 Nr {st['t60']['n']} (stan.json {st.get('zapisano', '?')})")
