@@ -37,9 +37,9 @@ def model(app, tabela, cel, nr):
     num = tabela[1:]
     repo = (REPO[app] + ('' if '{}' in REPO[app] else '{}')).format(num)
     p = os.path.join(katalog(), repo, 'szukaj', f'pool_{tabela}_{cel}.json')
-    if p not in _pule:
-        _pule[p] = json.load(open(p))['pool']
-    return _pule[p][nr - 1]
+    if p not in _pule:   # P{nr}: numer z listy 'nr' (pula przycięta — numery się nie przesuwają), bez niej pool[nr − 1]
+        d = json.load(open(p)); _pule[p] = dict(zip(d.get('nr') or range(1, len(d['pool']) + 1), d['pool']))
+    return _pule[p][nr]
 
 
 def _m1(p, c):
