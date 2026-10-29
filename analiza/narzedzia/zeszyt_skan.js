@@ -6,7 +6,11 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const D = process.env.PX5060 || path.join(__dirname, '..', '..', '..', 'px5060');
 const silnik = f => vm.runInNewContext(fs.readFileSync(path.join(D, 'zeszyt', f), 'utf8') + '\n;({buildBook, liczModel, modNum, modDef, STAWKI, przygotuj: typeof przygotuj === "function" ? przygotuj : null, szybkiModel: typeof szybkiModel === "function" ? szybkiModel : null});', {});
-const kody = f => { const s = fs.readFileSync(f, 'utf8'); if (s.trim()[0] === '{') return JSON.parse(s).codes; return s.replace(/\D/g, '').match(/.{3}/g); };
+// kody: eksport RAZEM ('codes'), stan.json z MOJE ({t50|t60: {kody}} + poprawki ZESZYTU zeszyt_v1_poprawki_<t> — jak liczy ZESZYT) albo tekst
+const kody = (f, t) => { const s = fs.readFileSync(f, 'utf8'); if (s.trim()[0] !== '{') return s.replace(/\D/g, '').match(/.{3}/g);
+  const d = JSON.parse(s); if (d.codes) return d.codes; const c = d[t].kody.match(/.{3}/g);
+  let P = {}; try { P = JSON.parse((d.storage || {})['zeszyt_v1_poprawki_' + t] || '{}') || {}; } catch (e) {}
+  for (const nr in P) if (+nr >= 1 && +nr <= c.length && /^\d{3}$/.test(P[nr])) c[nr - 1] = P[nr]; return c; };
 const [, , f50, f60, topS, minS] = process.argv, TOP = +topS || 6, MIN = +minS || 20;
 
 function wypisz(lab, E, C, B, lista, czest) {
@@ -30,14 +34,14 @@ function wypisz(lab, E, C, B, lista, czest) {
   for (const x of sort(czeka).slice(0, TOP)) console.log(`    ${x.nazwa} | czeka na pustą trójkę/stronę, najbliższy wiersz modelu Nr ${x.nr} | od k1: ${x.w}/${x.r} (${Math.round(100 * x.h)}%) · realnie ${Math.round(100 * x.real)}% | gier ${x.g}, LOST ${x.b}`);
 }
 if (f50) {
-  const E = silnik('silnik.js'), C = kody(f50), B = E.buildBook(C.length), H = E.przygotuj(C, B), lista = [], p = C.filter(c => c[1] === '1').length / C.length;
+  const E = silnik('silnik.js'), C = kody(f50, 't50'), B = E.buildBook(C.length), H = E.przygotuj(C, B), lista = [], p = C.filter(c => c[1] === '1').length / C.length;
   for (let a = 1; a <= 28; a++) for (let b = a + 1; b <= 28; b++) for (let d = b + 1; d <= 28; d++) for (const war of ['', 'boki']) for (const limit of [9, 10]) {
     const def = { w: [a, b, d], poz: 1, czekaj: 1, war, limit }; lista.push({ def, s: E.szybkiModel(H, E.modDef(def)).s });
   }
   wypisz('ZESZYT T50', E, C, B, lista, () => p);
 }
 if (f60) {
-  const E = silnik('silnik60.js'), C = kody(f60), B = E.buildBook(C.length), lista = [], pc = { x1x: C.filter(c => c[1] === '1').length / C.length, xx1: C.filter(c => c[2] === '1').length / C.length };
+  const E = silnik('silnik60.js'), C = kody(f60, 't60'), B = E.buildBook(C.length), lista = [], pc = { x1x: C.filter(c => c[1] === '1').length / C.length, xx1: C.filter(c => c[2] === '1').length / C.length };
   for (const cel of ['x1x', 'xx1']) for (let a = 1; a <= 30; a++) for (let b = a + 1; b <= 30; b++) for (const w of [[a, b], ...Array.from({ length: 30 - b }, (_, i) => [a, b, b + 1 + i])]) for (const limit of [9, 10]) {
     const def = { w, cel: [cel], cz: 1, limit }, M = E.liczModel(C, B, E.modDef(def)); lista.push({ def, s: M.gry.map(g => g.s) });
   }

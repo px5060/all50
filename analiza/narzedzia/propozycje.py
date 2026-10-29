@@ -2,7 +2,7 @@
 (min. cykli, max LOST wg przedziałów z puli), teraz na krokach --kroki, ułożone wg zamknięcia w historii od obecnego kroku
 (min. --min przypadków), potem realna szansa. Dla najlepszych: najbliższy zakład. ZESZYT T50 / T60: zeszyt_skan.js.
 Wymaga numba (pip install numba numpy).
-Użycie: python3 propozycje.py --t50 T50.json --t60 T60.json [--kroki 2-4] [--top 6] [--po-lost] [--bez-zeszytu]"""
+Użycie: python3 propozycje.py --t50 T50.json --t60 T60.json (albo --stan stan.json) [--kroki 2-4] [--top 6] [--po-lost] [--bez-zeszytu]"""
 import argparse, json, os, subprocess, sys
 import numpy as np
 from numba import njit, prange
@@ -98,14 +98,15 @@ def limit_lost(cyk, rules):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--t50'); ap.add_argument('--t60'); ap.add_argument('--kroki', default='2-4'); ap.add_argument('--top', type=int, default=6)
+    ap.add_argument('--t50'); ap.add_argument('--t60'); ap.add_argument('--stan'); ap.add_argument('--kroki', default='2-4'); ap.add_argument('--top', type=int, default=6)
     ap.add_argument('--min', type=int, default=20); ap.add_argument('--po-lost', action='store_true'); ap.add_argument('--bez-zeszytu', action='store_true')
     a = ap.parse_args()
+    if a.stan: a.t50, a.t60 = a.t50 or a.stan, a.t60 or a.stan   # stan.json z MOJE (☁ Kopia w GitHub) = obie tabele
     k0, k1 = map(int, a.kroki.split('-'))
     for tabela, plik, cele in (('t50', a.t50, ['x1x']), ('t60', a.t60, ['x1x', 'xx1'])):
         if not plik:
             continue
-        X = S.kody(plik); p = {c: sum(x[S.TPOS[c]] == '1' for x in X) / len(X) for c in cele}; kand = []
+        X = S.kody(plik, tabela); p = {c: sum(x[S.TPOS[c]] == '1' for x in X) / len(X) for c in cele}; kand = []
         for app in ('S', 'S+', 'L'):
             for cel in cele:
                 path = os.path.join(S.katalog(), (S.REPO[app] + ('' if '{}' in S.REPO[app] else '{}')).format(tabela[1:]), 'szukaj', f'pool_{tabela}_{cel}.json')

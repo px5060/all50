@@ -7,7 +7,16 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
 
 1. `bash analiza/narzedzia/pobierz.sh` — pobiera (tylko do odczytu) repo z pulami i silnikami: szukaj50/60, szukaj50plus/60plus,
    szukajbust50/60, zeszyt (do `../px5060/`).
-2. Użytkownik dołącza najnowsze eksporty kodów: **T50** z RAZEM (`v13_…kod.json`, `"app": "v13_troika"`, pole `codes`) i **T60**
+2. **Stan telefonu bez eksportów (MOJE 1.33.0+, KODY → „☁ Kopia w GitHub”)**: MOJE samo wysyła `stan.json` (kody T50/T60, modele w MOJE,
+   BANK, ZAKŁADY, RAZEM, ZESZYT) do **prywatnego** repo użytkownika (domyślnie `px5060/kody`). Dodać to repo do sesji (add_repo), wtedy
+   `pobierz.sh` ściąga `../px5060/kody/stan.json`, a narzędzia biorą `--stan ../px5060/kody/stan.json` zamiast `--t50/--t60`.
+   `python3 analiza/narzedzia/moje_stan.py ../px5060/kody/stan.json` — co jest w telefonie (modele z krokiem, BANK, ZESZYT, ostatnie
+   zakłady); `--modele-json PLIK` odtwarza listy do formatu `MODELE.json`. Zakładów z `stan.json` **nie** przenosić do tego (publicznego) repo.
+   Poprawki kodów (cofnięty i wpisany na nowo kod, zmiana w ZESZYCIE) MOJE wysyła sama: `moje_stan.py` pokazuje je na górze
+   („⚠ W TYM ZAPISIE …”, dziennik `moje_v1_kodzm`, kody z bazy poprawione w ZESZYCIE) — wtedy przelicz modele, które grały na tym Nr,
+   i nie opieraj się na wcześniejszych wynikach z tamtym kodem. Historia zapisów: `git -C ../px5060/kody log --oneline` („poprawka T50 Nr …”).
+   Bez tego repo — jak dotąd:
+   Użytkownik dołącza najnowsze eksporty kodów: **T50** z RAZEM (`v13_…kod.json`, `"app": "v13_troika"`, pole `codes`) i **T60**
    z RAZEM (`xx1_pikoff_…_n…json`, `"kind": "xx1_pikoff"`, pole `codes`). Zawsze sprawdzić, że stare kody są początkiem nowych.
 3. `python3 analiza/narzedzia/stan.py --t50 <T50.json> --t60 <T60.json> [--tylko-wybor] [--grupa "ZESZYT T50"]`
    → dla każdego modelu z `MODELE.json`: krok i stawka teraz, najbliższy zakład (Nr albo warunek), historia zamknięcia od obecnego
@@ -98,6 +107,7 @@ analiza/MODELE.json         modele ze screenów (wybor = aktualnie polecany), be
 analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
 analiza/narzedzia/model.py    jeden model w szczegółach (sesja jednego modelu)
+analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopia w GitHub) → modele, BANK, ZESZYT, zakłady, MODELE.json
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład

@@ -4,7 +4,11 @@
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const D = process.env.PX5060 || path.join(__dirname, '..', '..', '..', 'px5060');
 const silnik = f => vm.runInNewContext(fs.readFileSync(path.join(D, 'zeszyt', f), 'utf8') + '\n;({buildBook, liczModel, modNum, modDef, STAWKI, partsOf});', {});
-const kody = f => { const s = fs.readFileSync(f, 'utf8'); if (s.trim()[0] === '{') return JSON.parse(s).codes; const d = s.replace(/\D/g, ''); return d.match(/.{3}/g); };
+// kody: eksport RAZEM ('codes'), stan.json z MOJE ({t50|t60: {kody}} + poprawki ZESZYTU zeszyt_v1_poprawki_<t> — jak liczy ZESZYT) albo tekst
+const kody = (f, t) => { const s = fs.readFileSync(f, 'utf8'); if (s.trim()[0] !== '{') return s.replace(/\D/g, '').match(/.{3}/g);
+  const d = JSON.parse(s); if (d.codes) return d.codes; const c = d[t].kody.match(/.{3}/g);
+  let P = {}; try { P = JSON.parse((d.storage || {})['zeszyt_v1_poprawki_' + t] || '{}') || {}; } catch (e) {}
+  for (const nr in P) if (+nr >= 1 && +nr <= c.length && /^\d{3}$/.test(P[nr])) c[nr - 1] = P[nr]; return c; };
 const [, , fModele, f50, f60] = process.argv;
 const MODELE = JSON.parse(fs.readFileSync(fModele, 'utf8'));
 const CEL = { '2/3xx': ['2', '3'], '1xx': ['1'], x1x: ['x1x'], xx1: ['xx1'] };
@@ -40,7 +44,7 @@ function raport(E, C, def, czestosc) {
 }
 for (const [grupa, f, plik] of [['ZESZYT T50', 'silnik.js', f50], ['ZESZYT T60', 'silnik60.js', f60]]) {
   if (!plik || !MODELE[grupa]) continue;
-  const E = silnik(f), C = kody(plik);
+  const E = silnik(f), C = kody(plik, grupa === 'ZESZYT T50' ? 't50' : 't60');
   console.log(`\n=== ${grupa} (kody do Nr ${C.length}) ===`);
   for (const m of MODELE[grupa]) {
     const def = grupa === 'ZESZYT T50' ? { w: m.w, poz: m.poz ?? 1, czekaj: m.czekaj ?? 1, war: m.war || '', limit: m.limit || 9 }

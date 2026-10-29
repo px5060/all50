@@ -16,11 +16,16 @@ def katalog():
     return os.environ.get('PX5060') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'px5060')
 
 
-def kody(path):
-    """Eksport z RAZEM (.json z 'codes') albo plik tekstowy z kodami."""
+def kody(path, tabela=None):
+    """Eksport z RAZEM (.json z 'codes'), stan.json z MOJE (☁ Kopia w GitHub: {'t50': {'n', 'kody'}, 't60': …} — podaj tabelę)
+    albo plik tekstowy z kodami."""
     s = open(path).read()
     if s.lstrip().startswith('{'):
-        return json.loads(s)['codes']
+        d = json.loads(s)
+        if 'codes' in d:
+            return d['codes']
+        k = d[tabela]['kody']
+        return [k[i:i + 3] for i in range(0, len(k), 3)]
     s = ''.join(ch for ch in s if ch.isdigit())
     return [s[i:i + 3] for i in range(0, len(s), 3)]
 
