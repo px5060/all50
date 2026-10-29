@@ -23,6 +23,13 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    kroku (i obie połowy historii), realna szansa do limitu, LOST-y, po LOST, ile do limitu.
 4. Screeny użytkownika: nowe modele dopisać do `MODELE.json` (i sprawdzić, że WIN / LOST / „ostatnie” / krok zgadzają się z kartą).
 5. Do propozycji z pul: `pip install numba numpy` (raz na sesję), potem `propozycje.py` (niżej).
+6. **Pule SZUKAJ co 100 nowych kodów (prośba użytkownika).** `python3 analiza/narzedzia/pule.py --stan ../px5060/kody/stan.json` —
+   na ilu kodach liczona jest każda pula (S / S+ / LOST, T50 / T60, x1x / xx1) i ile przybyło. Przy „← do odświeżenia” (≥ 100) **zaproponować**
+   odświeżenie (jedno zdanie); po zgodzie: repo SZUKAJ do sesji z prawem zapisu, `pule.py --przygotuj --repo <katalog z klonami>`
+   (`szukaj/dopisane.txt` = kody od końca `seed_<t>.txt` do Nr z telefonu), w każdym repo `search.py … 6000000 7 --stale` (S, LOST) albo
+   `search.py …` (S+, zawsze dopisuje), `build_szukaj.py`, podbić wersję appki, PR-y — scalane po „scal”. **Stałe numery P**: stara pula
+   zostaje na początku w tej samej kolejności, nowe modele dostają kolejne numery (P… w MOJE, MODELE.json i analizie się nie zmieniają).
+   Sprawdzić przed PR: stara pula = początek nowej.
 
 ## Sesja jednego modelu (prośba użytkownika)
 
@@ -116,6 +123,7 @@ analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, Z
 analiza/narzedzia/model.py    jeden model w szczegółach (sesja jednego modelu)
 analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopia w GitHub) → modele, BANK, ZESZYT, zakłady, MODELE.json
 analiza/narzedzia/od_claude.py   propozycje modeli dla telefonu: od_claude.json w repo z kodami → MOJE „📥 Od Claude” (Dodaj / Odrzuć)
+analiza/narzedzia/pule.py        pule SZUKAJ / S+ / LOST a kody z telefonu: ile przybyło od przeliczenia (co 100 → odświeżyć), --przygotuj
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
