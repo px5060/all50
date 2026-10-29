@@ -1,7 +1,7 @@
 """Stan wszystkich modeli z MODELE.json na najnowszych kodach: krok i stawka teraz, najbliższy zakład (Nr albo warunek),
 historia zamknięcia od obecnego kroku, realna szansa do limitu, po LOST. Liczy silnikami aplikacji (SZUKAJ 1:1, ZESZYT 1:1).
 Użycie:  bash analiza/narzedzia/pobierz.sh   (raz na sesję)
-         python3 analiza/narzedzia/stan.py --t50 eksport_T50.json --t60 eksport_T60.json [--grupa "MOJE T50"] [--tylko-wybor]"""
+         python3 analiza/narzedzia/stan.py --t50 eksport_T50.json --t60 eksport_T60.json   (albo --stan stan.json) [--grupa "MOJE T50"] [--tylko-wybor]"""
 import argparse, json, os, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import szukaj as S
@@ -15,12 +15,13 @@ def pct(a, b):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--t50'); ap.add_argument('--t60')
+    ap.add_argument('--t50'); ap.add_argument('--t60'); ap.add_argument('--stan')
     ap.add_argument('--modele', default=os.path.join(TU, '..', 'MODELE.json'))
     ap.add_argument('--grupa'); ap.add_argument('--tylko-wybor', action='store_true')
     a = ap.parse_args()
+    if a.stan: a.t50, a.t60 = a.t50 or a.stan, a.t60 or a.stan   # stan.json z MOJE (☁ Kopia w GitHub) = obie tabele
     M = json.load(open(a.modele))
-    X = {'t50': S.kody(a.t50) if a.t50 else None, 't60': S.kody(a.t60) if a.t60 else None}
+    X = {'t50': S.kody(a.t50, 't50') if a.t50 else None, 't60': S.kody(a.t60, 't60') if a.t60 else None}
     for grupa in ('MOJE T50', 'MOJE T60'):
         tab = grupa[-3:].lower()
         if X[tab] is None or (a.grupa and a.grupa != grupa):
