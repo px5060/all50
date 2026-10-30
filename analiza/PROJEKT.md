@@ -3,6 +3,8 @@
 Ten folder działa jak „projekt” w czacie: nowa sesja Claude Code czyta ten plik i od razu wie, co robimy, jak liczyć i jak odpowiadać.
 Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownika (podaje je w rozmowie albo screenem ZAKŁADY).
 
+**Sesja ocen** (tylko „oceń …” / „wyszukaj modele …”): skrócona instrukcja w `analiza/SESJA_OCEN.md`.
+
 ## Start sesji (zawsze)
 
 1. `bash analiza/narzedzia/pobierz.sh` — pobiera (tylko do odczytu) repo z pulami i silnikami: szukaj50/60, szukaj50plus/60plus,
@@ -86,7 +88,7 @@ historycznej wygranej od obecnego kroku do zakładanego (`--do-kroku`; ≥ 20 pr
 Pokazać **2–4 na grupę, po jednej linii** (model · krok · stawka · Nr/warunek · historia od kroku · realnie), bez wykładu. Szczegóły
 wybranego: `model.py`.
 
-**Propozycje do telefonu (prośba użytkownika — kolejność stała):** 1. wybór wg kryteriów (`propozycje.py`, 2–4 kandydatów na grupę:
+**Propozycje do telefonu (prośba użytkownika — kolejność stała):** 1. wybór wg kryteriów (`propozycje.py`; „grają na następnym wierszu, krok kX” — `teraz.py`; 2–4 kandydatów na grupę:
 MOJE T50, MOJE T60, ZESZYT T50, ZESZYT T60) → 2. **każdy kandydat przez `ocena.py`** (6 kroków, niżej) → 3. do telefonu tylko najlepsi
 z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, którego telefon nie ma = `rodzaj: propozycja`), commit i push
 `oceny.json` do `../px5060/kody` (`git pull --rebase` przed — MOJE pisze tam `stan.json`). Telefon: zakładka OCENY + pasek na TERAZ —
@@ -159,6 +161,7 @@ z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, któr
 
 ```
 analiza/PROJEKT.md          ten opis (czytać na starcie)
+analiza/SESJA_OCEN.md       sesja tylko do ocen i wyszukiwania modeli (start, prośba → kroki, wysyłka, odpowiedź)
 analiza/MODELE.json         modele ze screenów (wybor = aktualnie polecany), bez zakładów
 analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
@@ -169,6 +172,7 @@ analiza/narzedzia/przytnij.py    po odświeżeniu: wypadają modele poza kryteri
 analiza/narzedzia/ocena.py       ocena jednego modelu (6 kroków) → rozmowa + oceny.json w repo z kodami (MOJE → OCENY: propozycja / Twój model)
 analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + ZESZYT z kalibracja_zeszyt.js) → analiza/kalibracja.json
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
+analiza/narzedzia/teraz.py       modele z pul z zakładem na najbliższym wierszu (--kroki, --za), duplikaty „≈” i ten sam Nr co MOJE
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
 analiza/narzedzia/zeszyt.js   ZESZYT T50 / T60 silnikami aplikacji: stan, plan kroków z Nr i stawkami
