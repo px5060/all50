@@ -1,0 +1,85 @@
+{
+ "opis": "Kalibracja oceny (kalibracja.py): czy historia modelu przewiduje trafialność jego zakładów na kodach, których wybór nie znał. Trafialność zakładu ≈ (trafienia + n0·zwykła) / (zakłady + n0); wygrana do k8 od kroku k ≈ 1 − (1 − szac)^(9 − k).",
+ "SZUKAJ": {
+  "modeli": 36818,
+  "zakladow_po": 311051,
+  "n0": 1000000000.0,
+  "trafialnosc_po": 0.2964,
+  "zwykla_po": 0.308,
+  "grupy": [
+   {
+    "historia": "100%",
+    "modeli": 1046,
+    "zakladow_po": 5010,
+    "trafialnosc_po": 0.2958,
+    "zwykla_po": 0.2887,
+    "wzgledem_zwyklej": 1.025
+   },
+   {
+    "historia": "95–99%",
+    "modeli": 21147,
+    "zakladow_po": 170605,
+    "trafialnosc_po": 0.2851,
+    "zwykla_po": 0.3058,
+    "wzgledem_zwyklej": 0.932
+   },
+   {
+    "historia": "90–95%",
+    "modeli": 7001,
+    "zakladow_po": 67799,
+    "trafialnosc_po": 0.3027,
+    "zwykla_po": 0.3094,
+    "wzgledem_zwyklej": 0.978
+   },
+   {
+    "historia": "80–90%",
+    "modeli": 2885,
+    "zakladow_po": 29977,
+    "trafialnosc_po": 0.3217,
+    "zwykla_po": 0.3119,
+    "wzgledem_zwyklej": 1.032
+   },
+   {
+    "historia": "< 80%",
+    "modeli": 1344,
+    "zakladow_po": 15385,
+    "trafialnosc_po": 0.3258,
+    "zwykla_po": 0.3093,
+    "wzgledem_zwyklej": 1.053
+   }
+  ]
+ },
+ "ZESZYT": {
+  "modeli": 13188,
+  "zakladow_po": 1963233,
+  "n0": 3000,
+  "trafialnosc_po": 0.2962,
+  "zwykla_po": 0.2922,
+  "grupy": [
+   {
+    "historia": "100%",
+    "modeli": 1610,
+    "zakladow_po": 254624,
+    "trafialnosc_po": 0.2943,
+    "zwykla_po": 0.2918,
+    "wzgledem_zwyklej": 1.009
+   },
+   {
+    "historia": "95–99%",
+    "modeli": 10303,
+    "zakladow_po": 1521950,
+    "trafialnosc_po": 0.2967,
+    "zwykla_po": 0.2922,
+    "wzgledem_zwyklej": 1.015
+   },
+   {
+    "historia": "90–95%",
+    "modeli": 526,
+    "zakladow_po": 80481,
+    "trafialnosc_po": 0.2949,
+    "zwykla_po": 0.2922,
+    "wzgledem_zwyklej": 1.009
+   }
+  ]
+ }
+}
