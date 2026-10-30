@@ -34,21 +34,32 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    SZUKAJ, wypada (zostaje dziura w numeracji, lista `nr`); **model z MOJE (listy, BANK, zakłady) nie wypada bez pytania** — narzędzie go
    zostawia i wypisuje „? P… w MOJE …”: zapytać użytkownika, po zgodzie `--usun P…`. Przytnij zapisuje w puli `zmiana` (dodano / usunięto względem puli
    sprzed odświeżenia) — appki SZUKAJ / S+ / LOST pokazują raz pasek „📦 Nowa pula modeli …” (prośba użytkownika). `search.py` przenosi listę `nr`.
+7. **Oceny — sprzątanie** (gdy jest `oceny.json`): `python3 analiza/narzedzia/ocena.py wyczysc --stan ../px5060/kody/stan.json` — wypadają oceny
+   modeli, których nie ma już w telefonie (decyzja starsza niż 14 dni albo Twój model usunięty poza OCENAMI); ocena modelu, który jest
+   w telefonie, zostaje (znaczek 🔍, `nowe` go nie ocenia drugi raz). Jeśli coś wypadło — commit i push w repo z kodami.
 
 ## Ocena modelu (prośba użytkownika — zawsze te same kroki)
 
 Gdy użytkownik prosi o ocenę / analizę modelu (swojego z MOJE, z puli albo ZESZYTU), **zawsze** `ocena.py` — i przy każdej propozycji Claude
 (wyżej). Model, który użytkownik sam dodał do MOJE / ZESZYTU (`rodzaj: moj`, rozpoznaje stan.json; `--rodzaj` wymusza) — w telefonie
 **Zostaw w MOJE** albo **Usuń z MOJE**; użytkownik czyta ocenę i decyduje, czy jego model zostaje.
-`python3 analiza/narzedzia/ocena.py lista` — oceny w oceny.json i decyzje z telefonu; `ocena.py wyczysc` — usuwa załatwione starsze niż 14 dni.
+`python3 analiza/narzedzia/ocena.py lista` — oceny w oceny.json i ich stan (decyzja z telefonu albo samo); `ocena.py wyczysc` — start sesji (wyżej).
+**Bez powielania (prośba użytkownika, MOJE 1.37.0 / ZESZYT 1.26.0)**: jedna ocena na model (stały id); **decyzje tylko w MOJE → OCENY**;
+ZESZYT pokazuje przy modelu werdykt i „Całą ocenę” tylko do odczytu; przy kartach modeli w MOJE (TERAZ / LOST / BANK) znaczek
+🔍 GRAĆ / OBSERWUJ / NIE GRAĆ. Ocena zamyka się sama (Załatwione, bez decyzji): Twój model usunięty poza OCENAMI → „nie ma go już”,
+propozycja dodana w SZUKAJ / ZESZYCIE → „dodany poza OCENAMI”; model wraca → ocena znowu czeka.
 `python3 analiza/narzedzia/ocena.py S+ t60 xx1 2496 --stan ../px5060/kody/stan.json` (ZESZYT: `ocena.py zeszyt t50 19,20,28 --limit 10`,
 T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / limitu i w 3 krokach, połowy), 3. **uczciwa szansa**
 (`analiza/kalibracja.json`: trafialność zakładu ściągnięta do zwykłej częstości + jak łatwo o taki wynik przypadkiem), 4. **symulacja**
 (Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
 GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
-Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach ≥ 75% i bez nakładania (< 30% wspólnych wierszy /
-kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
+Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
+(np. od k1 ok. 64%) i bez nakładania (< 30% wspólnych wierszy / kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
+**„Oceń moje modele” = tylko nieocenione** (prośba użytkownika): `ocena.py nowe` (lista) / `ocena.py nowe --zapisz` — wszystkie modele
+z telefonu (MOJE GRY, BANK, ZESZYT), których id nie ma w `oceny.json` (ten sam id: P… dla SZUKAJ, układ + ustawienia dla ZESZYTU; model
+dodany z propozycji też się liczy jako oceniony). Ponowna ocena tylko na wyraźną prośbę („oceń ponownie P…”) — `ocena.py … --zapisz`
+podmienia ocenę i w telefonie znowu czeka na decyzję.
 **Kalibracja** (`kalibracja.py`, ZESZYT `kalibracja_zeszyt.js`): odświeżać przy odświeżaniu pul (stare pule = `przed`; SZUKAJ: wynik każdego
 zakładu po T0, nie cykli — patrz Pułapki), `--zapisz` → `kalibracja.json`.
 

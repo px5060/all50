@@ -10,10 +10,13 @@ użytkownik sam dodał do MOJE / ZESZYTU = ocena jego modelu („Zostaw w MOJE�
 Użycie:  python3 ocena.py S+ t60 xx1 2496 [--stan ../px5060/kody/stan.json] [--zapisz]
          python3 ocena.py zeszyt t50 19,20,28 --limit 10 [--poz 1] [--czekaj 1] [--bok] [--zapisz]
          python3 ocena.py zeszyt t60 6,11,18 --cel x1x --limit 10 [--czekaj 1] [--zapisz]
-         python3 ocena.py lista            oceny w oceny.json i decyzje z telefonu
-         python3 ocena.py wyczysc [--dni 14]  usuwa z oceny.json oceny załatwione na telefonie dawniej niż N dni
+         python3 ocena.py nowe [--zapisz]   modele z telefonu (MOJE GRY, BANK, ZESZYT), których jeszcze nie oceniałem — tylko je
+                                            (prośba użytkownika: raz ocenionego modelu nie oceniać znowu; ponownie tylko na prośbę)
+         python3 ocena.py lista            oceny w oceny.json i ich stan (decyzja z telefonu albo samo: „nie ma go już” / „dodany poza OCENAMI”)
+         python3 ocena.py wyczysc [--dni 14]  start sesji: usuwa oceny modeli, których nie ma w telefonie (decyzja starsza niż N dni
+                                           albo Twój model usunięty poza OCENAMI); ocena modelu w telefonie zostaje (znaczek 🔍, `nowe` go pomija)
 --zapisz: dopisuje / podmienia ocenę w oceny.json w repo z kodami (MOJE → OCENY); potem commit i push (git pull --rebase przed)."""
-import argparse, json, math, os, random, subprocess, sys, tempfile
+import argparse, json, math, os, random, re, subprocess, sys, tempfile
 from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import szukaj as S
@@ -22,6 +25,7 @@ TU = os.path.dirname(os.path.abspath(__file__))
 NF = {'S': 5, 'S+': 7, 'L': 5}
 PFX = {'S': '_szukaj_v1_', 'S+': '_szukajp_v1_', 'L': '_szbust_v1_'}
 CEL60 = {'2/3xx': ['2', '3'], '1xx': ['1'], '1-3xx': ['1', '2', '3'], 'x1x': ['x1x'], 'xx1': ['xx1']}
+CELN = {','.join(v): k for k, v in CEL60.items()}   # ['1'] → '1xx'
 ILE_UKLADOW = {'t50': 3276 * 4, 't60': (435 + 4060) * 4}   # ZESZYT: przeszukiwane układy (do „szansy przypadku”)
 
 
@@ -101,6 +105,35 @@ def mc_szukaj(m, X, tabela, cel, k, n=2000, seed=7):
     return wyn
 
 
+def zid(t, md):
+    """id oceny modelu ZESZYTU — to samo przy ocenie i przy szukaniu nieocenionych"""
+    return f'Z|{t}|{".".join(map(str, sorted(md["w"])))}|{md.get("poz", "")}|{md["czekaj"]}|{md.get("war", "")}|{md.get("cel", "")}|{md["limit"]}'
+
+
+def modele_telefonu(stan):
+    """modele z telefonu, które ocena.py umie ocenić → [(id oceny, nazwa, argumenty)]: listy MOJE GRY (S / S+ / L) i BANK z numerem P,
+    ZESZYT T50 / T60 (RAZEM i modele spoza puli „N…” pomija)"""
+    out = []
+    for t in ('t50', 't60'):
+        for app, cel, mid, m in moje_modele(stan, t):
+            nr = str(mid).split()[0]
+            if re.match(r'^P\d+$', nr):
+                out.append((f'{app}|{t}|{cel}|{nr}', f'{app}{t[1:]} {cel} {nr}', dict(app=app, tabela=t, cel_lub_wiersze=cel, nr=nr[1:], m=m)))
+    St = stan.get('storage', {})
+    for z in jl(St.get('zeszyt_v1_modele', '[]'), []):
+        if isinstance(z, dict) and isinstance(z.get('w'), list) and len(z['w']) == 3:
+            md = {'w': sorted(z['w']), 'poz': z.get('poz', 1), 'czekaj': z.get('czekaj', 1), 'war': z.get('war') or '', 'limit': z.get('limit', 9)}
+            out.append((zid('t50', md), f'ZESZYT T50 {"·".join(map(str, md["w"]))}{" +bok" if md["war"] else ""} k{md["limit"]}', dict(app='zeszyt', tabela='t50', cel_lub_wiersze=','.join(map(str, md['w'])),
+                                                                                                       poz=md['poz'], czekaj=md['czekaj'], bok=md['war'] == 'boki', limit=md['limit'])))
+    for z in jl(St.get('zeszyt_v1_modele60', '[]'), []):
+        cn = CELN.get(','.join(z.get('cel') or [])) if isinstance(z, dict) else None
+        if cn and isinstance(z.get('w'), list):
+            md = {'w': sorted(z['w']), 'cel': cn, 'czekaj': z.get('cz', 1), 'limit': z.get('limit', 9)}
+            out.append((zid('t60', md), f'ZESZYT T60 {cn} {"·".join(map(str, md["w"]))} k{md["limit"]}', dict(app='zeszyt', tabela='t60', cel_lub_wiersze=','.join(map(str, md['w'])),
+                                                                                                          cel=cn, czekaj=md['czekaj'], limit=md['limit'])))
+    return out
+
+
 def w_telefonie(wpis, stan):
     """czy model z oceny jest w telefonie (listy MOJE GRY, BANK, ZESZYT) — wtedy to ocena modelu użytkownika"""
     St = stan.get('storage', {})
@@ -113,15 +146,26 @@ def w_telefonie(wpis, stan):
     return any(x[0] == wpis['app'] and x[1] == wpis['cel'] and json.dumps(x[3]) == sp for x in moje_modele(stan, wpis['tabela']))
 
 
+def stan_oceny(o, stan, dec):
+    """stan oceny jak w MOJE (ocStan): (decyzja z telefonu | None, model w telefonie?, opis) — bez decyzji: Twój model, którego już nie ma
+    w telefonie → „nie ma go już” (samo), propozycja, której model jest już w telefonie → „dodany poza OCENAMI” (samo), inaczej czeka"""
+    z = dec.get(f"{o['id']}|{o['data']}"); w = w_telefonie(o, stan)
+    if z:
+        return z, w, f"telefon: {z['d']} {datetime.fromtimestamp(z['t'] / 1000).strftime('%d.%m %H:%M')}"
+    if o.get('rodzaj', 'propozycja') == 'moj':
+        return None, w, 'czeka na decyzję' if w else 'nie ma go już w telefonie (samo)'
+    return None, w, 'dodany poza OCENAMI (samo)' if w else 'czeka na decyzję'
+
+
 def ocena_szukaj(a, stan, K):
     tabela, cel, nr, app = a.tabela, a.cel, int(str(a.nr).lstrip('Pp')), a.app
-    X = S.kody(a.stan, tabela); m = S.model(app, tabela, cel, nr); tp = S.TPOS[cel]
+    X = S.kody(a.stan, tabela); m = getattr(a, 'm', None) or S.model(app, tabela, cel, nr); tp = S.TPOS[cel]   # model z telefonu ma pierwszeństwo
     p = sum(c[tp] == '1' for c in X) / len(X); p500 = sum(c[tp] == '1' for c in X[-500:]) / 500
     r = S.analiza(m, X, tabela, cel, do_k=8, okno=3); k = r['k']
     ev, _ = zaklady(m, X, tabela, cel); hh = sum(1 for e in ev if e[1]); bh = len(ev)
     w8, r8 = r['od_kroku']; w3, _ = r['w_oknie']
     n0 = (K.get('SZUKAJ') or {}).get('n0', 1e9); h = (hh + n0 * p) / (bh + n0)
-    s8, s3 = 1 - (1 - h) ** max(0, 9 - k), 1 - (1 - h) ** max(0, min(3, 9 - k)); q8 = 1 - (1 - p) ** max(0, 9 - k)
+    s8, s3 = 1 - (1 - h) ** max(0, 9 - k), 1 - (1 - h) ** max(0, min(3, 9 - k)); q8 = 1 - (1 - p) ** max(0, 9 - k); q3 = 1 - (1 - p) ** max(0, min(3, 9 - k))
     tail = ogon(w8, r8, q8)
     MC = mc_szukaj(m, X, tabela, cel, k); n = len(MC)
     win8 = sum(1 for (st, _), _ in MC if 1 <= st <= 8) / n; win3 = sum(1 for (st, _), _ in MC if 1 <= st <= min(k + 2, 8)) / n
@@ -141,7 +185,7 @@ def ocena_szukaj(a, stan, K):
     hist_ok = r8 >= 20 and w8 / r8 >= 0.95; max_n = nakl[0][0] if nakl else 0
     if k > 8:
         werdykt = 'NIE GRAĆ'
-    elif hist_ok and (w3 / r8 if r8 else 0) >= 0.75 and max_n < 0.3:
+    elif hist_ok and (w3 / r8 if r8 else 0) >= q3 and max_n < 0.3:
         werdykt = 'GRAĆ'
     elif r8 >= 10 and w8 / r8 >= 0.85:
         werdykt = 'OBSERWUJ'
@@ -160,7 +204,7 @@ def ocena_szukaj(a, stan, K):
                                                        f'koszt do rozstrzygnięcia: mediana {koszty[n // 2]} zł, w 90% przypadków ≤ {koszty[int(n * 0.9)]} zł' + (f', najwyżej {koszty[-1]} zł' if koszty else ''),
                                                        f'czas: mediana {wiersze[len(wiersze) // 2]} wierszy, w 90% ≤ {wiersze[int(len(wiersze) * 0.9)]} wierszy' if wiersze else 'czas: —']),
         ('Nakładanie z MOJE', [f'{x[1]}: {x[0]:.0%} zakładów na tych samych wierszach' + (' · ten sam najbliższy Nr!' if x[2] else '') for x in nakl[:3]] or ['brak modeli w MOJE na tym celu']),
-        ('Czym się kierowałem', [f'historia do k8 {"≥" if hist_ok else "<"} 95% przy ≥ 20 przypadkach' + (', w 3 krokach ≥ 75%' if r8 and w3 / r8 >= 0.75 else ', w 3 krokach < 75%'),
+        ('Czym się kierowałem', [f'historia do k8 {"≥" if hist_ok else "<"} 95% przy ≥ 20 przypadkach' + (f', w 3 krokach {"≥" if r8 and w3 / r8 >= q3 else "<"} zwykłej szansy ({q3:.0%})'),
                                  'nakładanie z MOJE ' + (f'{max_n:.0%}' if nakl else 'brak') + (' (≥ 30% = podwójna stawka)' if max_n >= 0.3 else ''),
                                  'uczciwie: historia nie przewiduje przyszłości (kalibracja) — szansa realna ≈ jak każdego modelu na tym kroku']),
     ]
@@ -184,7 +228,7 @@ def ocena_zeszyt(a, stan, K):
     h1, h2 = s[:len(s) // 2], s[len(s) // 2:]
     pol = [pct(sum(1 for x in hh if k <= x <= L), sum(1 for x in hh if x >= k)) for hh in (h1, h2)]
     hh, bh = len(s), sum(s); n0 = (K.get('ZESZYT') or {}).get('n0', 3000); hz = (hh + n0 * p) / (bh + n0)
-    s8, s3 = 1 - (1 - hz) ** max(0, L - k + 1), 1 - (1 - hz) ** max(0, min(3, L - k + 1)); q = 1 - (1 - p) ** max(0, L - k + 1)
+    s8, s3 = 1 - (1 - hz) ** max(0, L - k + 1), 1 - (1 - hz) ** max(0, min(3, L - k + 1)); q = 1 - (1 - p) ** max(0, L - k + 1); q3 = 1 - (1 - p) ** max(0, min(3, L - k + 1))
     tail = ogon(w8, r8, q); plan = d['planNr']; koszt = sum(x['stawka'] for x in plan)
     # nakładanie: najbliższe wiersze planu a najbliższe zakłady modeli z MOJE (ta sama tabela)
     X = S.kody(a.stan, t); kolizje = []
@@ -197,7 +241,7 @@ def ocena_zeszyt(a, stan, K):
             if nr2 in nr_planu:
                 kolizje.append(f'{app2}{t[1:]} {cel2} {id2}: zakład na Nr {nr2} — ten sam wiersz co krok ZESZYTU')
     naz = d['nazwa']; hist_ok = r8 >= 20 and w8 / r8 >= 0.95
-    werdykt = 'NIE GRAĆ' if k > L else 'GRAĆ' if hist_ok and (w3 / r8 if r8 else 0) >= 0.75 and not kolizje else 'OBSERWUJ' if r8 >= 10 and w8 / r8 >= 0.85 else 'NIE GRAĆ'
+    werdykt = 'NIE GRAĆ' if k > L else 'GRAĆ' if hist_ok and (w3 / r8 if r8 else 0) >= q3 and not kolizje else 'OBSERWUJ' if r8 >= 10 and w8 / r8 >= 0.85 else 'NIE GRAĆ'
     sek = [
         ('Stan teraz', [d['teraz'], f'gier {d["gier"]}, LOST {d["lost"]}' + (f' (Nr {", ".join(map(str, d["lostNr"]))})' if d['lostNr'] else ''), f'ostatnie gry: {" ".join(d["ost10"][-6:])}']),
         ('Historia (Twoje kryterium)', [f'wygrana k{k}→k{L}: {pct(w8, r8)}', f'w 3 krokach (k{k}–k{min(k + 2, L)}): {pct(w3, r8)}', f'połowy historii: {pol[0]} · {pol[1]}']),
@@ -208,12 +252,12 @@ def ocena_zeszyt(a, stan, K):
                                                                          f'koszt do limitu {koszt} zł; ostatni krok najpóźniej na Nr {plan[-1]["nr"]} (za {plan[-1]["nr"] - d["nKodow"]} wierszy)' if plan else 'plan: czeka na start',
                                                                          f'LOST (pudło na wszystkich krokach do k{L}): ≈ {(1 - hz) ** max(0, L - k + 1):.0%}']),
         ('Nakładanie z MOJE', kolizje or ['najbliższe 3 wiersze planu nie pokrywają się z zakładami modeli w MOJE']),
-        ('Czym się kierowałem', [f'historia do k{L} {"≥" if hist_ok else "<"} 95% przy ≥ 20 przypadkach' + (', w 3 krokach ≥ 75%' if r8 and w3 / r8 >= 0.75 else ', w 3 krokach < 75%'),
+        ('Czym się kierowałem', [f'historia do k{L} {"≥" if hist_ok else "<"} 95% przy ≥ 20 przypadkach' + (f', w 3 krokach {"≥" if r8 and w3 / r8 >= q3 else "<"} zwykłej szansy ({q3:.0%})'),
                                  'kolizje z MOJE: ' + ('są' if kolizje else 'brak'), 'uczciwie: historia nie przewiduje przyszłości (kalibracja) — szansa realna ≈ jak każdego układu na tym kroku']),
     ]
     krotko = f'{naz}: {d["teraz"].split(" — ")[0]} · historia do k{L} {pct(w8, r8)} · w 3 krokach {pct(w3, r8)} · uczciwie ≈ {s8:.0%}'
     idw = '.'.join(map(str, w))
-    wpis = {'id': f'Z|{t}|{idw}|{md.get("poz", "")}|{md["czekaj"]}|{md.get("war", "")}|{md.get("cel", "")}|{md["limit"]}', 'gdzie': 'ZESZYT', 'tabela': t, 'w': w,
+    wpis = {'id': zid(t, md), 'gdzie': 'ZESZYT', 'tabela': t, 'w': w,
             **({'poz': md['poz'], 'czekaj': md['czekaj'], 'war': md['war'], 'limit': md['limit']} if t == 't50' else {'cel': CEL60[md['cel']], 'cz': md['czekaj'], 'limit': md['limit']}),
             'nazwa': f'{grupa} {naz}', 'krok': k, 'stawka': plan[0]['stawka'] if plan else 8, 'zaklad': d['teraz'], 'werdykt': werdykt, 'krotko': krotko,
             'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'koszt': koszt}}
@@ -234,13 +278,40 @@ def main():
         if a.app == 'lista':
             print(f"oceny.json: {len(L)} · decyzje z telefonu (stan.json {stan.get('zapisano', '?')})")
             for o in L:
-                z = dec.get(f"{o['id']}|{o['data']}")
-                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10} · {o['nazwa']} · {o['werdykt']} · "
-                      + (f"telefon: {z['d']} {datetime.fromtimestamp(z['t'] / 1000).strftime('%d.%m %H:%M')}" if z else 'czeka na decyzję'))
+                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10} · {o['nazwa']} · {o['werdykt']} · {stan_oceny(o, stan, dec)[2]}")
             return
-        gr = datetime.now().timestamp() * 1000 - a.dni * 86400000
-        L2 = [o for o in L if not (dec.get(f"{o['id']}|{o['data']}") and dec[f"{o['id']}|{o['data']}"]['t'] < gr)]
-        d['oceny'] = L2; json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1); print(f'usunięto {len(L) - len(L2)} załatwionych (starszych niż {a.dni} dni)'); return
+        # sprzątanie (start sesji): ocena zostaje, dopóki model jest w telefonie (znaczek 🔍 przy modelu, `nowe` go nie ocenia drugi raz)
+        # i dopóki propozycja czeka; wypada: model poza telefonem z decyzją starszą niż --dni, Twój model, którego już nie ma (bez decyzji)
+        gr = datetime.now().timestamp() * 1000 - a.dni * 86400000; L2, U = [], []
+        for o in L:
+            z, w, op = stan_oceny(o, stan, dec)
+            (U if not w and (z['t'] < gr if z else o.get('rodzaj', 'propozycja') == 'moj') else L2).append((o, op))
+        for o, op in U:
+            print(f"  − {o['nazwa']} · {o['werdykt']} · {op}")
+        d['oceny'] = [o for o, _ in L2]
+        if U:
+            json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1)
+        print(f'oceny.json: {len(L)} → {len(L2)} (usunięto {len(U)}: modeli nie ma w telefonie — decyzja starsza niż {a.dni} dni albo usunięty poza OCENAMI)'
+              + ('' if U else ' — bez zmian, nic do zapisania')); return
+    if a.app == 'nowe':
+        ocenione = {o['id'] for o in (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', [])}
+        T = modele_telefonu(stan); N = [x for x in T if x[0] not in ocenione]
+        print(f'modele w telefonie: {len(T)} · ocenione już: {len(T) - len(N)} · do oceny: {len(N)}')
+        for _, naz, _ in N:
+            print(f'  {naz}')
+        if a.zapisz and N:
+            W = []
+            for _, naz, kw in N:
+                b = argparse.Namespace(**{**vars(a), 'nr': None, 'cel': None, 'limit': None, 'poz': 1, 'czekaj': 1, 'bok': False, 'm': None, **kw})
+                W.append(ocen(b, stan, K, cicho=True)); print(f"  ✓ {W[-1]['nazwa']} — {W[-1]['werdykt']} · {W[-1]['krotko'].split(': ', 1)[-1]}")
+            zapisz(po, W)
+        return
+    wpis = ocen(a, stan, K)
+    if a.zapisz:
+        zapisz(po, [wpis])
+
+
+def ocen(a, stan, K, cicho=False):
     if a.app.lower() == 'zeszyt':
         a.nr = a.cel_lub_wiersze; wpis, sek = ocena_zeszyt(a, stan, K)
     else:
@@ -248,14 +319,19 @@ def main():
     wpis['rodzaj'] = a.rodzaj or ('moj' if w_telefonie(wpis, stan) else 'propozycja')
     wpis['data'] = datetime.now().astimezone().isoformat(timespec='minutes'); wpis['kody_do'] = {'t50': stan['t50']['n'], 't60': stan['t60']['n']}
     wpis['sekcje'] = [{'tytul': t, 'wiersze': w} for t, w in sek]
-    print(f"\n{wpis['nazwa']} — {wpis['werdykt']} · {'Twój model (Zostaw / Usuń z MOJE)' if wpis['rodzaj'] == 'moj' else 'propozycja (Dodaj / Usuń analizę)'} (kody do Nr T50 {wpis['kody_do']['t50']} / T60 {wpis['kody_do']['t60']})")
-    for t, w in sek:
-        print(f'  {t}:'); [print(f'    {x}') for x in w]
-    if a.zapisz:
-        p = po; d = jl(open(p).read(), {}) if os.path.exists(p) else {}
-        L = [x for x in d.get('oceny', []) if x.get('id') != wpis['id']] + [wpis]
-        json.dump({'opis': 'Oceny modeli od Claude (ocena.py) — MOJE → OCENY.', 'zapisano': wpis['data'], 'oceny': L[-200:]}, open(p, 'w'), ensure_ascii=False, indent=1)
-        print(f'\nzapisano {p} ({len(L)} ocen) — teraz commit i push do repo z kodami')
+    if not cicho:
+        print(f"\n{wpis['nazwa']} — {wpis['werdykt']} · {'Twój model (Zostaw / Usuń z MOJE)' if wpis['rodzaj'] == 'moj' else 'propozycja (Dodaj / Usuń analizę)'} (kody do Nr T50 {wpis['kody_do']['t50']} / T60 {wpis['kody_do']['t60']})")
+        for t, w in sek:
+            print(f'  {t}:'); [print(f'    {x}') for x in w]
+    return wpis
+
+
+def zapisz(p, W):
+    """oceny → oceny.json (ta sama ocena modelu podmieniona — w telefonie znowu czeka na decyzję)"""
+    d = jl(open(p).read(), {}) if os.path.exists(p) else {}; ids = {w['id'] for w in W}
+    L = [x for x in d.get('oceny', []) if x.get('id') not in ids] + W
+    json.dump({'opis': 'Oceny modeli od Claude (ocena.py) — MOJE → OCENY.', 'zapisano': W[-1]['data'], 'oceny': L[-200:]}, open(p, 'w'), ensure_ascii=False, indent=1)
+    print(f'\nzapisano {p} ({len(L)} ocen) — teraz commit i push do repo z kodami')
 
 
 if __name__ == '__main__':
