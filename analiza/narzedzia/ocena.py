@@ -12,8 +12,9 @@ Użycie:  python3 ocena.py S+ t60 xx1 2496 [--stan ../px5060/kody/stan.json] [--
          python3 ocena.py zeszyt t60 6,11,18 --cel x1x --limit 10 [--czekaj 1] [--zapisz]
          python3 ocena.py nowe [--zapisz]   modele z telefonu (MOJE GRY, BANK, ZESZYT), których jeszcze nie oceniałem — tylko je
                                             (prośba użytkownika: raz ocenionego modelu nie oceniać znowu; ponownie tylko na prośbę)
-         python3 ocena.py lista            oceny w oceny.json i decyzje z telefonu
-         python3 ocena.py wyczysc [--dni 14]  usuwa z oceny.json oceny załatwione na telefonie dawniej niż N dni
+         python3 ocena.py lista            oceny w oceny.json i ich stan (decyzja z telefonu albo samo: „nie ma go już” / „dodany poza OCENAMI”)
+         python3 ocena.py wyczysc [--dni 14]  start sesji: usuwa oceny modeli, których nie ma w telefonie (decyzja starsza niż N dni
+                                           albo Twój model usunięty poza OCENAMI); ocena modelu w telefonie zostaje (znaczek 🔍, `nowe` go pomija)
 --zapisz: dopisuje / podmienia ocenę w oceny.json w repo z kodami (MOJE → OCENY); potem commit i push (git pull --rebase przed)."""
 import argparse, json, math, os, random, re, subprocess, sys, tempfile
 from datetime import datetime
@@ -145,6 +146,17 @@ def w_telefonie(wpis, stan):
     return any(x[0] == wpis['app'] and x[1] == wpis['cel'] and json.dumps(x[3]) == sp for x in moje_modele(stan, wpis['tabela']))
 
 
+def stan_oceny(o, stan, dec):
+    """stan oceny jak w MOJE (ocStan): (decyzja z telefonu | None, model w telefonie?, opis) — bez decyzji: Twój model, którego już nie ma
+    w telefonie → „nie ma go już” (samo), propozycja, której model jest już w telefonie → „dodany poza OCENAMI” (samo), inaczej czeka"""
+    z = dec.get(f"{o['id']}|{o['data']}"); w = w_telefonie(o, stan)
+    if z:
+        return z, w, f"telefon: {z['d']} {datetime.fromtimestamp(z['t'] / 1000).strftime('%d.%m %H:%M')}"
+    if o.get('rodzaj', 'propozycja') == 'moj':
+        return None, w, 'czeka na decyzję' if w else 'nie ma go już w telefonie (samo)'
+    return None, w, 'dodany poza OCENAMI (samo)' if w else 'czeka na decyzję'
+
+
 def ocena_szukaj(a, stan, K):
     tabela, cel, nr, app = a.tabela, a.cel, int(str(a.nr).lstrip('Pp')), a.app
     X = S.kody(a.stan, tabela); m = getattr(a, 'm', None) or S.model(app, tabela, cel, nr); tp = S.TPOS[cel]   # model z telefonu ma pierwszeństwo
@@ -266,13 +278,21 @@ def main():
         if a.app == 'lista':
             print(f"oceny.json: {len(L)} · decyzje z telefonu (stan.json {stan.get('zapisano', '?')})")
             for o in L:
-                z = dec.get(f"{o['id']}|{o['data']}")
-                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10} · {o['nazwa']} · {o['werdykt']} · "
-                      + (f"telefon: {z['d']} {datetime.fromtimestamp(z['t'] / 1000).strftime('%d.%m %H:%M')}" if z else 'czeka na decyzję'))
+                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10} · {o['nazwa']} · {o['werdykt']} · {stan_oceny(o, stan, dec)[2]}")
             return
-        gr = datetime.now().timestamp() * 1000 - a.dni * 86400000
-        L2 = [o for o in L if not (dec.get(f"{o['id']}|{o['data']}") and dec[f"{o['id']}|{o['data']}"]['t'] < gr)]
-        d['oceny'] = L2; json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1); print(f'usunięto {len(L) - len(L2)} załatwionych (starszych niż {a.dni} dni)'); return
+        # sprzątanie (start sesji): ocena zostaje, dopóki model jest w telefonie (znaczek 🔍 przy modelu, `nowe` go nie ocenia drugi raz)
+        # i dopóki propozycja czeka; wypada: model poza telefonem z decyzją starszą niż --dni, Twój model, którego już nie ma (bez decyzji)
+        gr = datetime.now().timestamp() * 1000 - a.dni * 86400000; L2, U = [], []
+        for o in L:
+            z, w, op = stan_oceny(o, stan, dec)
+            (U if not w and (z['t'] < gr if z else o.get('rodzaj', 'propozycja') == 'moj') else L2).append((o, op))
+        for o, op in U:
+            print(f"  − {o['nazwa']} · {o['werdykt']} · {op}")
+        d['oceny'] = [o for o, _ in L2]
+        if U:
+            json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1)
+        print(f'oceny.json: {len(L)} → {len(L2)} (usunięto {len(U)}: modeli nie ma w telefonie — decyzja starsza niż {a.dni} dni albo usunięty poza OCENAMI)'
+              + ('' if U else ' — bez zmian, nic do zapisania')); return
     if a.app == 'nowe':
         ocenione = {o['id'] for o in (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', [])}
         T = modele_telefonu(stan); N = [x for x in T if x[0] not in ocenione]
