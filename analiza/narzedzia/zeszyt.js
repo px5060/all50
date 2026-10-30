@@ -25,9 +25,9 @@ function raport(E, C, def, czestosc) {
   BB.cards.forEach((cd, kk) => cd.parts.forEach((rows, p) => { if (E.partsOf(kk)[p] >= mx) units.push({ kk, p, rows }); }));
   let ui = units.findIndex(u => u.kk === t.k && u.p === t.p);
   const w = [...def.w].sort((a, b) => a - b), warunek = w.filter(r => units[ui].rows[r - 1].nr > n).map(r => units[ui].rows[r - 1].nr);
-  const plan = []; let s = k, on = false;
+  const plan = [], planNr = []; let s = k, on = false;
   if (!t.gra) ui++;
-  while (s <= L && units[ui]) { for (const r of w) { if (t.gra && !on && r !== t.r) continue; on = true; plan.push(`k${s} ${E.STAWKI[s - 1]} zł Nr ${units[ui].rows[r - 1].nr}`); if (++s > L) break; } ui++; }
+  while (s <= L && units[ui]) { for (const r of w) { if (t.gra && !on && r !== t.r) continue; on = true; plan.push(`k${s} ${E.STAWKI[s - 1]} zł Nr ${units[ui].rows[r - 1].nr}`); planNr.push({ k: s, nr: units[ui].rows[r - 1].nr, stawka: E.STAWKI[s - 1] }); if (++s > L) break; } ui++; }
   const keyNr = key => { const [a, b, c] = key.split('.').map(Number); return BB.cards[a].parts[b][c - 1].nr; };
   const seria = t.gra && M.otw ? M.otw.pol.flatMap(h => h.rs).flatMap(o => o.s.map(st => `k${st} Nr ${keyNr(o.key)} pudło`)) : [];
   const ost10 = M.gry.slice(-10).map(g => `${g.s > L ? 'L' : 'W'}${g.s}@${nrOf(g)}`);
@@ -40,18 +40,20 @@ function raport(E, C, def, czestosc) {
     po_lost: poLost.join(' '), realnie: `${Math.round(real * 100)}%`,
     do_limitu: E.STAWKI.slice(k - 1, L).reduce((a, b) => a + b, 0), seria, ost10,
     plan: plan.length > 5 && !SZCZ ? [...plan.slice(0, 4), '…', plan[plan.length - 1]] : plan,
+    s: gry, Lim: L, planNr, gra: !!t.gra, nKodow: n, warunek,   // dla ocena.py (JSON_OUT)
   };
 }
 for (const [grupa, f, plik] of [['ZESZYT T50', 'silnik.js', f50], ['ZESZYT T60', 'silnik60.js', f60]]) {
   if (!plik || !MODELE[grupa]) continue;
   const E = silnik(f), C = kody(plik, grupa === 'ZESZYT T50' ? 't50' : 't60');
-  console.log(`\n=== ${grupa} (kody do Nr ${C.length}) ===`);
+  if (!process.env.JSON_OUT) console.log(`\n=== ${grupa} (kody do Nr ${C.length}) ===`);
   for (const m of MODELE[grupa]) {
     const def = grupa === 'ZESZYT T50' ? { w: m.w, poz: m.poz ?? 1, czekaj: m.czekaj ?? 1, war: m.war || '', limit: m.limit || 9 }
       : { w: m.w, cel: CEL[m.cel], cz: m.czekaj ?? 1, limit: m.limit || 9 };
     const poz = grupa === 'ZESZYT T50' ? def.poz : null;
     const cz = C.filter(c => grupa === 'ZESZYT T50' ? c[poz] === '1' : (c[0] !== '0' && def.cel.includes(c[0])) || (c[1] === '1' && def.cel.includes('x1x')) || (c[2] === '1' && def.cel.includes('xx1'))).length / C.length;
     const r = raport(E, C, def, cz);
+    if (process.env.JSON_OUT) { console.log(JSON.stringify({ grupa, p: cz, ...r })); continue; }
     console.log(`${m.wybor ? '★ ' : '  '}${r.nazwa} | ${r.teraz} | wygrana do k${r.LL} w historii ${r.od_kroku} · w ${OK} krokach (k${r.k}–k${r.k3}) ${r.w3} (połowy ${r.polowy}) · realnie ${r.realnie} | gier ${r.gier}, LOST ${r.lost}${r.lostNr.length ? ' (Nr ' + r.lostNr.join(', ') + ')' : ''} | po LOST: ${r.po_lost || '—'} | do limitu ${r.do_limitu} zł${m.uwaga ? ' | ' + m.uwaga : ''}`);
     if (SZCZ) console.log(`      ostatnie gry: ${r.ost10.join(' ')}\n      ta gra: ${r.seria.join(', ') || '—'}`);
     console.log(`      ${r.plan.join(' → ')}`);

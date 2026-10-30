@@ -35,6 +35,20 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    zostawia i wypisuje „? P… w MOJE …”: zapytać użytkownika, po zgodzie `--usun P…`. Przytnij zapisuje w puli `zmiana` (dodano / usunięto względem puli
    sprzed odświeżenia) — appki SZUKAJ / S+ / LOST pokazują raz pasek „📦 Nowa pula modeli …” (prośba użytkownika). `search.py` przenosi listę `nr`.
 
+## Ocena modelu (prośba użytkownika — zawsze te same kroki)
+
+Gdy użytkownik prosi o ocenę / analizę modelu (swojego z MOJE, z puli albo ZESZYTU), **zawsze** `ocena.py`:
+`python3 analiza/narzedzia/ocena.py S+ t60 xx1 2496 --stan ../px5060/kody/stan.json` (ZESZYT: `ocena.py zeszyt t50 19,20,28 --limit 10`,
+T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / limitu i w 3 krokach, połowy), 3. **uczciwa szansa**
+(`analiza/kalibracja.json`: trafialność zakładu ściągnięta do zwykłej częstości + jak łatwo o taki wynik przypadkiem), 4. **symulacja**
+(Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
+GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
+z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, „＋ Dodaj”, licznik nowych).
+Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach ≥ 75% i bez nakładania (< 30% wspólnych wierszy /
+kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
+**Kalibracja** (`kalibracja.py`, ZESZYT `kalibracja_zeszyt.js`): odświeżać przy odświeżaniu pul (stare pule = `przed`; SZUKAJ: wynik każdego
+zakładu po T0, nie cykli — patrz Pułapki), `--zapisz` → `kalibracja.json`.
+
 ## Sesja jednego modelu (prośba użytkownika)
 
 Użytkownik sam wyszukuje modele; dla każdego nowego modelu zakłada **osobną sesję** i prowadzimy go **do WIN albo do LOST**.
@@ -106,6 +120,10 @@ które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów
 
 ## Ustalenia z analiz (fakty, nie powtarzać użytkownikowi bez potrzeby)
 
+- **Kalibracja (30.10, `kalibracja.json`)**: SZUKAJ / S+ / LOST — pule do Nr 15 227 / 12 837, potem ~200 kodów (311 tys. zakładów):
+  trafialność zakładu modeli z historią „100% do k8” × 1,025 zwykłej, 95–99% × 0,93, < 80% × 1,05 → historia nic nie przewiduje (n0 ∞).
+  ZESZYT — wszystkie układy, punkty 50 / 65 / 80% kodów (2 mln zakładów): 100% × 1,009, 95–99% × 1,015 (n0 = 3000).
+
 - Częstość: T50 x1x 28,8%, T50 „XX+” (xx1) 25,0%; T60 x1x 28,5%, xx1 28,4% (na Nr 12 838–13 027 aż 39,5% — seria), 1xx 17,7%, 2/3xx 13,4%.
   Ciąg bez pamięci (test po poprzednim kodzie: bez zależności).
 - Pule SZUKAJ na nowych kodach trafiały tyle, ile zwykła częstość; historyczne „0 LOST” to efekt wyboru z milionów modeli.
@@ -116,6 +134,9 @@ które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów
   (x0x na wszystkich 7) 51 razy na 548. W grach po pustej trójce nigdy 9 × 000.
 
 ## Pułapki zauważone
+- **Kalibracja / sprawdzenie „potem”**: nie liczyć tylko cykli, które zdążyły się skończyć (krótkie wygrane kończą się szybko, długie serie pudeł
+  nie zdążą → zawyżony wynik, np. 96% zamiast zwykłej). Liczyć każdy zakład po T0 (trafił / nie) i porównywać z częstością celu **w tym samym
+  okresie** (T60 xx1 po Nr 12 837: 38% zamiast 28%).
 
 - MOJE: TOP7 M3 pokazywał k1, a tabela TOP7 liczy k5. MIX3 T1+5: karta „x1x” i „WIN 247”, z kodów 69 gier / 0 LOST, krok się zgadza.
 - ZESZYT T60: 1xx 3·8·21 jest dwa razy (k10 i k12) — to ta sama gra.
@@ -133,6 +154,8 @@ analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopi
 analiza/narzedzia/od_claude.py   propozycje modeli dla telefonu: od_claude.json w repo z kodami → MOJE „📥 Od Claude” (Dodaj / Odrzuć)
 analiza/narzedzia/pule.py        pule SZUKAJ / S+ / LOST a kody z telefonu: ile przybyło od przeliczenia (co 200 → odświeżyć), --przygotuj
 analiza/narzedzia/przytnij.py    po odświeżeniu: wypadają modele poza kryteriami SZUKAJ (lista nr, stałe numery P); modele z MOJE — pytać
+analiza/narzedzia/ocena.py       ocena jednego modelu (6 kroków) → rozmowa + oceny.json w repo z kodami (MOJE → OCENY)
+analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + ZESZYT z kalibracja_zeszyt.js) → analiza/kalibracja.json
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
