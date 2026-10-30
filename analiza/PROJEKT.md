@@ -47,8 +47,12 @@ T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / l
 (Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
 GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
-Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach ≥ 75% i bez nakładania (< 30% wspólnych wierszy /
-kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
+Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
+(np. od k1 ok. 64%) i bez nakładania (< 30% wspólnych wierszy / kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
+**„Oceń moje modele” = tylko nieocenione** (prośba użytkownika): `ocena.py nowe` (lista) / `ocena.py nowe --zapisz` — wszystkie modele
+z telefonu (MOJE GRY, BANK, ZESZYT), których id nie ma w `oceny.json` (ten sam id: P… dla SZUKAJ, układ + ustawienia dla ZESZYTU; model
+dodany z propozycji też się liczy jako oceniony). Ponowna ocena tylko na wyraźną prośbę („oceń ponownie P…”) — `ocena.py … --zapisz`
+podmienia ocenę i w telefonie znowu czeka na decyzję.
 **Kalibracja** (`kalibracja.py`, ZESZYT `kalibracja_zeszyt.js`): odświeżać przy odświeżaniu pul (stare pule = `przed`; SZUKAJ: wynik każdego
 zakładu po T0, nie cykli — patrz Pułapki), `--zapisz` → `kalibracja.json`.
 
