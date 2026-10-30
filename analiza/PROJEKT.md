@@ -37,13 +37,16 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
 
 ## Ocena modelu (prośba użytkownika — zawsze te same kroki)
 
-Gdy użytkownik prosi o ocenę / analizę modelu (swojego z MOJE, z puli albo ZESZYTU), **zawsze** `ocena.py`:
+Gdy użytkownik prosi o ocenę / analizę modelu (swojego z MOJE, z puli albo ZESZYTU), **zawsze** `ocena.py` — i przy każdej propozycji Claude
+(wyżej). Model, który użytkownik sam dodał do MOJE / ZESZYTU (`rodzaj: moj`, rozpoznaje stan.json; `--rodzaj` wymusza) — w telefonie
+**Zostaw w MOJE** albo **Usuń z MOJE**; użytkownik czyta ocenę i decyduje, czy jego model zostaje.
+`python3 analiza/narzedzia/ocena.py lista` — oceny w oceny.json i decyzje z telefonu; `ocena.py wyczysc` — usuwa załatwione starsze niż 14 dni.
 `python3 analiza/narzedzia/ocena.py S+ t60 xx1 2496 --stan ../px5060/kody/stan.json` (ZESZYT: `ocena.py zeszyt t50 19,20,28 --limit 10`,
 T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / limitu i w 3 krokach, połowy), 3. **uczciwa szansa**
 (`analiza/kalibracja.json`: trafialność zakładu ściągnięta do zwykłej częstości + jak łatwo o taki wynik przypadkiem), 4. **symulacja**
 (Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
 GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
-z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, „＋ Dodaj”, licznik nowych).
+z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
 Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach ≥ 75% i bez nakładania (< 30% wspólnych wierszy /
 kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
 **Kalibracja** (`kalibracja.py`, ZESZYT `kalibracja_zeszyt.js`): odświeżać przy odświeżaniu pul (stare pule = `przed`; SZUKAJ: wynik każdego
@@ -72,12 +75,11 @@ historycznej wygranej od obecnego kroku do zakładanego (`--do-kroku`; ≥ 20 pr
 Pokazać **2–4 na grupę, po jednej linii** (model · krok · stawka · Nr/warunek · historia od kroku · realnie), bez wykładu. Szczegóły
 wybranego: `model.py`.
 
-**Dodawanie do telefonu (📥 Od Claude, MOJE 1.34.0+).** Gdy użytkownik zechce model (albo poprosi „dodaj”), zamiast przepisywania ręcznie:
-`python3 analiza/narzedzia/od_claude.py moje|bank S+ t60 xx1 5070 [--uwaga "…"]` albo `… zeszyt t50 6,11,27 --limit 10` /
-`… zeszyt t60 1,5,11 --cel x1x --limit 9`, potem commit i push `od_claude.json` do `../px5060/kody` (repo dodane do sesji z prawem zapisu;
-przed pushem `git pull --rebase`, bo MOJE pisze tam `stan.json`). Telefon pokaże okienko na TERAZ — model trafia do MOJE / BANK / ZESZYTU
-dopiero po „＋ Dodaj”. `od_claude.py lista` pokazuje decyzje z telefonu (stan.json), `wyczysc` usuwa załatwione. Narzędzie pomija modele,
-które telefon już ma. Bez zgody użytkownika nic tam nie wpisywać; zakładów się tak nie ustawia.
+**Propozycje do telefonu (prośba użytkownika — kolejność stała):** 1. wybór wg kryteriów (`propozycje.py`, 2–4 kandydatów na grupę:
+MOJE T50, MOJE T60, ZESZYT T50, ZESZYT T60) → 2. **każdy kandydat przez `ocena.py`** (6 kroków, niżej) → 3. do telefonu tylko najlepsi
+z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, którego telefon nie ma = `rodzaj: propozycja`), commit i push
+`oceny.json` do `../px5060/kody` (`git pull --rebase` przed — MOJE pisze tam `stan.json`). Telefon: zakładka OCENY + pasek na TERAZ —
+**＋ Dodaj do MOJE** albo **Usuń analizę**. Wysyłać, gdy użytkownik prosi o propozycje albo się zgodzi; zakładów się tak nie ustawia.
 
 ## Jak odpowiadać (prośby użytkownika)
 
@@ -151,10 +153,9 @@ analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
 analiza/narzedzia/model.py    jeden model w szczegółach (sesja jednego modelu)
 analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopia w GitHub) → modele, BANK, ZESZYT, zakłady, MODELE.json
-analiza/narzedzia/od_claude.py   propozycje modeli dla telefonu: od_claude.json w repo z kodami → MOJE „📥 Od Claude” (Dodaj / Odrzuć)
 analiza/narzedzia/pule.py        pule SZUKAJ / S+ / LOST a kody z telefonu: ile przybyło od przeliczenia (co 200 → odświeżyć), --przygotuj
 analiza/narzedzia/przytnij.py    po odświeżeniu: wypadają modele poza kryteriami SZUKAJ (lista nr, stałe numery P); modele z MOJE — pytać
-analiza/narzedzia/ocena.py       ocena jednego modelu (6 kroków) → rozmowa + oceny.json w repo z kodami (MOJE → OCENY)
+analiza/narzedzia/ocena.py       ocena jednego modelu (6 kroków) → rozmowa + oceny.json w repo z kodami (MOJE → OCENY: propozycja / Twój model)
 analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + ZESZYT z kalibracja_zeszyt.js) → analiza/kalibracja.json
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60

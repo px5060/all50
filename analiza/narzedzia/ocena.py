@@ -5,9 +5,13 @@
   4. Symulacja — Monte Carlo przyszłych kodów (SZUKAJ) / plan wierszy (ZESZYT): wygrana, LOST, koszt, czas.
   5. Nakładanie — czy model gra na tych samych wierszach co modele w MOJE (podwójna stawka na jeden mecz).
   6. Werdykt (GRAĆ / OBSERWUJ / NIE GRAĆ) i czym się kierowałem.
+Rodzaj (prośba użytkownika): model, którego telefon nie ma = propozycja Claude (w MOJE: „＋ Dodaj do MOJE” / „Usuń analizę”); model, który
+użytkownik sam dodał do MOJE / ZESZYTU = ocena jego modelu („Zostaw w MOJE” / „Usuń z MOJE”). Rozpoznaje stan.json, --rodzaj wymusza.
 Użycie:  python3 ocena.py S+ t60 xx1 2496 [--stan ../px5060/kody/stan.json] [--zapisz]
          python3 ocena.py zeszyt t50 19,20,28 --limit 10 [--poz 1] [--czekaj 1] [--bok] [--zapisz]
          python3 ocena.py zeszyt t60 6,11,18 --cel x1x --limit 10 [--czekaj 1] [--zapisz]
+         python3 ocena.py lista            oceny w oceny.json i decyzje z telefonu
+         python3 ocena.py wyczysc [--dni 14]  usuwa z oceny.json oceny załatwione na telefonie dawniej niż N dni
 --zapisz: dopisuje / podmienia ocenę w oceny.json w repo z kodami (MOJE → OCENY); potem commit i push (git pull --rebase przed)."""
 import argparse, json, math, os, random, subprocess, sys, tempfile
 from datetime import datetime
@@ -95,6 +99,18 @@ def mc_szukaj(m, X, tabela, cel, k, n=2000, seed=7):
                     koniec = (9, bp - N + 1); break
         wyn.append((koniec or (0, None), koszt))
     return wyn
+
+
+def w_telefonie(wpis, stan):
+    """czy model z oceny jest w telefonie (listy MOJE GRY, BANK, ZESZYT) — wtedy to ocena modelu użytkownika"""
+    St = stan.get('storage', {})
+    if wpis['gdzie'] == 'ZESZYT':
+        L = jl(St.get('zeszyt_v1_modele' if wpis['tabela'] == 't50' else 'zeszyt_v1_modele60', '[]'), [])
+        if wpis['tabela'] == 't50':
+            return any(m.get('w') == wpis['w'] and m.get('limit') == wpis['limit'] and m.get('poz', 1) == wpis['poz'] and m.get('czekaj', 1) == wpis['czekaj'] and (m.get('war') or '') == wpis['war'] for m in L if isinstance(m, dict))
+        return any(m.get('w') == wpis['w'] and m.get('limit') == wpis['limit'] and m.get('cel') == wpis['cel'] and m.get('cz', 1) == wpis['cz'] for m in L if isinstance(m, dict))
+    sp = json.dumps(wpis['m'][:NF[wpis['app']]])
+    return any(x[0] == wpis['app'] and x[1] == wpis['cel'] and json.dumps(x[3]) == sp for x in moje_modele(stan, wpis['tabela']))
 
 
 def ocena_szukaj(a, stan, K):
@@ -206,22 +222,37 @@ def ocena_zeszyt(a, stan, K):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('app'); ap.add_argument('tabela'); ap.add_argument('cel_lub_wiersze'); ap.add_argument('nr', nargs='?')
+    ap.add_argument('app'); ap.add_argument('tabela', nargs='?'); ap.add_argument('cel_lub_wiersze', nargs='?'); ap.add_argument('nr', nargs='?')
     ap.add_argument('--stan', default=os.path.join(S.katalog(), 'kody', 'stan.json')); ap.add_argument('--kody', default=os.path.join(S.katalog(), 'kody'))
     ap.add_argument('--limit', type=int); ap.add_argument('--poz', type=int, default=1); ap.add_argument('--czekaj', type=int, default=1)
     ap.add_argument('--bok', action='store_true'); ap.add_argument('--cel'); ap.add_argument('--zapisz', action='store_true')
+    ap.add_argument('--rodzaj', choices=['propozycja', 'moj']); ap.add_argument('--dni', type=int, default=14)
     a = ap.parse_args(); stan = json.load(open(a.stan)); K = kalibracja()
+    po = os.path.join(a.kody, 'oceny.json'); dec = jl(stan.get('storage', {}).get('moje_v1_ocdec', '{}'), {})
+    if a.app in ('lista', 'wyczysc'):
+        d = jl(open(po).read(), {}) if os.path.exists(po) else {}; L = d.get('oceny', [])
+        if a.app == 'lista':
+            print(f"oceny.json: {len(L)} · decyzje z telefonu (stan.json {stan.get('zapisano', '?')})")
+            for o in L:
+                z = dec.get(f"{o['id']}|{o['data']}")
+                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10} · {o['nazwa']} · {o['werdykt']} · "
+                      + (f"telefon: {z['d']} {datetime.fromtimestamp(z['t'] / 1000).strftime('%d.%m %H:%M')}" if z else 'czeka na decyzję'))
+            return
+        gr = datetime.now().timestamp() * 1000 - a.dni * 86400000
+        L2 = [o for o in L if not (dec.get(f"{o['id']}|{o['data']}") and dec[f"{o['id']}|{o['data']}"]['t'] < gr)]
+        d['oceny'] = L2; json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1); print(f'usunięto {len(L) - len(L2)} załatwionych (starszych niż {a.dni} dni)'); return
     if a.app.lower() == 'zeszyt':
         a.nr = a.cel_lub_wiersze; wpis, sek = ocena_zeszyt(a, stan, K)
     else:
         a.cel = a.cel_lub_wiersze; wpis, sek = ocena_szukaj(a, stan, K)
+    wpis['rodzaj'] = a.rodzaj or ('moj' if w_telefonie(wpis, stan) else 'propozycja')
     wpis['data'] = datetime.now().astimezone().isoformat(timespec='minutes'); wpis['kody_do'] = {'t50': stan['t50']['n'], 't60': stan['t60']['n']}
     wpis['sekcje'] = [{'tytul': t, 'wiersze': w} for t, w in sek]
-    print(f"\n{wpis['nazwa']} — {wpis['werdykt']} (kody do Nr T50 {wpis['kody_do']['t50']} / T60 {wpis['kody_do']['t60']})")
+    print(f"\n{wpis['nazwa']} — {wpis['werdykt']} · {'Twój model (Zostaw / Usuń z MOJE)' if wpis['rodzaj'] == 'moj' else 'propozycja (Dodaj / Usuń analizę)'} (kody do Nr T50 {wpis['kody_do']['t50']} / T60 {wpis['kody_do']['t60']})")
     for t, w in sek:
         print(f'  {t}:'); [print(f'    {x}') for x in w]
     if a.zapisz:
-        p = os.path.join(a.kody, 'oceny.json'); d = jl(open(p).read(), {}) if os.path.exists(p) else {}
+        p = po; d = jl(open(p).read(), {}) if os.path.exists(p) else {}
         L = [x for x in d.get('oceny', []) if x.get('id') != wpis['id']] + [wpis]
         json.dump({'opis': 'Oceny modeli od Claude (ocena.py) — MOJE → OCENY.', 'zapisano': wpis['data'], 'oceny': L[-200:]}, open(p, 'w'), ensure_ascii=False, indent=1)
         print(f'\nzapisano {p} ({len(L)} ocen) — teraz commit i push do repo z kodami')
