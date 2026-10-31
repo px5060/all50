@@ -81,5 +81,175 @@
     "wzgledem_zwyklej": 1.009
    }
   ]
+ },
+ "SKALA9": {
+  "opis": "kalibracja_pkt9.py: skala 9 pkt przy T0 (stare pule) → trafialność zakładów po T0 względem modeli tej samej tabeli i celu na tych samych wierszach; p5–p95 = 90% (losowanie wierszy)",
+  "modeli": 36818,
+  "okres": {
+   "t50 x1x": {
+    "T0": 15227,
+    "kodow_po": 209,
+    "cel_po": 0.2871,
+    "cel_przed": 0.2881
+   },
+   "t60 x1x": {
+    "T0": 12837,
+    "kodow_po": 212,
+    "cel_po": 0.283,
+    "cel_przed": 0.2851
+   },
+   "t60 xx1": {
+    "T0": 12837,
+    "kodow_po": 212,
+    "cel_po": 0.3821,
+    "cel_przed": 0.2825
+   }
+  },
+  "grupy": [
+   {
+    "grupa": "wszystkie modele pul",
+    "pkt": "≤ 4",
+    "modeli": 31104,
+    "zakladow_po": 292647,
+    "wzgledem": 0.995,
+    "p5": 0.987,
+    "p95": 1.003,
+    "zysk_model": -33
+   },
+   {
+    "grupa": "wszystkie modele pul",
+    "pkt": "5–6",
+    "modeli": 4032,
+    "zakladow_po": 21971,
+    "wzgledem": 1.027,
+    "p5": 0.954,
+    "p95": 1.101,
+    "zysk_model": -7
+   },
+   {
+    "grupa": "wszystkie modele pul",
+    "pkt": "≥ 7",
+    "modeli": 1682,
+    "zakladow_po": 8372,
+    "wzgledem": 1.094,
+    "p5": 0.976,
+    "p95": 1.216,
+    "zysk_model": 20
+   },
+   {
+    "grupa": "wszystkie modele pul",
+    "pkt": "9",
+    "modeli": 360,
+    "zakladow_po": 1702,
+    "wzgledem": 1.311,
+    "p5": 1.096,
+    "p95": 1.528,
+    "zysk_model": 81
+   },
+   {
+    "grupa": "wszystkie modele pul",
+    "pkt": "≥ 7 − ≤ 4",
+    "roznica": 0.098,
+    "p5": -0.027,
+    "p95": 0.228,
+    "szansa_lepsze": 0.9
+   },
+   {
+    "grupa": "Twoje kryterium przy T0",
+    "pkt": "≤ 4",
+    "modeli": 14919,
+    "zakladow_po": 132697,
+    "wzgledem": 0.961,
+    "p5": 0.931,
+    "p95": 0.992,
+    "zysk_model": -45
+   },
+   {
+    "grupa": "Twoje kryterium przy T0",
+    "pkt": "5–6",
+    "modeli": 2982,
+    "zakladow_po": 16295,
+    "wzgledem": 1.025,
+    "p5": 0.945,
+    "p95": 1.109,
+    "zysk_model": -8
+   },
+   {
+    "grupa": "Twoje kryterium przy T0",
+    "pkt": "≥ 7",
+    "modeli": 1255,
+    "zakladow_po": 6183,
+    "wzgledem": 1.044,
+    "p5": 0.945,
+    "p95": 1.15,
+    "zysk_model": -16
+   },
+   {
+    "grupa": "Twoje kryterium przy T0",
+    "pkt": "9",
+    "modeli": 247,
+    "zakladow_po": 1125,
+    "wzgledem": 1.248,
+    "p5": 1.094,
+    "p95": 1.422,
+    "zysk_model": 28
+   },
+   {
+    "grupa": "Twoje kryterium przy T0",
+    "pkt": "≥ 7 − ≤ 4",
+    "roznica": 0.083,
+    "p5": -0.024,
+    "p95": 0.197,
+    "szansa_lepsze": 0.89
+   },
+   {
+    "grupa": "Twoje kryterium, od k3",
+    "pkt": "≤ 4",
+    "modeli": 2608,
+    "zakladow_po": 19337,
+    "wzgledem": 1.029,
+    "p5": 0.951,
+    "p95": 1.118,
+    "zysk_model": -18
+   },
+   {
+    "grupa": "Twoje kryterium, od k3",
+    "pkt": "5–6",
+    "modeli": 1167,
+    "zakladow_po": 6179,
+    "wzgledem": 1.097,
+    "p5": 1.015,
+    "p95": 1.176,
+    "zysk_model": -14
+   },
+   {
+    "grupa": "Twoje kryterium, od k3",
+    "pkt": "≥ 7",
+    "modeli": 554,
+    "zakladow_po": 2793,
+    "wzgledem": 1.137,
+    "p5": 1.015,
+    "p95": 1.261,
+    "zysk_model": -21
+   },
+   {
+    "grupa": "Twoje kryterium, od k3",
+    "pkt": "9",
+    "modeli": 121,
+    "zakladow_po": 582,
+    "wzgledem": 1.268,
+    "p5": 1.08,
+    "p95": 1.473,
+    "zysk_model": 38
+   },
+   {
+    "grupa": "Twoje kryterium, od k3",
+    "pkt": "≥ 7 − ≤ 4",
+    "roznica": 0.108,
+    "p5": -0.048,
+    "p95": 0.266,
+    "szansa_lepsze": 0.87
+   }
+  ]
  }
 }
