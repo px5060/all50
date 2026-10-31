@@ -15,6 +15,7 @@ Użycie:  python3 ocena.py S+ t60 xx1 2496 [--stan ../px5060/kody/stan.json] [--
          python3 ocena.py zeszyt t60 6,11,18 --cel x1x --limit 10 [--czekaj 1] [--zapisz]
          python3 ocena.py nowe [--zapisz]   modele z telefonu (MOJE GRY, BANK, ZESZYT), których jeszcze nie oceniałem — tylko je
                                             (prośba użytkownika: raz ocenionego modelu nie oceniać znowu; ponownie tylko na prośbę)
+         python3 ocena.py nieaktualne [--zapisz]   start sesji: oceny modeli po LOST-cie / SZUKAJ LOST, w których zmienił się stan „po LOST-cie”
          python3 ocena.py lista            oceny w oceny.json i ich stan (decyzja z telefonu albo samo: „nie ma go już” / „dodany poza OCENAMI”)
          python3 ocena.py wyczysc [--dni 14]  start sesji: usuwa oceny modeli, których nie ma w telefonie (decyzja starsza niż N dni
                                            albo Twój model usunięty poza OCENAMI); ocena modelu w telefonie zostaje (znaczek 🔍, `nowe` go pomija)
@@ -305,6 +306,23 @@ def ocena_szukaj(a, stan, K):
     gra, sg = sposob_gry(k, r['stawka'], r.get('zaklad', ''), w8, r8, bool(r['po_lost_teraz']), s9, {3: P9 and P9['b3'], 5: P9 and P9['b5']}, BS, Mc) if BS else (None, [])
     if getattr(a, 'werdykt', None):   # wyważenie Claude w okolicznościach modelu (powód w „Czym się kierowałem”)
         waga += f' · werdykt Claude: {a.werdykt} (zamiast {werdykt}) — {a.powod or "bez powodu"}'; werdykt = a.werdykt
+    # gry po LOST (prośba użytkownika): ile gier tuż po LOST-cie i jak się skończyły; po WIN po LOST-cie model wraca do puli (TERAZ / BANK)
+    cz = [(krok if w_ else 9, bp + 1) for bp, w_, krok in ev if w_ or krok == 8]   # zamknięte cykle: (krok WIN albo 9 = LOST, Nr)
+    po = [(cz[i - 1][1], cz[i]) for i in range(1, len(cz)) if cz[i - 1][0] == 9]   # gra tuż po LOST-cie: (Nr LOST-u, wynik)
+    gpl = []
+    if app == 'L' or r['po_lost_teraz']:
+        wk = sorted(x[1][0] for x in po if x[1][0] <= 8)
+        gpl = [f'LOST-ów w historii: {len(r["lost_nr"])} · gier tuż po LOST-cie (zakończonych): {len(po)} — WIN {len(wk)}'
+               + (f' (' + ', '.join(f'k{q} ×{wk.count(q)}' for q in sorted(set(wk))) + ')' if wk else '') + f', LOST od razu po LOST-cie {len(po) - len(wk)}',
+               'ostatnie: ' + ' · '.join(f'LOST Nr {l} → ' + (f'W{x[0]} Nr {x[1]}' if x[0] <= 8 else f'LOST Nr {x[1]}') for l, x in po[-4:]) if po else 'ostatnie: —']
+        if r['po_lost_teraz']:
+            gpl.append(f'teraz: gra tuż po LOST-cie z Nr {r["lost_nr"][-1]} — k{k} {r["stawka"]} zł · {r.get("zaklad", "")}')
+        elif po and cz[-1][0] <= 8 and len(cz) >= 2 and cz[-2][0] == 9:
+            gpl.append(f'teraz: po LOST-cie z Nr {cz[-2][1]} była już wygrana W{cz[-1][0]} na Nr {cz[-1][1]} — model wrócił do puli (TERAZ / BANK)')
+        else:
+            gpl.append(f'teraz: ostatni cykl to WIN, nie LOST' + (f' (ostatni LOST Nr {r["lost_nr"][-1]})' if r['lost_nr'] else ''))
+        if app == 'L':
+            gpl.append('uczciwie: test appki SZUKAJ LOST T60 (wybór na 65% kodów, sprawdzenie na 35%) — LOST od razu po LOST-cie w 5,4% cykli, tyle co zwykły LOST')
     sek = [
         ('Stan teraz', [f'k{k} {r["stawka"]} zł · {r.get("zaklad", "")}', f'cykli {r["cykle"]}, WIN {r["win"]}, LOST {len(r["lost_nr"])}' + (f' (ost. Nr {r["lost_nr"][-1]})' if r['lost_nr'] else ''),
                         f'ostatnie cykle: {" ".join(r["ost10"][-6:])}' + (' · teraz po LOST-cie' if r['po_lost_teraz'] else '')]),
@@ -318,6 +336,7 @@ def ocena_szukaj(a, stan, K):
                                                        f'koszt do rozstrzygnięcia: mediana {koszty[n // 2]} zł, w 90% przypadków ≤ {koszty[int(n * 0.9)]} zł' + (f', najwyżej {koszty[-1]} zł' if koszty else ''),
                                                        f'czas: mediana {wiersze[len(wiersze) // 2]} wierszy, w 90% ≤ {wiersze[int(len(wiersze) * 0.9)]} wierszy' if wiersze else 'czas: —']),
         *([('Sposób gry: prosta progresja czy BANK', sg)] if sg else []),
+        *([('Gry po LOST', gpl)] if gpl else []),
         ('Nakładanie z MOJE', [f'{x[1]}: {x[0]:.0%} zakładów na tych samych wierszach' + (' · ten sam najbliższy Nr!' if x[2] else '') for x in nakl[:3]] or ['brak modeli w MOJE na tym celu']),
         ('Skala 9 pkt (jak w SZUKAJ — cały model)', [f'{s9}/9 → w SZUKAJ {P9["v"]} (GRAĆ od 7, OBSERWUJ 5–6)',
                                                      'punkty: ' + ', '.join(f'{x} {v}/{PKT9_MAX.get(x, v)}' for x, v in P9['pts'].items()),
@@ -332,7 +351,7 @@ def ocena_szukaj(a, stan, K):
         + (f' · gra: {"BANK +" + str(gra["bank"]) if gra["zalecana"] == "BANK" else gra["zalecana"]}' if gra else '')
     wpis = {'id': f'{app}|{tabela}|{cel}|P{nr}', 'gdzie': 'MOJE', 'tabela': tabela, 'app': app, 'cel': cel, 'model': f'P{nr}', 'm': m[:NF[app]],
             'nazwa': naz, 'krok': k, 'stawka': r['stawka'], 'zaklad': r.get('zaklad', ''), 'werdykt': werdykt, 'krotko': krotko,
-            'gra': gra, 'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
+            'gra': gra, 'po_lost': bool(r['po_lost_teraz']), 'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
     return wpis, sek
 
 
@@ -415,6 +434,29 @@ def main():
             json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1)
         print(f'oceny.json: {len(L)} → {len(L2)} (usunięto {len(U)}: modeli nie ma w telefonie — decyzja starsza niż {a.dni} dni albo usunięty poza OCENAMI)'
               + ('' if U else ' — bez zmian, nic do zapisania')); return
+    if a.app == 'nieaktualne':
+        # prośba użytkownika: model po LOST-cie i model SZUKAJ LOST — ocena nieaktualna, gdy zmienił się stan „po LOST-cie” (po WIN model wraca
+        # do puli: TERAZ / BANK; nowy LOST: LOST / BANK); takie oceny liczę od nowa (--zapisz), żeby telefon nie podpowiadał LOST bez LOST-u
+        L = (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', []); N = []
+        for o in L:
+            g = o.get('gra') or {}
+            if o['gdzie'] != 'MOJE' or o.get('app') not in NF or not (o['app'] == 'L' or g.get('po_lost')):
+                continue
+            z, w, _ = stan_oceny(o, stan, dec)
+            if z and not w:   # decyzja zapadła, modelu nie ma w telefonie — sprząta `wyczysc`
+                continue
+            bylo = o.get('po_lost', g.get('po_lost') if 'po_lost' in g else any('teraz po LOST-cie' in x for sk in o.get('sekcje', []) for x in sk['wiersze']))
+            X = S.kody(a.stan, o['tabela']); teraz = bool(S.analiza(o['m'], X, o['tabela'], o['cel'])['po_lost_teraz'])
+            if bool(bylo) != teraz:
+                N.append(o); print(f"  {o['nazwa']} · {o['werdykt']} · ocena: {'po LOST-cie' if bylo else 'nie po LOST-cie'} → teraz: {'po LOST-cie' if teraz else 'nie po LOST-cie'}")
+        print(f'nieaktualne oceny (stan po LOST-cie się zmienił): {len(N)}')
+        if a.zapisz and N:
+            W = []
+            for o in N:
+                b = argparse.Namespace(**{**vars(a), 'app': o['app'], 'tabela': o['tabela'], 'cel_lub_wiersze': o['cel'], 'nr': o['model'][1:], 'cel': None, 'm': o['m']})
+                W.append(ocen(b, stan, K, cicho=True)); print(f"  ✓ {W[-1]['nazwa']} — {W[-1]['werdykt']} · {W[-1]['krotko'].split(': ', 1)[-1]}")
+            zapisz(po, W)
+        return
     if a.app == 'nowe':
         ocenione = {o['id'] for o in (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', [])}
         T = modele_telefonu(stan); N = [x for x in T if x[0] not in ocenione]
