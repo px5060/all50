@@ -55,8 +55,10 @@ T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / l
 (`analiza/kalibracja.json`: trafialność zakładu ściągnięta do zwykłej częstości + jak łatwo o taki wynik przypadkiem), 4. **symulacja**
 (Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
 GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. **Sposób gry** (SZUKAJ, prośba użytkownika): prosta progresja czy BANK +3 / +5 —
-liczone jak MOJE (krok banku z przeniesionymi krokami, okno, szansa w oknie, najdłuższa seria, skala 9 pkt banku); sugestia BANK, gdy skala
-banku ≥ 7 i wyższa niż przy prostej progresji, a krok banku ≤ k5; inaczej TERAZ (model po LOST — LOST). W telefonie wybór ＋ Do MOJE (TERAZ) /
+liczone jak MOJE (krok banku z przeniesionymi krokami, okno, szansa w oknie, najdłuższa seria, skala 9 pkt banku). **BANK tylko przy lepszych
+szansach banku jako modelu** (prośba użytkownika): w całej historii seria banku kończy się WIN do k8 częściej niż cykl prostej progresji o ≥ 2 pp
+(≥ 30 serii), skala banku ≥ 7 i nie niższa niż prostej, krok banku teraz ≤ k5; inaczej TERAZ (model po LOST — LOST). Fakt: zwykle bank
+przekracza k8 częściej, niż prosta przegrywa do k8 (Twoje modele: tak u 14 z 18; próbka 600 modeli pul: bank lepszy w 1) — i po k8 gra dalej (1024, 2048 zł). W telefonie wybór ＋ Do MOJE (TERAZ) /
 ＋ Do LOST (tylko po LOST) / ＋ Do BANK; Twój model — Przenieś do BANK / TERAZ (MOJE 1.38.0+). W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
 Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
