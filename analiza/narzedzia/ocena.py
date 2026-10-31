@@ -117,6 +117,16 @@ def pkt9(app, tabela, ev, N):
     return json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else None
 
 
+def spr9(K):
+    """sprawdzenie skali 9 pkt (kalibracja_pkt9.py → SKALA9 w kalibracja.json): jak trafiały potem modele z ≥ 7 i ≤ 4 pkt"""
+    G = {g['pkt']: g for g in (K.get('SKALA9') or {}).get('grupy', []) if g['grupa'] == 'wszystkie modele pul'}
+    if '≥ 7' not in G or '≤ 4' not in G:
+        return []
+    d = G.get('≥ 7 − ≤ 4', {})
+    return [f"sprawdzenie (kalibracja): po wyborze modele z ≥ 7 pkt trafiały × {G['≥ 7']['wzgledem']:.2f}, z ≤ 4 pkt × {G['≤ 4']['wzgledem']:.2f} modeli tej samej tabeli i celu"
+            + (f" — słaby sygnał (szansa, że ≥ 7 lepsze, ok. {d['szansa_lepsze']:.0%}; jeden okres)" if d else '')]
+
+
 def zid(t, md):
     """id oceny modelu ZESZYTU — to samo przy ocenie i przy szukaniu nieocenionych"""
     return f'Z|{t}|{".".join(map(str, sorted(md["w"])))}|{md.get("poz", "")}|{md["czekaj"]}|{md.get("war", "")}|{md.get("cel", "")}|{md["limit"]}'
@@ -248,7 +258,7 @@ def ocena_szukaj(a, stan, K):
         ('Skala 9 pkt (jak w SZUKAJ — cały model)', [f'{s9}/9 → w SZUKAJ {P9["v"]} (GRAĆ od 7, OBSERWUJ 5–6)',
                                                      'punkty: ' + ', '.join(f'{x} {v}/{PKT9_MAX.get(x, v)}' for x, v in P9['pts'].items()),
                                                      f'losowanie zakładów (5000×): mediana {P9["bootMed"]:.0f} zł, strata w {P9["bootP"]:.0%} losowań · LOST przy K7: {P9["k7"]} · okresów na plus {P9["okresy"]}/5',
-                                                     f'jako BANK (osobna skala w SZUKAJ): +3 {P9["b3"]}/9 · +5 {P9["b5"]}/9' + (' — model jest w BANK' if bank else '')]
+                                                     f'jako BANK (osobna skala w SZUKAJ): +3 {P9["b3"]}/9 · +5 {P9["b5"]}/9' + (' — model jest w BANK' if bank else '')] + spr9(K)
                                                     if P9 else ['za mało zakładów (< 20)']),
         ('Czym się kierowałem', [f'historia do k8 {"≥" if hist_ok else "<"} 95% przy ≥ 20 przypadkach' + (f', w 3 krokach {"≥" if r8 and w3 / r8 >= q3 else "<"} zwykłej szansy ({q3:.0%})'),
                                  'nakładanie z MOJE ' + (f'{max_n:.0%}' if nakl else 'brak') + (' (≥ 30% = podwójna stawka)' if max_n >= 0.3 else ''), waga,
