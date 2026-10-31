@@ -40,7 +40,7 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
    modeli, których nie ma już w telefonie (decyzja starsza niż 14 dni albo Twój model usunięty poza OCENAMI); ocena modelu, który jest
    w telefonie, zostaje (znaczek 🔍, `nowe` go nie ocenia drugi raz). Jeśli coś wypadło — commit i push w repo z kodami.
    Potem `ocena.py nieaktualne --zapisz` — ocena modelu po LOST-cie / SZUKAJ LOST liczona od nowa, gdy zmienił się stan „po LOST-cie”
-   (prośba użytkownika: nie podpowiadać gry modelom LOST, które nie mogą jej grać).
+   (prośba użytkownika: nie podpowiadać LOST modelom, które nie są po LOST-cie — po WIN wracają do TERAZ / BANK).
 
 ## Ocena modelu (prośba użytkownika — zawsze te same kroki)
 
@@ -61,9 +61,9 @@ liczone jak MOJE (krok banku z przeniesionymi krokami, okno, szansa w oknie, naj
 szansach banku jako modelu** (prośba użytkownika): w całej historii seria banku kończy się WIN do k8 częściej niż cykl prostej progresji o ≥ 2 pp
 (≥ 30 serii), skala banku ≥ 7 i nie niższa niż prostej, krok banku teraz ≤ k5; inaczej TERAZ (model po LOST — LOST). Fakt: zwykle bank
 przekracza k8 częściej, niż prosta przegrywa do k8 (Twoje modele: tak u 14 z 18; próbka 600 modeli pul: bank lepszy w 1) — i po k8 gra dalej (1024, 2048 zł). W telefonie wybór ＋ Do MOJE (TERAZ) /
-＋ Do LOST (tylko po LOST) / ＋ Do BANK; Twój model — Przenieś do BANK / TERAZ (MOJE 1.38.0+). **Model SZUKAJ LOST gra tylko cykl tuż po LOST-cie**
-(prośba użytkownika): w innym cyklu (np. po WIN k1 po LOST-cie) `ocena.py` daje NIE GRAĆ bez sugestii gry („czekaj na następny LOST”), a `teraz.py` /
-`propozycje.py` pokazują modele L tylko po LOST-cie; sekcja „Gry po LOST” — ile gier tuż po LOST-cie i jak się skończyły. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
+＋ Do LOST (tylko po LOST) / ＋ Do BANK; Twój model — Przenieś do BANK / TERAZ (MOJE 1.38.0+). **Sugestia LOST tylko dla modelu po LOST-cie**
+(prośba użytkownika): po LOST-cie — LOST albo BANK, jeśli uzasadniony; po WIN po LOST-cie model wraca do puli — TERAZ albo BANK (też model
+SZUKAJ LOST). Sekcja „Gry po LOST” — ile gier tuż po LOST-cie i jak się skończyły. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
 Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
 (np. od k1 ok. 64%) i bez nakładania (< 30% wspólnych wierszy / kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.

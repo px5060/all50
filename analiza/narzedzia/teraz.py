@@ -36,7 +36,7 @@ def main():
             P = json.load(open(path)); O = skan(P['pool'], X, t, cel); NR = P.get('nr') or range(1, len(P['pool']) + 1)
             for i, o in enumerate(O):
                 cyk = int(o[:9].sum()); lost = int(o[8]); k = int(o[9]) + 1; lim = limit_lost(cyk, P['rules'])
-                if cyk < P['minCyc'] or lim is None or lost > lim or int(o[10]) != 2 or not (k0 <= k <= k1) or (app == 'L' and (lost < P.get('minBust', 0) or not o[11])):   # SZUKAJ LOST: tylko tuż po LOST-cie
+                if cyk < P['minCyc'] or lim is None or lost > lim or int(o[10]) != 2 or not (k0 <= k <= k1) or (app == 'L' and lost < P.get('minBust', 0)):
                     continue
                 m = S.model(app, t, cel, NR[i]); r = S.run(m, X, S.TPOS[cel], S.ALPH[t])
                 if r[0] != 'PEND' or not (N <= r[2] < N + a.za):

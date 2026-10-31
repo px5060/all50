@@ -306,10 +306,9 @@ def ocena_szukaj(a, stan, K):
     gra, sg = sposob_gry(k, r['stawka'], r.get('zaklad', ''), w8, r8, bool(r['po_lost_teraz']), s9, {3: P9 and P9['b3'], 5: P9 and P9['b5']}, BS, Mc) if BS else (None, [])
     if getattr(a, 'werdykt', None):   # wyważenie Claude w okolicznościach modelu (powód w „Czym się kierowałem”)
         waga += f' · werdykt Claude: {a.werdykt} (zamiast {werdykt}) — {a.powod or "bez powodu"}'; werdykt = a.werdykt
-    # gry po LOST (prośba użytkownika): model SZUKAJ LOST gra tylko cykl tuż po LOST-cie — w innym cyklu blokada (NIE GRAĆ, bez sugestii gry)
+    # gry po LOST (prośba użytkownika): ile gier tuż po LOST-cie i jak się skończyły; po WIN po LOST-cie model wraca do puli (TERAZ / BANK)
     cz = [(krok if w_ else 9, bp + 1) for bp, w_, krok in ev if w_ or krok == 8]   # zamknięte cykle: (krok WIN albo 9 = LOST, Nr)
     po = [(cz[i - 1][1], cz[i]) for i in range(1, len(cz)) if cz[i - 1][0] == 9]   # gra tuż po LOST-cie: (Nr LOST-u, wynik)
-    blok = app == 'L' and not r['po_lost_teraz'] and k <= 8
     gpl = []
     if app == 'L' or r['po_lost_teraz']:
         wk = sorted(x[1][0] for x in po if x[1][0] <= 8)
@@ -319,14 +318,11 @@ def ocena_szukaj(a, stan, K):
         if r['po_lost_teraz']:
             gpl.append(f'teraz: gra tuż po LOST-cie z Nr {r["lost_nr"][-1]} — k{k} {r["stawka"]} zł · {r.get("zaklad", "")}')
         elif po and cz[-1][0] <= 8 and len(cz) >= 2 and cz[-2][0] == 9:
-            gpl.append(f'teraz: po LOST-cie z Nr {cz[-2][1]} była już wygrana W{cz[-1][0]} na Nr {cz[-1][1]} — teraz drugi cykl po LOST-cie')
+            gpl.append(f'teraz: po LOST-cie z Nr {cz[-2][1]} była już wygrana W{cz[-1][0]} na Nr {cz[-1][1]} — model wrócił do puli (TERAZ / BANK)')
         else:
             gpl.append(f'teraz: ostatni cykl to WIN, nie LOST' + (f' (ostatni LOST Nr {r["lost_nr"][-1]})' if r['lost_nr'] else ''))
         if app == 'L':
             gpl.append('uczciwie: test appki SZUKAJ LOST T60 (wybór na 65% kodów, sprawdzenie na 35%) — LOST od razu po LOST-cie w 5,4% cykli, tyle co zwykły LOST')
-    if blok:
-        waga += (' · ' if waga else '') + 'BLOKADA: model SZUKAJ LOST gra tylko cykl tuż po LOST-cie — teraz nie jest po LOST-cie → NIE GRAĆ, czekaj na następny LOST'
-        werdykt = 'NIE GRAĆ'; gra = None; sg = ['czeka na następny LOST — model SZUKAJ LOST gra tylko cykl tuż po LOST-cie (ani TERAZ, ani BANK)']
     sek = [
         ('Stan teraz', [f'k{k} {r["stawka"]} zł · {r.get("zaklad", "")}', f'cykli {r["cykle"]}, WIN {r["win"]}, LOST {len(r["lost_nr"])}' + (f' (ost. Nr {r["lost_nr"][-1]})' if r['lost_nr'] else ''),
                         f'ostatnie cykle: {" ".join(r["ost10"][-6:])}' + (' · teraz po LOST-cie' if r['po_lost_teraz'] else '')]),
@@ -340,7 +336,7 @@ def ocena_szukaj(a, stan, K):
                                                        f'koszt do rozstrzygnięcia: mediana {koszty[n // 2]} zł, w 90% przypadków ≤ {koszty[int(n * 0.9)]} zł' + (f', najwyżej {koszty[-1]} zł' if koszty else ''),
                                                        f'czas: mediana {wiersze[len(wiersze) // 2]} wierszy, w 90% ≤ {wiersze[int(len(wiersze) * 0.9)]} wierszy' if wiersze else 'czas: —']),
         *([('Sposób gry: prosta progresja czy BANK', sg)] if sg else []),
-        *([('Gry po LOST' + (' (SZUKAJ LOST gra tylko tuż po LOST-cie)' if app == 'L' else ''), gpl)] if gpl else []),
+        *([('Gry po LOST', gpl)] if gpl else []),
         ('Nakładanie z MOJE', [f'{x[1]}: {x[0]:.0%} zakładów na tych samych wierszach' + (' · ten sam najbliższy Nr!' if x[2] else '') for x in nakl[:3]] or ['brak modeli w MOJE na tym celu']),
         ('Skala 9 pkt (jak w SZUKAJ — cały model)', [f'{s9}/9 → w SZUKAJ {P9["v"]} (GRAĆ od 7, OBSERWUJ 5–6)',
                                                      'punkty: ' + ', '.join(f'{x} {v}/{PKT9_MAX.get(x, v)}' for x, v in P9['pts'].items()),
@@ -352,7 +348,7 @@ def ocena_szukaj(a, stan, K):
                                  'uczciwie: historia nie przewiduje przyszłości (kalibracja) — szansa realna ≈ jak każdego modelu na tym kroku']),
     ]
     krotko = f'{naz}: k{k} {r["stawka"]} zł · historia do k8 {pct(w8, r8)} · w 3 krokach {pct(w3, r8)} · uczciwie ≈ {s8:.0%} · LOST w symulacji {lost:.0%}' + (f' · 9 pkt {s9}/9' if P9 else '') \
-        + (f' · gra: {"BANK +" + str(gra["bank"]) if gra["zalecana"] == "BANK" else gra["zalecana"]}' if gra else '') + (' · teraz nie grać: czeka na następny LOST' if blok else '')
+        + (f' · gra: {"BANK +" + str(gra["bank"]) if gra["zalecana"] == "BANK" else gra["zalecana"]}' if gra else '')
     wpis = {'id': f'{app}|{tabela}|{cel}|P{nr}', 'gdzie': 'MOJE', 'tabela': tabela, 'app': app, 'cel': cel, 'model': f'P{nr}', 'm': m[:NF[app]],
             'nazwa': naz, 'krok': k, 'stawka': r['stawka'], 'zaklad': r.get('zaklad', ''), 'werdykt': werdykt, 'krotko': krotko,
             'gra': gra, 'po_lost': bool(r['po_lost_teraz']), 'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
@@ -439,8 +435,8 @@ def main():
         print(f'oceny.json: {len(L)} → {len(L2)} (usunięto {len(U)}: modeli nie ma w telefonie — decyzja starsza niż {a.dni} dni albo usunięty poza OCENAMI)'
               + ('' if U else ' — bez zmian, nic do zapisania')); return
     if a.app == 'nieaktualne':
-        # prośba użytkownika: model po LOST-cie i model SZUKAJ LOST — ocena nieaktualna, gdy zmienił się stan „po LOST-cie” (WIN po LOST-cie
-        # kończy grę modelu LOST, nowy LOST ją otwiera); takie oceny liczę od nowa (--zapisz), żeby telefon nie podpowiadał gry, której nie ma
+        # prośba użytkownika: model po LOST-cie i model SZUKAJ LOST — ocena nieaktualna, gdy zmienił się stan „po LOST-cie” (po WIN model wraca
+        # do puli: TERAZ / BANK; nowy LOST: LOST / BANK); takie oceny liczę od nowa (--zapisz), żeby telefon nie podpowiadał LOST bez LOST-u
         L = (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', []); N = []
         for o in L:
             g = o.get('gra') or {}

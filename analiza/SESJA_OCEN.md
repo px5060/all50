@@ -14,8 +14,8 @@ Wynik idzie do telefonu: `oceny.json` w prywatnym repo z kodami → MOJE → �
 3. `pip install numba numpy` (gdy brak).
 4. `python3 analiza/narzedzia/moje_stan.py ../px5060/kody/stan.json` — Nr T50 / T60 i poprawki kodów (⚠ → nie opierać się na starych wynikach).
 5. `python3 analiza/narzedzia/ocena.py wyczysc` — sprzątanie ocen; jeśli coś wypadło — commit i push w `kody` (niżej).
-   Potem `ocena.py nieaktualne --zapisz` — oceny modeli po LOST-cie / SZUKAJ LOST, w których zmienił się stan „po LOST-cie” (WIN po LOST-cie
-   kończy grę modelu LOST, nowy LOST ją otwiera), liczone od nowa; jeśli coś zmienił — commit i push w `kody`.
+   Potem `ocena.py nieaktualne --zapisz` — oceny modeli po LOST-cie / SZUKAJ LOST, w których zmienił się stan „po LOST-cie” (po WIN model wraca
+   do TERAZ / BANK, nowy LOST daje sugestię LOST), liczone od nowa; jeśli coś zmienił — commit i push w `kody`.
 6. `python3 analiza/narzedzia/pule.py` — przy „← do odświeżenia” (≥ 200 nowych kodów) jedno zdanie: pule do odświeżenia w sesji głównej (PROJEKT.md).
 
 **Przed każdą prośbą:** `git -C ../px5060/kody pull -q --rebase` — telefon zapisuje `stan.json` na bieżąco (nowe kody, nowe modele, decyzje).
@@ -61,8 +61,8 @@ Po polsku, krótko („daj modele, analizę zachowaj dla siebie”), formą neut
 
 Model SZUKAJ: dopisz **sugestię sposobu gry** z oceny (prosta progresja TERAZ / LOST po LOST-cie / BANK +3 / +5 — krok i stawka banku teraz);
 w telefonie wybór ＋ Do MOJE / ＋ Do LOST / ＋ Do BANK (Twój model: Przenieś do BANK / TERAZ).
-Model SZUKAJ LOST (L…) — **tylko w cyklu tuż po LOST-cie**; w innym cyklu ocena = NIE GRAĆ („czekaj na następny LOST”), bez sugestii TERAZ / BANK.
-Przy modelu L podać: ile gier tuż po LOST-cie w historii i jak się skończyły (sekcja „Gry po LOST”).
+Sugestia **LOST tylko po LOST-cie** (albo BANK, jeśli uzasadniony); po WIN po LOST-cie model — też SZUKAJ LOST — wraca do puli: TERAZ albo BANK.
+Przy modelu L / po LOST-cie podać: ile gier tuż po LOST-cie w historii i jak się skończyły (sekcja „Gry po LOST”).
 
 ZESZYT: werdykt · krok, stawka, Nr · plan kroków (Nr do limitu) · historia do limitu i w 3 krokach · kolizje z MOJE.
 Na końcu: gdzie zdecydować (MOJE → OCENY) i jedno zdanie uczciwie: historia nie przewiduje przyszłości (kalibracja) — realna szansa jak
