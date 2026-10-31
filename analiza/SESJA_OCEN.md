@@ -14,6 +14,8 @@ Wynik idzie do telefonu: `oceny.json` w prywatnym repo z kodami → MOJE → �
 3. `pip install numba numpy` (gdy brak).
 4. `python3 analiza/narzedzia/moje_stan.py ../px5060/kody/stan.json` — Nr T50 / T60 i poprawki kodów (⚠ → nie opierać się na starych wynikach).
 5. `python3 analiza/narzedzia/ocena.py wyczysc` — sprzątanie ocen; jeśli coś wypadło — commit i push w `kody` (niżej).
+   Potem `ocena.py nieaktualne --zapisz` — oceny modeli po LOST-cie / SZUKAJ LOST, w których zmienił się stan „po LOST-cie” (WIN po LOST-cie
+   kończy grę modelu LOST, nowy LOST ją otwiera), liczone od nowa; jeśli coś zmienił — commit i push w `kody`.
 6. `python3 analiza/narzedzia/pule.py` — przy „← do odświeżenia” (≥ 200 nowych kodów) jedno zdanie: pule do odświeżenia w sesji głównej (PROJEKT.md).
 
 **Przed każdą prośbą:** `git -C ../px5060/kody pull -q --rebase` — telefon zapisuje `stan.json` na bieżąco (nowe kody, nowe modele, decyzje).

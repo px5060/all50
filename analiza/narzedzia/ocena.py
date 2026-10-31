@@ -15,6 +15,7 @@ Użycie:  python3 ocena.py S+ t60 xx1 2496 [--stan ../px5060/kody/stan.json] [--
          python3 ocena.py zeszyt t60 6,11,18 --cel x1x --limit 10 [--czekaj 1] [--zapisz]
          python3 ocena.py nowe [--zapisz]   modele z telefonu (MOJE GRY, BANK, ZESZYT), których jeszcze nie oceniałem — tylko je
                                             (prośba użytkownika: raz ocenionego modelu nie oceniać znowu; ponownie tylko na prośbę)
+         python3 ocena.py nieaktualne [--zapisz]   start sesji: oceny modeli po LOST-cie / SZUKAJ LOST, w których zmienił się stan „po LOST-cie”
          python3 ocena.py lista            oceny w oceny.json i ich stan (decyzja z telefonu albo samo: „nie ma go już” / „dodany poza OCENAMI”)
          python3 ocena.py wyczysc [--dni 14]  start sesji: usuwa oceny modeli, których nie ma w telefonie (decyzja starsza niż N dni
                                            albo Twój model usunięty poza OCENAMI); ocena modelu w telefonie zostaje (znaczek 🔍, `nowe` go pomija)
@@ -354,7 +355,7 @@ def ocena_szukaj(a, stan, K):
         + (f' · gra: {"BANK +" + str(gra["bank"]) if gra["zalecana"] == "BANK" else gra["zalecana"]}' if gra else '') + (' · teraz nie grać: czeka na następny LOST' if blok else '')
     wpis = {'id': f'{app}|{tabela}|{cel}|P{nr}', 'gdzie': 'MOJE', 'tabela': tabela, 'app': app, 'cel': cel, 'model': f'P{nr}', 'm': m[:NF[app]],
             'nazwa': naz, 'krok': k, 'stawka': r['stawka'], 'zaklad': r.get('zaklad', ''), 'werdykt': werdykt, 'krotko': krotko,
-            'gra': gra, 'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
+            'gra': gra, 'po_lost': bool(r['po_lost_teraz']), 'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
     return wpis, sek
 
 
@@ -437,6 +438,29 @@ def main():
             json.dump(d, open(po, 'w'), ensure_ascii=False, indent=1)
         print(f'oceny.json: {len(L)} → {len(L2)} (usunięto {len(U)}: modeli nie ma w telefonie — decyzja starsza niż {a.dni} dni albo usunięty poza OCENAMI)'
               + ('' if U else ' — bez zmian, nic do zapisania')); return
+    if a.app == 'nieaktualne':
+        # prośba użytkownika: model po LOST-cie i model SZUKAJ LOST — ocena nieaktualna, gdy zmienił się stan „po LOST-cie” (WIN po LOST-cie
+        # kończy grę modelu LOST, nowy LOST ją otwiera); takie oceny liczę od nowa (--zapisz), żeby telefon nie podpowiadał gry, której nie ma
+        L = (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', []); N = []
+        for o in L:
+            g = o.get('gra') or {}
+            if o['gdzie'] != 'MOJE' or o.get('app') not in NF or not (o['app'] == 'L' or g.get('po_lost')):
+                continue
+            z, w, _ = stan_oceny(o, stan, dec)
+            if z and not w:   # decyzja zapadła, modelu nie ma w telefonie — sprząta `wyczysc`
+                continue
+            bylo = o.get('po_lost', g.get('po_lost') if 'po_lost' in g else any('teraz po LOST-cie' in x for sk in o.get('sekcje', []) for x in sk['wiersze']))
+            X = S.kody(a.stan, o['tabela']); teraz = bool(S.analiza(o['m'], X, o['tabela'], o['cel'])['po_lost_teraz'])
+            if bool(bylo) != teraz:
+                N.append(o); print(f"  {o['nazwa']} · {o['werdykt']} · ocena: {'po LOST-cie' if bylo else 'nie po LOST-cie'} → teraz: {'po LOST-cie' if teraz else 'nie po LOST-cie'}")
+        print(f'nieaktualne oceny (stan po LOST-cie się zmienił): {len(N)}')
+        if a.zapisz and N:
+            W = []
+            for o in N:
+                b = argparse.Namespace(**{**vars(a), 'app': o['app'], 'tabela': o['tabela'], 'cel_lub_wiersze': o['cel'], 'nr': o['model'][1:], 'cel': None, 'm': o['m']})
+                W.append(ocen(b, stan, K, cicho=True)); print(f"  ✓ {W[-1]['nazwa']} — {W[-1]['werdykt']} · {W[-1]['krotko'].split(': ', 1)[-1]}")
+            zapisz(po, W)
+        return
     if a.app == 'nowe':
         ocenione = {o['id'] for o in (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', [])}
         T = modele_telefonu(stan); N = [x for x in T if x[0] not in ocenione]

@@ -39,6 +39,8 @@ Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownik
 7. **Oceny — sprzątanie** (gdy jest `oceny.json`): `python3 analiza/narzedzia/ocena.py wyczysc --stan ../px5060/kody/stan.json` — wypadają oceny
    modeli, których nie ma już w telefonie (decyzja starsza niż 14 dni albo Twój model usunięty poza OCENAMI); ocena modelu, który jest
    w telefonie, zostaje (znaczek 🔍, `nowe` go nie ocenia drugi raz). Jeśli coś wypadło — commit i push w repo z kodami.
+   Potem `ocena.py nieaktualne --zapisz` — ocena modelu po LOST-cie / SZUKAJ LOST liczona od nowa, gdy zmienił się stan „po LOST-cie”
+   (prośba użytkownika: nie podpowiadać gry modelom LOST, które nie mogą jej grać).
 
 ## Ocena modelu (prośba użytkownika — zawsze te same kroki)
 
