@@ -4,6 +4,8 @@
   3. Uczciwa szansa — kalibracja.json (czy historia przewidywała na kodach, których wybór nie znał) + jak łatwo o taki wynik przypadkiem.
   4. Symulacja — Monte Carlo przyszłych kodów (SZUKAJ) / plan wierszy (ZESZYT): wygrana, LOST, koszt, czas.
   5. Nakładanie — czy model gra na tych samych wierszach co modele w MOJE (podwójna stawka na jeden mecz).
+  Sposób gry (SZUKAJ, prośba użytkownika): prosta progresja (TERAZ / LOST po LOST-cie) czy BANK +3 / +5 — jak w MOJE (bankOf, skala 9 pkt banku),
+  sugestia w polu `gra` (MOJE: ＋ Do MOJE / LOST / BANK, przy Twoim modelu Przenieś do BANK / TERAZ).
   6. Werdykt (GRAĆ / OBSERWUJ / NIE GRAĆ) i czym się kierowałem. SZUKAJ: skala 9 pkt z aplikacji (pkt9.js) jako czynnik, nie wyrok —
      ważona wg sytuacji (od k3 liczy się seria od obecnego kroku); --werdykt X --powod "…" = wyważenie Claude w okolicznościach modelu.
 Rodzaj (prośba użytkownika): model, którego telefon nie ma = propozycja Claude (w MOJE: „＋ Dodaj do MOJE” / „Usuń analizę”); model, który
@@ -117,6 +119,58 @@ def pkt9(app, tabela, ev, N):
     return json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else None
 
 
+def bank_stan(M, bs, ph, w):
+    """BANK +w jak w MOJE (bankOf): bank gra w każdym cyklu modelu tylko jego pierwsze w zakładów; WIN modelu w oknie = WIN banku na kroku
+    (przeniesione kroki + krok modelu), inaczej bank przegrywa okno i gra dalej w następnym cyklu, bez limitu (k9 1024 zł, k10 2048 zł …).
+    M = krok WIN modelu w każdym zamkniętym cyklu (99 = LOST), bs = przegrane zakłady bieżącego cyklu, ph = 2: zakład ustawiony"""
+    carry, ser = 0, []
+    for m in M:
+        if m <= w:
+            ser.append(carry + m); carry = 0
+        else:
+            carry += w
+    okno = bs < w; ws = carry + 1 if okno else carry + w + 1; nxt = carry + bs + 1 if okno else ws; otw = carry + bs if okno else carry + w
+    eq = lambda x: sum(1 for m in M if m == x); gt = lambda x: sum(1 for m in M if m > x)
+    surv, cum, p = 1.0, 0.0, []
+    for i in range(3 if w == 3 else 2):   # szanse z historii: najbliższe okno (w bieżącym cyklu — tylko cykle, w których model też przegrał bs), potem kolejne
+        war = i == 0 and okno; base = gt(bs) if war else len(M)
+        if not base:
+            break
+        pw = 0
+        for x in range(bs + 1 if war else 1, w + 1):
+            cum += surv * eq(x) / base; pw += eq(x) / base
+        surv *= 1 - pw; p.append(cum)
+    return {'w': w, 'nxt': nxt, 'stawka': S.ST[nxt - 1] if nxt <= 8 else 512 * 2 ** (nxt - 8), 'teraz': okno and ph == 2, 'okno': okno, 'ws': ws, 'we': ws + w - 1,
+            'maxk': max(ser + [otw]), 'over': sum(1 for x in ser if x > (9 if w == 3 else 10)), 'lim': 9 if w == 3 else 10, 'first': sum(1 for x in ser if x <= w) / len(ser) if ser else 0,
+            'p1': p[0] if p else None, 'p2': p[1] if len(p) > 1 else None, 'serii': len(ser), 'carry': carry}
+
+
+def sposob_gry(k, stawka, zaklad, w8, r8, po_lost, s9, b9, B):
+    """prośba użytkownika: po ocenie — lepiej prosta progresja (TERAZ; model po LOST — zakładka LOST) czy BANK. BANK, gdy jego skala 9 pkt
+    (z SZUKAJ) ≥ 7 i wyższa niż przy prostej progresji, a bank nie jest teraz w środku długiej serii (krok banku ≤ k5); inaczej prosta progresja"""
+    tz = 'LOST' if po_lost else 'TERAZ'; wiersze = []; kd = sum(S.ST[k - 1:8])
+    wiersze.append(f'prosta progresja ({"zakładka LOST — model jest po LOST" if po_lost else "TERAZ"}): k{k} {stawka} zł · {zaklad} · do k8 {pct(w8, r8)} · '
+                   f'skala {s9 if s9 is not None else "—"}/9 · koszt do k8 najwyżej {kd} zł')
+    for b in B:
+        st = 'gra teraz' if b['teraz'] else f'okno k{b["ws"]}–k{b["we"]} trwa' if b['okno'] else f'czeka na WIN modelu, potem okno k{b["ws"]}–k{b["we"]}'
+        wiersze.append(f'BANK +{b["w"]}: {st} · k{b["nxt"]} {b["stawka"]} zł' + (f' (przeniesione z historii {b["carry"]} kroków)' if b['carry'] else '')
+                       + (f' · w tym oknie {b["p1"]:.0%}' if b['p1'] is not None else '') + (f', w 2 oknach {b["p2"]:.0%}' if b['p2'] is not None else '')
+                       + f' · {b["first"]:.0%} serii wygranych w 1. oknie · najdłuższa seria k{b["maxk"]} · serie > k{b["lim"]}: {b["over"]}'
+                       + f' · skala {b9[b["w"]] if b9[b["w"]] is not None else "—"}/9')
+    zb = sorted(B, key=lambda b: (-(b9[b['w']] if b9[b['w']] is not None else -1), b['w']))[0]; pz = b9[zb['w']]; s9_ = s9 if s9 is not None else -1
+    if pz is not None and pz >= 7 and pz > s9_ and zb['nxt'] <= 5:
+        z = {'zalecana': 'BANK', 'bank': zb['w'], 'po_lost': po_lost,
+             'tx': f'BANK +{zb["w"]} — skala {pz}/9 wobec {s9 if s9 is not None else "—"}/9 przy prostej progresji; {zb["first"]:.0%} serii banku wygranych '
+                   f'w 1. oknie, najdłuższa k{zb["maxk"]}; teraz k{zb["nxt"]} {zb["stawka"]} zł'}
+    else:
+        pw = ('za mało danych do skali banku' if pz is None else f'bank słabszy w skali (+3 {b9[3]}/9, +5 {b9[5]}/9)' if pz < 7
+              else f'prosta progresja nie gorsza w skali ({s9}/9)' if pz <= s9_
+              else f'bank jest teraz w środku serii (k{zb["nxt"]} {zb["stawka"]} zł — przeniesione przegrane z historii)')
+        z = {'zalecana': tz, 'bank': None, 'po_lost': po_lost, 'tx': f'prosta progresja ({tz}) — {pw}; limit k8, koszt najwyżej {kd} zł'}
+    wiersze.append(f'➜ sugestia: {z["tx"]}' + (' · BANK bez limitu: przy złej serii k9 1024 zł, k10 2048 zł' if z['zalecana'] == 'BANK' else ''))
+    return z, wiersze
+
+
 def spr9(K):
     """sprawdzenie skali 9 pkt (kalibracja_pkt9.py → SKALA9 w kalibracja.json): jak trafiały potem modele z ≥ 7 i ≤ 4 pkt"""
     G = {g['pkt']: g for g in (K.get('SKALA9') or {}).get('grupy', []) if g['grupa'] == 'wszystkie modele pul'}
@@ -184,7 +238,7 @@ def ocena_szukaj(a, stan, K):
     X = S.kody(a.stan, tabela); m = getattr(a, 'm', None) or S.model(app, tabela, cel, nr); tp = S.TPOS[cel]   # model z telefonu ma pierwszeństwo
     p = sum(c[tp] == '1' for c in X) / len(X); p500 = sum(c[tp] == '1' for c in X[-500:]) / 500
     r = S.analiza(m, X, tabela, cel, do_k=8, okno=3); k = r['k']
-    ev, _ = zaklady(m, X, tabela, cel); hh = sum(1 for e in ev if e[1]); bh = len(ev)
+    ev, res = zaklady(m, X, tabela, cel); hh = sum(1 for e in ev if e[1]); bh = len(ev)
     w8, r8 = r['od_kroku']; w3, _ = r['w_oknie']
     n0 = (K.get('SZUKAJ') or {}).get('n0', 1e9); h = (hh + n0 * p) / (bh + n0)
     s8, s3 = 1 - (1 - h) ** max(0, 9 - k), 1 - (1 - h) ** max(0, min(3, 9 - k)); q8 = 1 - (1 - p) ** max(0, 9 - k); q3 = 1 - (1 - p) ** max(0, min(3, 9 - k))
@@ -240,6 +294,10 @@ def ocena_szukaj(a, stan, K):
             slabe = [x for x, z in ((f'od k{k} tylko {r8} przypadków (< 30)', r8 < 30), (f'od k{k} {pct(w8, r8)}, nie 100%', w8 < r8),
                                     ('jedna z połów historii < 95%', not pol_ok), (na_k8 + ' — słabość skali widać też w tej serii', styk > 1.5 * styk_zw * w8)) if z]
             waga += 'seria od tego kroku jej nie przeważa: ' + '; '.join(slabe) + ' → OBSERWUJ'
+    # sposób gry (prośba użytkownika): prosta progresja (TERAZ / LOST) czy BANK +3 / +5 — liczone jak w MOJE
+    Mc = [krok if w_ else 99 for _, w_, krok in ev if w_ or krok == 8]
+    BS = [bank_stan(Mc, k - 1, 2 if res[0] == 'PEND' else 0, w_) for w_ in (3, 5)] if k <= 8 and Mc else []
+    gra, sg = sposob_gry(k, r['stawka'], r.get('zaklad', ''), w8, r8, bool(r['po_lost_teraz']), s9, {3: P9 and P9['b3'], 5: P9 and P9['b5']}, BS) if BS else (None, [])
     if getattr(a, 'werdykt', None):   # wyważenie Claude w okolicznościach modelu (powód w „Czym się kierowałem”)
         waga += f' · werdykt Claude: {a.werdykt} (zamiast {werdykt}) — {a.powod or "bez powodu"}'; werdykt = a.werdykt
     sek = [
@@ -254,6 +312,7 @@ def ocena_szukaj(a, stan, K):
         ('Symulacja (2000 losowań przyszłych kodów)', [f'wygrana do k8: {win8:.0%}, w 3 krokach: {win3:.0%}, LOST: {lost:.0%}',
                                                        f'koszt do rozstrzygnięcia: mediana {koszty[n // 2]} zł, w 90% przypadków ≤ {koszty[int(n * 0.9)]} zł' + (f', najwyżej {koszty[-1]} zł' if koszty else ''),
                                                        f'czas: mediana {wiersze[len(wiersze) // 2]} wierszy, w 90% ≤ {wiersze[int(len(wiersze) * 0.9)]} wierszy' if wiersze else 'czas: —']),
+        *([('Sposób gry: prosta progresja czy BANK', sg)] if sg else []),
         ('Nakładanie z MOJE', [f'{x[1]}: {x[0]:.0%} zakładów na tych samych wierszach' + (' · ten sam najbliższy Nr!' if x[2] else '') for x in nakl[:3]] or ['brak modeli w MOJE na tym celu']),
         ('Skala 9 pkt (jak w SZUKAJ — cały model)', [f'{s9}/9 → w SZUKAJ {P9["v"]} (GRAĆ od 7, OBSERWUJ 5–6)',
                                                      'punkty: ' + ', '.join(f'{x} {v}/{PKT9_MAX.get(x, v)}' for x, v in P9['pts'].items()),
@@ -264,10 +323,11 @@ def ocena_szukaj(a, stan, K):
                                  'nakładanie z MOJE ' + (f'{max_n:.0%}' if nakl else 'brak') + (' (≥ 30% = podwójna stawka)' if max_n >= 0.3 else ''), waga,
                                  'uczciwie: historia nie przewiduje przyszłości (kalibracja) — szansa realna ≈ jak każdego modelu na tym kroku']),
     ]
-    krotko = f'{naz}: k{k} {r["stawka"]} zł · historia do k8 {pct(w8, r8)} · w 3 krokach {pct(w3, r8)} · uczciwie ≈ {s8:.0%} · LOST w symulacji {lost:.0%}' + (f' · 9 pkt {s9}/9' if P9 else '')
+    krotko = f'{naz}: k{k} {r["stawka"]} zł · historia do k8 {pct(w8, r8)} · w 3 krokach {pct(w3, r8)} · uczciwie ≈ {s8:.0%} · LOST w symulacji {lost:.0%}' + (f' · 9 pkt {s9}/9' if P9 else '') \
+        + (f' · gra: {"BANK +" + str(gra["bank"]) if gra["zalecana"] == "BANK" else gra["zalecana"]}' if gra else '')
     wpis = {'id': f'{app}|{tabela}|{cel}|P{nr}', 'gdzie': 'MOJE', 'tabela': tabela, 'app': app, 'cel': cel, 'model': f'P{nr}', 'm': m[:NF[app]],
             'nazwa': naz, 'krok': k, 'stawka': r['stawka'], 'zaklad': r.get('zaklad', ''), 'werdykt': werdykt, 'krotko': krotko,
-            'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
+            'gra': gra, 'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
     return wpis, sek
 
 

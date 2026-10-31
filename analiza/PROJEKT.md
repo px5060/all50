@@ -3,6 +3,8 @@
 Ten folder działa jak „projekt” w czacie: nowa sesja Claude Code czyta ten plik i od razu wie, co robimy, jak liczyć i jak odpowiadać.
 Repo jest **publiczne**, więc nie zapisujemy tu zakładów ani kwot użytkownika (podaje je w rozmowie albo screenem ZAKŁADY).
 
+**Sesja ocen** (tylko „oceń …” / „wyszukaj modele …”): skrócona instrukcja w `analiza/SESJA_OCEN.md`.
+
 ## Start sesji (zawsze)
 
 1. `bash analiza/narzedzia/pobierz.sh` — pobiera (tylko do odczytu) repo z pulami i silnikami: szukaj50/60, szukaj50plus/60plus,
@@ -52,7 +54,10 @@ propozycja dodana w SZUKAJ / ZESZYCIE → „dodany poza OCENAMI”; model wraca
 T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / limitu i w 3 krokach, połowy), 3. **uczciwa szansa**
 (`analiza/kalibracja.json`: trafialność zakładu ściągnięta do zwykłej częstości + jak łatwo o taki wynik przypadkiem), 4. **symulacja**
 (Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
-GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
+GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. **Sposób gry** (SZUKAJ, prośba użytkownika): prosta progresja czy BANK +3 / +5 —
+liczone jak MOJE (krok banku z przeniesionymi krokami, okno, szansa w oknie, najdłuższa seria, skala 9 pkt banku); sugestia BANK, gdy skala
+banku ≥ 7 i wyższa niż przy prostej progresji, a krok banku ≤ k5; inaczej TERAZ (model po LOST — LOST). W telefonie wybór ＋ Do MOJE (TERAZ) /
+＋ Do LOST (tylko po LOST) / ＋ Do BANK; Twój model — Przenieś do BANK / TERAZ (MOJE 1.38.0+). W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
 Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
 (np. od k1 ok. 64%) i bez nakładania (< 30% wspólnych wierszy / kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
@@ -94,7 +99,7 @@ historycznej wygranej od obecnego kroku do zakładanego (`--do-kroku`; ≥ 20 pr
 Pokazać **2–4 na grupę, po jednej linii** (model · krok · stawka · Nr/warunek · historia od kroku · realnie), bez wykładu. Szczegóły
 wybranego: `model.py`.
 
-**Propozycje do telefonu (prośba użytkownika — kolejność stała):** 1. wybór wg kryteriów (`propozycje.py`, 2–4 kandydatów na grupę:
+**Propozycje do telefonu (prośba użytkownika — kolejność stała):** 1. wybór wg kryteriów (`propozycje.py`; „grają na następnym wierszu, krok kX” — `teraz.py`; 2–4 kandydatów na grupę:
 MOJE T50, MOJE T60, ZESZYT T50, ZESZYT T60) → 2. **każdy kandydat przez `ocena.py`** (6 kroków, niżej) → 3. do telefonu tylko najlepsi
 z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, którego telefon nie ma = `rodzaj: propozycja`), commit i push
 `oceny.json` do `../px5060/kody` (`git pull --rebase` przed — MOJE pisze tam `stan.json`). Telefon: zakładka OCENY + pasek na TERAZ —
@@ -172,6 +177,7 @@ z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, któr
 
 ```
 analiza/PROJEKT.md          ten opis (czytać na starcie)
+analiza/SESJA_OCEN.md       sesja tylko do ocen i wyszukiwania modeli (start, prośba → kroki, wysyłka, odpowiedź)
 analiza/MODELE.json         modele ze screenów (wybor = aktualnie polecany), bez zakładów
 analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
@@ -184,6 +190,7 @@ analiza/narzedzia/pkt9.js        skala „pkt z 9” z aplikacji SZUKAJ (kod OC 
 analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + ZESZYT z kalibracja_zeszyt.js) → analiza/kalibracja.json
 analiza/narzedzia/kalibracja_pkt9.py  czy skala 9 pkt przewiduje (stare pule, zakłady po T0; --sprawdz = zgodność z pkt9.js) → SKALA9
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
+analiza/narzedzia/teraz.py       modele z pul z zakładem na najbliższym wierszu (--kroki, --za), duplikaty „≈” i ten sam Nr co MOJE
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
 analiza/narzedzia/zeszyt.js   ZESZYT T50 / T60 silnikami aplikacji: stan, plan kroków z Nr i stawkami
