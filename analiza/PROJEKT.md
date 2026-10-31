@@ -56,6 +56,13 @@ GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdyk
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
 Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
 (np. od k1 ok. 64%) i bez nakładania (< 30% wspólnych wierszy / kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
+**Skala 9 pkt z SZUKAJ — czynnik, nie wyrok (prośba użytkownika: zwracać na nią uwagę, ale nie być jej zakładnikiem).** `ocena.py` liczy ją
+kodem aplikacji (`pkt9.js`: OC z `szukaj_template.html`; też BANK +3 / +5 jako informacja) i waży wg sytuacji modelu — skala ocenia cały model,
+a na k3 i dalej liczy się seria od obecnego kroku: ≥ 7 pkt potwierdza GRAĆ; 5–6 pkt — GRAĆ od k3 (na k1–k2 seria ≈ cały model, wtedy tylko przy
+mocnej serii); ≤ 4 pkt — GRAĆ tylko od k3 i przy **mocnej serii od obecnego kroku** (100% do k8 przy ≥ 30 przypadkach, obie połowy ≥ 95%, wygranych
+dopiero na k8 nie więcej niż 1,5 × zwykle — gdy więcej, słabość skali „LOST przy K7” widać też w tej serii), inaczej OBSERWUJ. Skala nie podnosi
+werdyktu ponad kryterium użytkownika. Gdy okoliczności modelu każą inaczej, Claude sam waży: `ocena.py … --werdykt GRAĆ|OBSERWUJ|NIE GRAĆ
+--powod "…"` (powód i werdykt narzędzia trafiają do „Czym się kierowałem”). Czy skala przewiduje — nie sprawdzone kalibracją.
 **„Oceń moje modele” = tylko nieocenione** (prośba użytkownika): `ocena.py nowe` (lista) / `ocena.py nowe --zapisz` — wszystkie modele
 z telefonu (MOJE GRY, BANK, ZESZYT), których id nie ma w `oceny.json` (ten sam id: P… dla SZUKAJ, układ + ustawienia dla ZESZYTU; model
 dodany z propozycji też się liczy jako oceniony). Ponowna ocena tylko na wyraźną prośbę („oceń ponownie P…”) — `ocena.py … --zapisz`
@@ -167,6 +174,7 @@ analiza/narzedzia/moje_stan.py   co jest w telefonie: stan.json z MOJE (☁ Kopi
 analiza/narzedzia/pule.py        pule SZUKAJ / S+ / LOST a kody z telefonu: ile przybyło od przeliczenia (co 200 → odświeżyć), --przygotuj
 analiza/narzedzia/przytnij.py    po odświeżeniu: wypadają modele poza kryteriami SZUKAJ (lista nr, stałe numery P); modele z MOJE — pytać
 analiza/narzedzia/ocena.py       ocena jednego modelu (6 kroków) → rozmowa + oceny.json w repo z kodami (MOJE → OCENY: propozycja / Twój model)
+analiza/narzedzia/pkt9.js        skala „pkt z 9” z aplikacji SZUKAJ (kod OC z szukaj_template.html, 1:1) — dla ocena.py
 analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + ZESZYT z kalibracja_zeszyt.js) → analiza/kalibracja.json
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
