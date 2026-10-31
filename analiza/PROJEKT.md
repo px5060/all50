@@ -62,12 +62,13 @@ a na k3 i dalej liczy się seria od obecnego kroku: ≥ 7 pkt potwierdza GRAĆ; 
 mocnej serii); ≤ 4 pkt — GRAĆ tylko od k3 i przy **mocnej serii od obecnego kroku** (100% do k8 przy ≥ 30 przypadkach, obie połowy ≥ 95%, wygranych
 dopiero na k8 nie więcej niż 1,5 × zwykle — gdy więcej, słabość skali „LOST przy K7” widać też w tej serii), inaczej OBSERWUJ. Skala nie podnosi
 werdyktu ponad kryterium użytkownika. Gdy okoliczności modelu każą inaczej, Claude sam waży: `ocena.py … --werdykt GRAĆ|OBSERWUJ|NIE GRAĆ
---powod "…"` (powód i werdykt narzędzia trafiają do „Czym się kierowałem”). Czy skala przewiduje — nie sprawdzone kalibracją.
+--powod "…"` (powód i werdykt narzędzia trafiają do „Czym się kierowałem”). Sprawdzenie skali (`kalibracja_pkt9.py`, sekcja SKALA9
+w `kalibracja.json`; wynik w „Ustaleniach”): słaby sygnał we właściwą stronę — w przeciwieństwie do historii, która nic nie przewiduje.
 **„Oceń moje modele” = tylko nieocenione** (prośba użytkownika): `ocena.py nowe` (lista) / `ocena.py nowe --zapisz` — wszystkie modele
 z telefonu (MOJE GRY, BANK, ZESZYT), których id nie ma w `oceny.json` (ten sam id: P… dla SZUKAJ, układ + ustawienia dla ZESZYTU; model
 dodany z propozycji też się liczy jako oceniony). Ponowna ocena tylko na wyraźną prośbę („oceń ponownie P…”) — `ocena.py … --zapisz`
 podmienia ocenę i w telefonie znowu czeka na decyzję.
-**Kalibracja** (`kalibracja.py`, ZESZYT `kalibracja_zeszyt.js`): odświeżać przy odświeżaniu pul (stare pule = `przed`; SZUKAJ: wynik każdego
+**Kalibracja** (`kalibracja.py`, ZESZYT `kalibracja_zeszyt.js`, skala 9 pkt `kalibracja_pkt9.py --sprawdz`): odświeżać przy odświeżaniu pul (stare pule = `przed`; SZUKAJ: wynik każdego
 zakładu po T0, nie cykli — patrz Pułapki), `--zapisz` → `kalibracja.json`.
 
 ## Sesja jednego modelu (prośba użytkownika)
@@ -143,6 +144,11 @@ z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, któr
 - **Kalibracja (30.10, `kalibracja.json`)**: SZUKAJ / S+ / LOST — pule do Nr 15 227 / 12 837, potem ~200 kodów (311 tys. zakładów):
   trafialność zakładu modeli z historią „100% do k8” × 1,025 zwykłej, 95–99% × 0,93, < 80% × 1,05 → historia nic nie przewiduje (n0 ∞).
   ZESZYT — wszystkie układy, punkty 50 / 65 / 80% kodów (2 mln zakładów): 100% × 1,009, 95–99% × 1,015 (n0 = 3000).
+- **Skala 9 pkt z SZUKAJ (31.10, `kalibracja_pkt9.py`)**: te same stare pule (T0 = Nr 15 227 / 12 837, potem ~210 kodów, 323 tys. zakładów),
+  skala liczona tylko na kodach < T0 (kod aplikacji, sprawdzony 1:1), trafialność każdego zakładu po T0 względem modeli tej samej tabeli i celu
+  na tych samych wierszach: ≤ 4 pkt × 0,995 · 5–6 × 1,03 · ≥ 7 × 1,09 (90%: 0,98–1,22) · 9 pkt × 1,31 (1,10–1,53, 360 modeli); ≥ 7 lepsze od ≤ 4
+  z szansą ok. 90% (w kryterium użytkownika 89%, od k3 87%) → **słaby sygnał we właściwą stronę, jeden okres, nie pewność**. Nawet ≥ 7 pkt
+  trafia ok. 31% (próg opłacalności przy kursie 3,0 to 33,3%); zysk po T0 w kryterium użytkownika: ≥ 7 −16 zł / model, ≤ 4 −45 zł.
 
 - Częstość: T50 x1x 28,8%, T50 „XX+” (xx1) 25,0%; T60 x1x 28,5%, xx1 28,4% (na Nr 12 838–13 027 aż 39,5% — seria), 1xx 17,7%, 2/3xx 13,4%.
   Ciąg bez pamięci (test po poprzednim kodzie: bez zależności).
@@ -176,6 +182,7 @@ analiza/narzedzia/przytnij.py    po odświeżeniu: wypadają modele poza kryteri
 analiza/narzedzia/ocena.py       ocena jednego modelu (6 kroków) → rozmowa + oceny.json w repo z kodami (MOJE → OCENY: propozycja / Twój model)
 analiza/narzedzia/pkt9.js        skala „pkt z 9” z aplikacji SZUKAJ (kod OC z szukaj_template.html, 1:1) — dla ocena.py
 analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + ZESZYT z kalibracja_zeszyt.js) → analiza/kalibracja.json
+analiza/narzedzia/kalibracja_pkt9.py  czy skala 9 pkt przewiduje (stare pule, zakłady po T0; --sprawdz = zgodność z pkt9.js) → SKALA9
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
