@@ -57,6 +57,9 @@ Po polsku, krótko („daj modele, analizę zachowaj dla siebie”), formą neut
 
 > **S+ P… x1x — GRAĆ** · **Nr … · k4 · 32 zł** · do k8 w/r (%) · w 3 krokach w/r (%) · cykli …, LOST … · nakładanie z MOJE …
 
+Model SZUKAJ: dopisz **sugestię sposobu gry** z oceny (prosta progresja TERAZ / LOST po LOST-cie / BANK +3 / +5 — krok i stawka banku teraz);
+w telefonie wybór ＋ Do MOJE / ＋ Do LOST / ＋ Do BANK (Twój model: Przenieś do BANK / TERAZ).
+
 ZESZYT: werdykt · krok, stawka, Nr · plan kroków (Nr do limitu) · historia do limitu i w 3 krokach · kolizje z MOJE.
 Na końcu: gdzie zdecydować (MOJE → OCENY) i jedno zdanie uczciwie: historia nie przewiduje przyszłości (kalibracja) — realna szansa jak
 każdego modelu na tym kroku. Bez wykładu.

@@ -54,7 +54,10 @@ propozycja dodana w SZUKAJ / ZESZYCIE → „dodany poza OCENAMI”; model wraca
 T60: `--cel x1x`). Kroki: 1. stan teraz, 2. historia (Twoje kryterium: do k8 / limitu i w 3 krokach, połowy), 3. **uczciwa szansa**
 (`analiza/kalibracja.json`: trafialność zakładu ściągnięta do zwykłej częstości + jak łatwo o taki wynik przypadkiem), 4. **symulacja**
 (Monte Carlo przyszłych kodów — wygrana, LOST, koszt, czas; ZESZYT: plan wierszy), 5. **nakładanie** z modelami w MOJE, 6. werdykt
-GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
+GRAĆ / OBSERWUJ / NIE GRAĆ + czym się kierowałem. **Sposób gry** (SZUKAJ, prośba użytkownika): prosta progresja czy BANK +3 / +5 —
+liczone jak MOJE (krok banku z przeniesionymi krokami, okno, szansa w oknie, najdłuższa seria, skala 9 pkt banku); sugestia BANK, gdy skala
+banku ≥ 7 i wyższa niż przy prostej progresji, a krok banku ≤ k5; inaczej TERAZ (model po LOST — LOST). W telefonie wybór ＋ Do MOJE (TERAZ) /
+＋ Do LOST (tylko po LOST) / ＋ Do BANK; Twój model — Przenieś do BANK / TERAZ (MOJE 1.38.0+). W rozmowie krótko (werdykt + 2–3 liczby); całość z `--zapisz` do `oceny.json` w repo
 z kodami (commit i push, `git pull --rebase` przed) → MOJE 1.36.0+ zakładka **OCENY** (pełna ocena przy modelu, decyzja, licznik czekających).
 Werdykt: GRAĆ = historia do k8 / limitu ≥ 95% (≥ 20 przypadków) i w 3 krokach nie gorzej niż zwykła szansa na 3 krokach od tego kroku
 (np. od k1 ok. 64%) i bez nakładania (< 30% wspólnych wierszy / kolizji najbliższych Nr); OBSERWUJ = historia ≥ 85% (≥ 10); inaczej NIE GRAĆ.
