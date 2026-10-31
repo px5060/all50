@@ -4,7 +4,8 @@
   3. Uczciwa szansa — kalibracja.json (czy historia przewidywała na kodach, których wybór nie znał) + jak łatwo o taki wynik przypadkiem.
   4. Symulacja — Monte Carlo przyszłych kodów (SZUKAJ) / plan wierszy (ZESZYT): wygrana, LOST, koszt, czas.
   5. Nakładanie — czy model gra na tych samych wierszach co modele w MOJE (podwójna stawka na jeden mecz).
-  6. Werdykt (GRAĆ / OBSERWUJ / NIE GRAĆ) i czym się kierowałem.
+  6. Werdykt (GRAĆ / OBSERWUJ / NIE GRAĆ) i czym się kierowałem. SZUKAJ: skala 9 pkt z aplikacji (pkt9.js) jako czynnik, nie wyrok —
+     ważona wg sytuacji (od k3 liczy się seria od obecnego kroku); --werdykt X --powod "…" = wyważenie Claude w okolicznościach modelu.
 Rodzaj (prośba użytkownika): model, którego telefon nie ma = propozycja Claude (w MOJE: „＋ Dodaj do MOJE” / „Usuń analizę”); model, który
 użytkownik sam dodał do MOJE / ZESZYTU = ocena jego modelu („Zostaw w MOJE” / „Usuń z MOJE”). Rozpoznaje stan.json, --rodzaj wymusza.
 Użycie:  python3 ocena.py S+ t60 xx1 2496 [--stan ../px5060/kody/stan.json] [--zapisz]
@@ -105,6 +106,27 @@ def mc_szukaj(m, X, tabela, cel, k, n=2000, seed=7):
     return wyn
 
 
+PKT9_MAX = {'boot med > 0': 2, 'P(straty) < 0,35': 1, '5 okresów': 2, 'LOST przy K7': 2, '40%: 0 LOST, +': 1, '0 LOST K8': 1}
+
+
+def pkt9(app, tabela, ev, N):
+    """skala „pkt z 9” z aplikacji SZUKAJ (kod aplikacji przez pkt9.js) na zamkniętych cyklach modelu; None = za mało zakładów (< 20)"""
+    repo = (S.REPO[app] + ('' if '{}' in S.REPO[app] else '{}')).format(tabela[1:])
+    cyc = [[krok if w else 9, bp] for bp, w, krok in ev if w or krok == 8]
+    out = subprocess.run(['node', os.path.join(TU, 'pkt9.js'), repo], input=json.dumps({'N': N, 'cyc': cyc}), capture_output=True, text=True)
+    return json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else None
+
+
+def spr9(K):
+    """sprawdzenie skali 9 pkt (kalibracja_pkt9.py → SKALA9 w kalibracja.json): jak trafiały potem modele z ≥ 7 i ≤ 4 pkt"""
+    G = {g['pkt']: g for g in (K.get('SKALA9') or {}).get('grupy', []) if g['grupa'] == 'wszystkie modele pul'}
+    if '≥ 7' not in G or '≤ 4' not in G:
+        return []
+    d = G.get('≥ 7 − ≤ 4', {})
+    return [f"sprawdzenie (kalibracja): po wyborze modele z ≥ 7 pkt trafiały × {G['≥ 7']['wzgledem']:.2f}, z ≤ 4 pkt × {G['≤ 4']['wzgledem']:.2f} modeli tej samej tabeli i celu"
+            + (f" — słaby sygnał (szansa, że ≥ 7 lepsze, ok. {d['szansa_lepsze']:.0%}; jeden okres)" if d else '')]
+
+
 def zid(t, md):
     """id oceny modelu ZESZYTU — to samo przy ocenie i przy szukaniu nieocenionych"""
     return f'Z|{t}|{".".join(map(str, sorted(md["w"])))}|{md.get("poz", "")}|{md["czekaj"]}|{md.get("war", "")}|{md.get("cel", "")}|{md["limit"]}'
@@ -183,14 +205,43 @@ def ocena_szukaj(a, stan, K):
     nakl.sort(reverse=True)
     naz = f'{app}{tabela[1:]} {cel} P{nr}'
     hist_ok = r8 >= 20 and w8 / r8 >= 0.95; max_n = nakl[0][0] if nakl else 0
+    glowne = hist_ok and (w3 / r8 if r8 else 0) >= q3 and max_n < 0.3
+    # skala 9 pkt z SZUKAJ (cały model) — czynnik, nie wyrok (prośba użytkownika): waży wg sytuacji. Na k1–k2 seria ≈ cały model, więc skala
+    # liczy się w pełni; od k3 liczy się seria od obecnego kroku — „mocna” = 100% (≥ 30), obie połowy ≥ 95%, wygranych dopiero na k8 ≤ 1,5 × zwykle
+    P9 = pkt9(app, tabela, ev, len(X)); s9 = P9['score'] if P9 else None
+    bank = any(isinstance(b, dict) and (b.get('t'), b.get('a'), b.get('tg'), str(b.get('id', '')).split()[0]) == (tabela, app, cel, f'P{nr}') for b in jl(stan.get('storage', {}).get('moje_v1_bank', '[]'), []))
+    styk = sum(1 for _, w, krok in ev if w and krok == 8) if k <= 8 else 0
+    styk_zw = (1 - p) ** (8 - k) * p / (1 - (1 - p) ** (9 - k)) if k <= 8 else 1   # zwykły udział wygranych na k8 wśród wygranych od kroku k
+    pol_ok = all(b and a_ / b >= 0.95 for a_, b in r['polowy'])
+    mocna = r8 >= 30 and w8 == r8 and pol_ok and styk <= 1.5 * styk_zw * w8
     if k > 8:
         werdykt = 'NIE GRAĆ'
-    elif hist_ok and (w3 / r8 if r8 else 0) >= q3 and max_n < 0.3:
-        werdykt = 'GRAĆ'
+    elif glowne:
+        werdykt = 'GRAĆ' if s9 is None or s9 >= 7 or (s9 >= 5 and (k >= 3 or mocna)) or (k >= 3 and mocna) else 'OBSERWUJ'
     elif r8 >= 10 and w8 / r8 >= 0.85:
         werdykt = 'OBSERWUJ'
     else:
         werdykt = 'NIE GRAĆ'
+    if s9 is None:
+        waga = 'skala 9 pkt: za mało zakładów (< 20) — bez niej'
+    elif s9 >= 7:
+        waga = f'skala 9 pkt {s9}/9 — zgodna z historią'
+    else:
+        brak = ', '.join(x for x, v in P9['pts'].items() if v < PKT9_MAX.get(x, v))
+        na_k8 = f'dopiero na k8 wygrał {styk} z {w8} ({styk / w8:.0%}, zwykle ok. {styk_zw:.0%})' if w8 else ''
+        waga = f'skala 9 pkt {s9}/9 (brak: {brak}) — '
+        if not glowne:
+            waga += 'Twoje kryterium i tak niespełnione'
+        elif werdykt == 'GRAĆ':
+            waga += f'mimo to GRAĆ: na k{k} liczy się seria od tego kroku — {pct(w8, r8)}' + (f', {na_k8}' if na_k8 else '')
+        elif k < 3:
+            waga += f'na k{k} seria to prawie cały model, więc skala waży w pełni → OBSERWUJ'
+        else:
+            slabe = [x for x, z in ((f'od k{k} tylko {r8} przypadków (< 30)', r8 < 30), (f'od k{k} {pct(w8, r8)}, nie 100%', w8 < r8),
+                                    ('jedna z połów historii < 95%', not pol_ok), (na_k8 + ' — słabość skali widać też w tej serii', styk > 1.5 * styk_zw * w8)) if z]
+            waga += 'seria od tego kroku jej nie przeważa: ' + '; '.join(slabe) + ' → OBSERWUJ'
+    if getattr(a, 'werdykt', None):   # wyważenie Claude w okolicznościach modelu (powód w „Czym się kierowałem”)
+        waga += f' · werdykt Claude: {a.werdykt} (zamiast {werdykt}) — {a.powod or "bez powodu"}'; werdykt = a.werdykt
     sek = [
         ('Stan teraz', [f'k{k} {r["stawka"]} zł · {r.get("zaklad", "")}', f'cykli {r["cykle"]}, WIN {r["win"]}, LOST {len(r["lost_nr"])}' + (f' (ost. Nr {r["lost_nr"][-1]})' if r['lost_nr'] else ''),
                         f'ostatnie cykle: {" ".join(r["ost10"][-6:])}' + (' · teraz po LOST-cie' if r['po_lost_teraz'] else '')]),
@@ -204,14 +255,19 @@ def ocena_szukaj(a, stan, K):
                                                        f'koszt do rozstrzygnięcia: mediana {koszty[n // 2]} zł, w 90% przypadków ≤ {koszty[int(n * 0.9)]} zł' + (f', najwyżej {koszty[-1]} zł' if koszty else ''),
                                                        f'czas: mediana {wiersze[len(wiersze) // 2]} wierszy, w 90% ≤ {wiersze[int(len(wiersze) * 0.9)]} wierszy' if wiersze else 'czas: —']),
         ('Nakładanie z MOJE', [f'{x[1]}: {x[0]:.0%} zakładów na tych samych wierszach' + (' · ten sam najbliższy Nr!' if x[2] else '') for x in nakl[:3]] or ['brak modeli w MOJE na tym celu']),
+        ('Skala 9 pkt (jak w SZUKAJ — cały model)', [f'{s9}/9 → w SZUKAJ {P9["v"]} (GRAĆ od 7, OBSERWUJ 5–6)',
+                                                     'punkty: ' + ', '.join(f'{x} {v}/{PKT9_MAX.get(x, v)}' for x, v in P9['pts'].items()),
+                                                     f'losowanie zakładów (5000×): mediana {P9["bootMed"]:.0f} zł, strata w {P9["bootP"]:.0%} losowań · LOST przy K7: {P9["k7"]} · okresów na plus {P9["okresy"]}/5',
+                                                     f'jako BANK (osobna skala w SZUKAJ): +3 {P9["b3"]}/9 · +5 {P9["b5"]}/9' + (' — model jest w BANK' if bank else '')] + spr9(K)
+                                                    if P9 else ['za mało zakładów (< 20)']),
         ('Czym się kierowałem', [f'historia do k8 {"≥" if hist_ok else "<"} 95% przy ≥ 20 przypadkach' + (f', w 3 krokach {"≥" if r8 and w3 / r8 >= q3 else "<"} zwykłej szansy ({q3:.0%})'),
-                                 'nakładanie z MOJE ' + (f'{max_n:.0%}' if nakl else 'brak') + (' (≥ 30% = podwójna stawka)' if max_n >= 0.3 else ''),
+                                 'nakładanie z MOJE ' + (f'{max_n:.0%}' if nakl else 'brak') + (' (≥ 30% = podwójna stawka)' if max_n >= 0.3 else ''), waga,
                                  'uczciwie: historia nie przewiduje przyszłości (kalibracja) — szansa realna ≈ jak każdego modelu na tym kroku']),
     ]
-    krotko = f'{naz}: k{k} {r["stawka"]} zł · historia do k8 {pct(w8, r8)} · w 3 krokach {pct(w3, r8)} · uczciwie ≈ {s8:.0%} · LOST w symulacji {lost:.0%}'
+    krotko = f'{naz}: k{k} {r["stawka"]} zł · historia do k8 {pct(w8, r8)} · w 3 krokach {pct(w3, r8)} · uczciwie ≈ {s8:.0%} · LOST w symulacji {lost:.0%}' + (f' · 9 pkt {s9}/9' if P9 else '')
     wpis = {'id': f'{app}|{tabela}|{cel}|P{nr}', 'gdzie': 'MOJE', 'tabela': tabela, 'app': app, 'cel': cel, 'model': f'P{nr}', 'm': m[:NF[app]],
             'nazwa': naz, 'krok': k, 'stawka': r['stawka'], 'zaklad': r.get('zaklad', ''), 'werdykt': werdykt, 'krotko': krotko,
-            'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3)}}
+            'liczby': {'w8': w8, 'r8': r8, 'w3': w3, 'szansa8': round(s8, 3), 'szansa3': round(s3, 3), 'mc_win8': round(win8, 3), 'mc_lost': round(lost, 3), 'nakladanie': round(max_n, 3), 'pkt9': s9}}
     return wpis, sek
 
 
@@ -271,6 +327,7 @@ def main():
     ap.add_argument('--limit', type=int); ap.add_argument('--poz', type=int, default=1); ap.add_argument('--czekaj', type=int, default=1)
     ap.add_argument('--bok', action='store_true'); ap.add_argument('--cel'); ap.add_argument('--zapisz', action='store_true')
     ap.add_argument('--rodzaj', choices=['propozycja', 'moj']); ap.add_argument('--dni', type=int, default=14)
+    ap.add_argument('--werdykt', choices=['GRAĆ', 'OBSERWUJ', 'NIE GRAĆ']); ap.add_argument('--powod')   # SZUKAJ: werdykt Claude w okolicznościach modelu
     a = ap.parse_args(); stan = json.load(open(a.stan)); K = kalibracja()
     po = os.path.join(a.kody, 'oceny.json'); dec = jl(stan.get('storage', {}).get('moje_v1_ocdec', '{}'), {})
     if a.app in ('lista', 'wyczysc'):
