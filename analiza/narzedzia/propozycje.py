@@ -115,7 +115,7 @@ def main():
                 for i, o in enumerate(O):
                     cyk = int(o[:9].sum()); lost = int(o[8]); k = int(o[9]) + 1
                     lim = limit_lost(cyk, P['rules'])
-                    if cyk < P['minCyc'] or lim is None or lost > lim or not (k0 <= k <= min(k1, L)) or (a.po_lost and not o[11]):
+                    if cyk < P['minCyc'] or lim is None or lost > lim or not (k0 <= k <= min(k1, L)) or ((a.po_lost or app == 'L') and not o[11]):   # SZUKAJ LOST: tylko tuż po LOST-cie
                         continue
                     reach = int(o[k - 1:9].sum()); w = int(o[k - 1:L].sum())   # wygrane na krokach k…L / gry, które doszły do k
                     w3 = int(o[k - 1:min(k - 1 + a.okno, L)].sum())   # druga miara: wygrana w najbliższych --okno krokach
