@@ -43,6 +43,9 @@ Wybór kandydatów do telefonu (z `teraz.py` / `propozycje.py`):
 - werdykt liczy `ocena.py` (GRAĆ: historia ≥ 95% przy ≥ 20 i w 3 krokach ≥ zwykłej szansy, bez nakładania / kolizji; OBSERWUJ: ≥ 85% przy ≥ 10).
   Do telefonu tylko GRAĆ; resztę wymienić w jednej linii.
 
+**Propozycje dnia (automat)**: w `oceny.json` są też oceny z polem `auto: "dnia"` („📅 Propozycja dnia”) — liczy je i podmienia zadanie GitHuba
+w repo `kody` po każdym zapisie stanu z telefonu (PROJEKT.md → Propozycje dnia). Sesja ich nie rusza; `ocena.py lista` oznacza je 📅.
+
 ## Wysyłka do telefonu
 
 `--zapisz` dopisuje / podmienia ocenę w `../px5060/kody/oceny.json` (rodzaj sam: model, którego telefon nie ma = propozycja, model z telefonu = Twój model).

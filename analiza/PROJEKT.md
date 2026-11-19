@@ -111,6 +111,24 @@ z werdyktem GRAĆ (najwyżej 2 na grupę): `ocena.py … --zapisz` (model, któr
 `oceny.json` do `../px5060/kody` (`git pull --rebase` przed — MOJE pisze tam `stan.json`). Telefon: zakładka OCENY + pasek na TERAZ —
 **＋ Dodaj do MOJE** albo **Usuń analizę**. Wysyłać, gdy użytkownik prosi o propozycje albo się zgodzi; zakładów się tak nie ustawia.
 
+## Propozycje dnia — automat (prośba użytkownika, 19.11)
+
+Użytkownik chce codziennie przed sesją dostać kilka modeli z całych pul, które **są teraz na k1–k3** i w historii **najczęściej wygrywały
+do k3** od kroku, na którym są — żeby nie przegapić okazji, gdy jego modele tylko czekają; ale **nie za dużo**. Robi to bez sesji
+zadanie GitHuba w prywatnym repo `kody` (`.github/workflows/propozycje.yml`): po każdym zapisie `stan.json` z telefonu uruchamia
+`python3 analiza/narzedzia/propozycje_dnia.py --zapisz` (z `main` tego repo) i zapisuje `oceny.json` → MOJE → 🔍 OCENY.
+- Kandydaci: SZUKAJ / S+ / LOST w kryteriach appki, krok k1–k3, **zakład już ustawiony** na jednym z 5 najbliższych wierszy (po triggerze;
+  jak `teraz.py`); ZESZYT T50 / T60 — układ gra (k1–k3), najbliższy wiersz na najbliższej stronie (jak `zeszyt_skan.js`, `JSON_OUT=1`).
+- Kolejność: wygrana do k3 od obecnego kroku w historii (≥ 20 przypadków), potem do k8 / limitu; do oceny tylko historia do k8 / limitu ≥ 95%.
+- Każdy przez `ocena.py`; do telefonu **najwyżej 1 z GRAĆ na grupę** (SZUKAJ T50, SZUKAJ T60, ZESZYT T50, ZESZYT T60) — pole `auto: "dnia"`,
+  w ocenie sekcja „📅 Propozycja dnia”, w krótkim opisie „📅 Propozycja dnia ·”.
+- Propozycja bez decyzji zostaje, dopóki model jest na k1–k3 z zakładem w oknie i ma GRAĆ (po zagranym kroku ocena od nowa); potem znika sama.
+  Nie proponuje modelu z telefonu, z oceną z sesji ani z decyzją z ostatnich 14 dni. Oceny z sesji (bez `auto`) automat zostawia.
+- Oszczędnie (minuty GitHuba): `--czy-liczyc` (podpis kodów, modeli, decyzji, ocen, pul i narzędzi — bez zmian nic nie liczy) i pamięć
+  „bez GRAĆ przy tym stanie” (`oceny.json` → `propozycje_dnia.odrzucone`), żeby ten sam model nie był oceniany znowu.
+- W sesji: `ocena.py lista` oznacza je 📅; `nieaktualne` ich nie rusza. Zmiana ustawień (kroki, okno, liczba na grupę) — argumenty
+  `propozycje_dnia.py` w pliku zadania w `kody` (PR, „scal”).
+
 ## Jak odpowiadać (prośby użytkownika)
 
 - Po polsku, **krótko**: „daj modele, analizę zachowaj dla siebie”. Długie wyliczenia tylko na prośbę.
@@ -197,6 +215,7 @@ analiza/narzedzia/kalibracja.py  czy historia przewiduje (SZUKAJ: po T0 puli; + 
 analiza/narzedzia/kalibracja_pkt9.py  czy skala 9 pkt przewiduje (stare pule, zakłady po T0; --sprawdz = zgodność z pkt9.js) → SKALA9
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/teraz.py       modele z pul z zakładem na najbliższym wierszu (--kroki, --za), duplikaty „≈” i ten sam Nr co MOJE
+analiza/narzedzia/propozycje_dnia.py  automat (zadanie GitHuba w repo kody): modele na k1–k3 z najwyższą wygraną do k3 → ocena → OCENY (1 GRAĆ na grupę)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
 analiza/narzedzia/zeszyt.js   ZESZYT T50 / T60 silnikami aplikacji: stan, plan kroków z Nr i stawkami
