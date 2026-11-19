@@ -117,7 +117,7 @@ Użytkownik chce na swoją prośbę (nic nie liczy się samo) dostać z całych 
 wygrywały w najbliższych krokach — żeby nie przegapić okazji, gdy jego modele tylko czekają; ale **nie za dużo**.
 Przycisk **🔎 Wyszukaj najlepsze** w MOJE → OCENY (MOJE 1.52.0): MOJE wysyła stan i zapisuje prośbę `szukaj.json` w repo `kody` → zadanie GitHuba
 `.github/workflows/najlepsze.yml` (tylko przy zmianie `szukaj.json`) uruchamia `python3 analiza/narzedzia/najlepsze.py --prosba … --zapisz`
-(z `main` tego repo) → `oceny.json` → MOJE → 🔍 OCENY (wynik po ok. 2–4 min; MOJE sama sprawdza i pokazuje stan prośby).
+(z `main` tego repo) → `oceny.json` → MOJE → 🔍 OCENY (wynik po ok. 3–5 min; MOJE sama sprawdza i pokazuje stan prośby).
 - Dwa zakresy: **k1–k3** — wg wygranej **do k3** od obecnego kroku w historii; **k4–k6** (modele po przekroczeniu k3) — wg wygranej **do k6**;
   k7–k8 pomijam. Przy równym % (zaokrąglonym) — historia do k8 / limitu, potem liczba przypadków (≥ 20).
 - Kandydaci: SZUKAJ / S+ / LOST w kryteriach appki z **zakładem już ustawionym** na jednym z 5 najbliższych wierszy (po triggerze, jak `teraz.py`);
