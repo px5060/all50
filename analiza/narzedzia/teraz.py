@@ -14,7 +14,7 @@ from ocena import modele_telefonu, moje_modele, zaklady, jl
 
 def kandydaci(t, X, k0, k1, za, cele, minimum=20):
     """modele z pul S+ / S / L w kryteriach appki, na krokach k0–k1, z zakładem ustawionym na jednym z `za` najbliższych wierszy
-    → (lista słowników, ile odpadło przez < minimum przypadków). Też dla propozycje_dnia.py (do3: wygrana do k3 od obecnego kroku)."""
+    → (lista słowników, ile odpadło przez < minimum przypadków). Też dla najlepsze.py (cnt: cykle zamknięte WIN na k1…k8 i LOST)."""
     N = len(X); kand, mniej = [], 0
     for app in ('S+', 'S', 'L'):
         for cel in cele:
@@ -31,7 +31,7 @@ def kandydaci(t, X, k0, k1, za, cele, minimum=20):
                 if reach < minimum:
                     mniej += 1; continue
                 kand.append(dict(h=int(o[k - 1:8].sum()) / reach, h3=int(o[k - 1:min(k + 2, 8)].sum()) / reach, reach=reach, w=int(o[k - 1:8].sum()),
-                                 w3=int(o[k - 1:min(k + 2, 8)].sum()), do3=int(o[k - 1:3].sum()), app=app, nr=NR[i], cel=cel, k=k, cyk=cyk, lost=lost,
+                                 w3=int(o[k - 1:min(k + 2, 8)].sum()), cnt=[int(x) for x in o[:9]], app=app, nr=NR[i], cel=cel, k=k, cyk=cyk, lost=lost,
                                  pl=bool(o[11]), bet=r[2] + 1, m=m, sp=json.dumps(list(m[1:5]) + [m[5] if len(m) > 5 else 1, m[6] if len(m) > 6 else ''])))
     kand.sort(key=lambda r: (-round(r['h'], 2), -r['h3'], -r['reach'], ['S+', 'S', 'L'].index(r['app'])))   # 97% = 97% (zaokrąglone), potem w 3 krokach
     seen = set(); kand = [r for r in kand if not (r['sp'] + r['cel'] in seen or seen.add(r['sp'] + r['cel']))]   # ten sam model w S i S+ — raz (S+ ma pierwszeństwo)
