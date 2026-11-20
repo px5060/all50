@@ -2,6 +2,8 @@
 // (T50: X+X, po 1 pustej trójce, bez warunku i „+ z boku”, do k9 / k10; T60: x1x i xx1, 2–3 wiersze, po 1 pustej stronie, do k9 / k10),
 // min. 100 gier, najwyżej 2 LOST. Ułożone wg zamknięcia w historii od obecnego kroku; osobno: GRA teraz i CZEKA na start.
 // Użycie: node zeszyt_skan.js T50.json T60.json [top] [min_przypadkow] [do_kroku]   (do_kroku: zakładany krok gry, 0 = limit modelu)
+// JSON_OUT=1: zamiast tekstu jedna linia JSON na tabelę {tabela, n, gra: [...]} — układy GRA teraz z definicją (dla najlepsze.py;
+//             kon[j] = gry wygrane na kroku k+j, r = gry, które doszły do obecnego kroku k)
 'use strict';
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const D = process.env.PX5060 || path.join(__dirname, '..', '..', '..', 'px5060');
@@ -23,7 +25,12 @@ function wypisz(lab, E, C, B, lista, czest) {
     const reach = s.filter(x => x >= k), w = reach.filter(x => x <= LL).length, w3 = reach.filter(x => x <= Math.min(k + OK - 1, LL)).length;
     if (reach.length < MIN) continue;
     const real = 1 - (1 - czest(def)) ** (LL - k + 1);
-    (t.gra ? gra : czeka).push({ nazwa: M.nazwa, k, LL, w3, k3: Math.min(k + OK - 1, LL), nr: t.nr, h: w / reach.length, w, r: reach.length, real, g, b, stawka: E.STAWKI[k - 1] });
+    (t.gra ? gra : czeka).push({ nazwa: M.nazwa, k, LL, w3, k3: Math.min(k + OK - 1, LL), nr: t.nr, h: w / reach.length, w, r: reach.length, real, g, b, stawka: E.STAWKI[k - 1],
+      def, kon: Array.from({ length: LL - k + 1 }, (_, j) => reach.filter(x => x === k + j).length) });
+  }
+  if (process.env.JSON_OUT) {   // najlepsze.py: wszystkie GRA teraz (układa i wybiera Python)
+    console.log(JSON.stringify({ tabela: lab, n, gra: gra.map(({ nazwa, k, LL, nr, w, r, w3, kon, g, b, stawka, def }) => ({ nazwa, k, LL, nr, w, r, w3, kon, g, b, stawka, def })) }));
+    return;
   }
   const sort = a => { a.sort((x, y) => y.h - x.h || y.w3 / y.r - x.w3 / x.r || y.real - x.real || y.r - x.r); const seen = new Set();   // te same wiersze z innym limitem — raz
     return a.filter(x => { const key = x.nazwa.replace(/ k\d+$/, ''); if (seen.has(key)) return false; seen.add(key); return true; }); };

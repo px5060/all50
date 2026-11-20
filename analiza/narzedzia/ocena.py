@@ -419,7 +419,7 @@ def main():
         if a.app == 'lista':
             print(f"oceny.json: {len(L)} · decyzje z telefonu (stan.json {stan.get('zapisano', '?')})")
             for o in L:
-                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10} · {o['nazwa']} · {o['werdykt']} · {stan_oceny(o, stan, dec)[2]}")
+                print(f"  {o['data'][:16]} · {o.get('rodzaj', 'propozycja'):10}{' 🔎' if o.get('auto') else ''} · {o['nazwa']} · {o['werdykt']} · {stan_oceny(o, stan, dec)[2]}")
             return
         # sprzątanie (start sesji): ocena zostaje, dopóki model jest w telefonie (znaczek 🔍 przy modelu, `nowe` go nie ocenia drugi raz)
         # i dopóki propozycja czeka; wypada: model poza telefonem z decyzją starszą niż --dni, Twój model, którego już nie ma (bez decyzji)
@@ -440,7 +440,7 @@ def main():
         L = (jl(open(po).read(), {}) if os.path.exists(po) else {}).get('oceny', []); N = []
         for o in L:
             g = o.get('gra') or {}
-            if o['gdzie'] != 'MOJE' or o.get('app') not in NF or not (o['app'] == 'L' or g.get('po_lost')):
+            if o['gdzie'] != 'MOJE' or o.get('app') not in NF or not (o['app'] == 'L' or g.get('po_lost')) or o.get('auto'):   # auto: „Wyszukaj najlepsze” (najlepsze.py)
                 continue
             z, w, _ = stan_oceny(o, stan, dec)
             if z and not w:   # decyzja zapadła, modelu nie ma w telefonie — sprząta `wyczysc`
@@ -494,7 +494,8 @@ def zapisz(p, W):
     """oceny → oceny.json (ta sama ocena modelu podmieniona — w telefonie znowu czeka na decyzję)"""
     d = jl(open(p).read(), {}) if os.path.exists(p) else {}; ids = {w['id'] for w in W}
     L = [x for x in d.get('oceny', []) if x.get('id') not in ids] + W
-    json.dump({'opis': 'Oceny modeli od Claude (ocena.py) — MOJE → OCENY.', 'zapisano': W[-1]['data'], 'oceny': L[-200:]}, open(p, 'w'), ensure_ascii=False, indent=1)
+    d.update({'opis': 'Oceny modeli od Claude (ocena.py) — MOJE → OCENY.', 'zapisano': W[-1]['data'], 'oceny': L[-200:]})   # inne pola (najlepsze) zostają
+    json.dump(d, open(p, 'w'), ensure_ascii=False, indent=1)
     print(f'\nzapisano {p} ({len(L)} ocen) — teraz commit i push do repo z kodami')
 
 
