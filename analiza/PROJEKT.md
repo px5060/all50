@@ -163,8 +163,8 @@ Przycisk **🔎 Wyszukaj najlepsze** w MOJE → OCENY (MOJE 1.52.0): MOJE wysył
 - **RAZEM T60**: MIX3 T1+5 (HIT = 101/201/301, STEP = 100/200/300, inne kody się nie liczą; po cyklu M = 1 gramy cykl o 5 dalej);
   TOP7 M3 = silnik 1T (`['S', '001∪010∪200', 3, '000∪101', 4]`, x1x).
 - **Kod T50** (od użytkownika, 22.11): 1. cyfra = gol od 41' do końca 1. połowy (z doliczonym czasem), 2. cyfra = gol 51'–60' (x1x — „środek”),
-  3. cyfra = gol od 88' do końca meczu (z doliczonym czasem; „XX+”); 1 = był gol, 0 = brak. (Do ustalenia, gdy wrócimy do automatu wyników:
-  gol samobójczy, gol anulowany przez VAR.)
+  3. cyfra = gol od 88' do końca meczu (z doliczonym czasem; „XX+”); 1 = był gol, 0 = brak. Gol samobójczy liczymy,
+  gol nieuznany (VAR, spalony) nie. (Kody T50 i T60 — ta sama zasada.)
 - **ZESZYT T50** (`zeszyt/silnik.js`): karta = 2 połowy × 28 wierszy (karta 0 i 1 inaczej). Model = 3 wiersze połowy; krok = wiersz modelu.
   **Pusta trójka** = na 3 wierszach modelu x0x (dla XX+: xx0). Po `czekaj` pustych trójkach gra od następnej połowy do WIN; `limit` = krok
   maks. Nazwy: `16·18·27`, `+bok` (warunek „+ z boku”), `XX+` (gra na końcu), `×2` (po 2 pustych), `k10` (limit ≠ 9).
