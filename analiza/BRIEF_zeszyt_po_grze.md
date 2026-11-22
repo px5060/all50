@@ -50,11 +50,20 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
    < 25% — 15. To tyle, ile daje sam przypadek przy ~120 grach na układ (najlepszy z 3 276 ≈ 3,5 odchylenia od 36%); u najlepszych wynik
    lepszy zwykle tylko w jednej połowie historii. „1x%” dla 3 wierszy nie istnieje.
 
+7. **„8 kroków na stronie” jako zestaw dający 8 wierszy** (22.11, druga sesja; interpretacja do potwierdzenia) — tryb `zestawy --karta 277L`:
+   460 układów na pierwszej próbie po grze na 277 L → 5,8 mln zestawów 2–3 układów z sumą dokładnie 8 wierszy (≥ 5 razy naraz w historii);
+   **bez przegranej progresji, gdy wszystkie były naraz na pierwszej próbie: 2,47 mln — z przypadku oczekiwane 2,74 mln** (2–4 układy: 92,6 mln
+   z 209 mln, oczekiwane 102 mln) → brak przewagi. Najlepsze (najwięcej razy naraz, 0 przegranych): 6·11·21 + 5·12·19 + 11·24·27 (26×; wiersze
+   5,6,11,12,19,21,24,27 = Nr 15 577 · 15 578 · 15 583 · 15 584 · 15 591 · 15 593 · 15 596 · 15 599), 6·11·21 + 6·19·24 + 5·12·18 (25×; wiersze
+   5,6,11,12,18,19,21,24 = Nr 15 577 … 15 596). U najlepszych wszystkie 8 wierszy puste w całej historii 7–10% połówek (teoria 6,6%).
+   Zestaw 7 układów z p. 5 przycięty do 8 kroków (bez w.27): Nr 15 575 · 15 578 · 15 583 · 15 584 · 15 590 · 15 591 · 15 593 · 15 596,
+   wszystkie puste 40/555 (7,2%); w 6 połówkach „wszystkie 7 naraz” wygrałby zawsze (najpóźniej krok 8).
+
 ## Otwarte (następna sesja)
 
 - **Wynik karty 277 L** (Nr 15 573–15 600) dla zestawu 7 układów i dla 13·24·27 / 1·9·13 / 6·9·13 — sprawdzić, gdy w `stan.json` będą kody.
-- **„8 kroków na stronie”** — użytkownik prosił o „układy dające 8 kroków na stronie”; nie jest jasne, czy chodzi o zestaw układów, które razem
-  dają 8 wierszy do progresji (jak suma 9 wierszy wyżej), czy o coś innego — **zapytać**. Dla 8 wierszy: wszystkie puste ≈ 0,712⁸ ≈ 6,6%.
+- **„8 kroków na stronie”** — policzone jako zestaw układów z sumą 8 wierszy (p. 7); użytkownik ma potwierdzić, czy o to chodziło
+  (zapytany 22.11). Dla 8 wierszy: wszystkie puste ≈ 0,712⁸ ≈ 6,6%.
 - Ewentualnie: zestawy układów, które **teraz** razem są na pierwszej próbie po grze, z sumą wierszy ≤ 5–8 i historią „nigdy wszystkie trigger”.
 - Automat wyników (mecze → kody) — odłożony; zasady kodów T50 / T60 są w PROJEKT.md.
 
