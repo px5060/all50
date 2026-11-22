@@ -117,7 +117,6 @@ Użytkownik chce na swoją prośbę (nic nie liczy się samo) dostać z całych 
 wygrywały w najbliższych krokach — żeby nie przegapić okazji, gdy jego modele tylko czekają; ale **nie za dużo**.
 Przycisk **🔎 Wyszukaj najlepsze** w MOJE → OCENY (MOJE 1.52.0): MOJE wysyła stan i zapisuje prośbę `szukaj.json` w repo `kody` → zadanie GitHuba
 `.github/workflows/najlepsze.yml` (tylko przy zmianie `szukaj.json`) uruchamia `python3 analiza/narzedzia/najlepsze.py --prosba … --zapisz`
-analiza/narzedzia/zeszyt_po_grze.js  ZESZYT T50 „pierwsza połówka po grze”: ranking / teraz / polost / razem / progresja (BRIEF_zeszyt_po_grze.md)
 (z `main` tego repo) → `oceny.json` → MOJE → 🔍 OCENY (wynik po ok. 3–5 min; MOJE sama sprawdza i pokazuje stan prośby).
 - Dwa zakresy: **k1–k3** — wg wygranej **do k3** od obecnego kroku w historii; **k4–k6** (modele po przekroczeniu k3) — wg wygranej **do k6**;
   k7–k8 pomijam. Przy równym % (zaokrąglonym) — historia do k8 / limitu, potem liczba przypadków (≥ 20).
@@ -221,6 +220,7 @@ analiza/narzedzia/kalibracja_pkt9.py  czy skala 9 pkt przewiduje (stare pule, za
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/teraz.py       modele z pul z zakładem na najbliższym wierszu (--kroki, --za), duplikaty „≈” i ten sam Nr co MOJE
 analiza/narzedzia/najlepsze.py   🔎 Wyszukaj najlepsze (przycisk w MOJE → zadanie GitHuba w repo kody): k1–k3 do k3, k4–k6 do k6 → ocena → OCENY
+analiza/narzedzia/zeszyt_po_grze.js  ZESZYT T50 „pierwsza połówka po grze”: ranking / teraz / polost / razem / progresja (BRIEF_zeszyt_po_grze.md)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
 analiza/narzedzia/zeszyt.js   ZESZYT T50 / T60 silnikami aplikacji: stan, plan kroków z Nr i stawkami
