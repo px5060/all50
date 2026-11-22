@@ -164,12 +164,12 @@ Przycisk **🔎 Wyszukaj najlepsze** w MOJE → OCENY (MOJE 1.52.0): MOJE wysył
   TOP7 M3 = silnik 1T (`['S', '001∪010∪200', 3, '000∪101', 4]`, x1x).
 - **Kod T50** (od użytkownika, 22.11): 1. cyfra = gol od 41' do końca 1. połowy (z doliczonym czasem), 2. cyfra = gol 51'–60' (x1x — „środek”),
   3. cyfra = gol od 88' do końca meczu (z doliczonym czasem; „XX+”); 1 = był gol, 0 = brak. Gol samobójczy liczymy,
-  gol nieuznany (VAR, spalony) nie. (Kody T50 i T60 — ta sama zasada.)
+  gol nieuznany (VAR, spalony) nie. (Kody T50 i T60 — ta sama zasada; przedziały od pełnej minuty: 41', 51', 61', 88'; doliczony czas się liczy.)
 - **ZESZYT T50** (`zeszyt/silnik.js`): karta = 2 połowy × 28 wierszy (karta 0 i 1 inaczej). Model = 3 wiersze połowy; krok = wiersz modelu.
   **Pusta trójka** = na 3 wierszach modelu x0x (dla XX+: xx0). Po `czekaj` pustych trójkach gra od następnej połowy do WIN; `limit` = krok
   maks. Nazwy: `16·18·27`, `+bok` (warunek „+ z boku”), `XX+` (gra na końcu), `×2` (po 2 pustych), `k10` (limit ≠ 9).
-- **ZESZYT T60** (`zeszyt/silnik60.js`): strony po 30 wierszy od Nr 1. Kod T60: 1. cyfra 0 brak gola 40–50', 1 gol 40–45', 2 gol 46–50',
-  3 oba; 2. cyfra gol 50–60' (x1x); 3. cyfra gol 60–70' (xx1). Cele 1xx, 2/3xx, x1x, xx1.
+- **ZESZYT T60** (`zeszyt/silnik60.js`): strony po 30 wierszy od Nr 1. Kod T60 (granice od użytkownika, 22.11): 1. cyfra 0 brak gola
+  41'–50', 1 gol 41'–45' (z doliczonym czasem 1. połowy), 2 gol 46'–50', 3 gole w obu; 2. cyfra gol 51'–60' (x1x); 3. cyfra gol 61'–70' (xx1). Cele 1xx, 2/3xx, x1x, xx1.
 
 ## Ustalenia z analiz (fakty, nie powtarzać użytkownikowi bez potrzeby)
 
