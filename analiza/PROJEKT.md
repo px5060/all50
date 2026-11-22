@@ -117,6 +117,7 @@ Użytkownik chce na swoją prośbę (nic nie liczy się samo) dostać z całych 
 wygrywały w najbliższych krokach — żeby nie przegapić okazji, gdy jego modele tylko czekają; ale **nie za dużo**.
 Przycisk **🔎 Wyszukaj najlepsze** w MOJE → OCENY (MOJE 1.52.0): MOJE wysyła stan i zapisuje prośbę `szukaj.json` w repo `kody` → zadanie GitHuba
 `.github/workflows/najlepsze.yml` (tylko przy zmianie `szukaj.json`) uruchamia `python3 analiza/narzedzia/najlepsze.py --prosba … --zapisz`
+analiza/narzedzia/zeszyt_po_grze.js  ZESZYT T50 „pierwsza połówka po grze”: ranking / teraz / polost / razem / progresja (BRIEF_zeszyt_po_grze.md)
 (z `main` tego repo) → `oceny.json` → MOJE → 🔍 OCENY (wynik po ok. 3–5 min; MOJE sama sprawdza i pokazuje stan prośby).
 - Dwa zakresy: **k1–k3** — wg wygranej **do k3** od obecnego kroku w historii; **k4–k6** (modele po przekroczeniu k3) — wg wygranej **do k6**;
   k7–k8 pomijam. Przy równym % (zaokrąglonym) — historia do k8 / limitu, potem liczba przypadków (≥ 20).
@@ -205,6 +206,7 @@ Przycisk **🔎 Wyszukaj najlepsze** w MOJE → OCENY (MOJE 1.52.0): MOJE wysył
 ```
 analiza/PROJEKT.md          ten opis (czytać na starcie)
 analiza/SESJA_OCEN.md       sesja tylko do ocen i wyszukiwania modeli (start, prośba → kroki, wysyłka, odpowiedź)
+analiza/BRIEF_zeszyt_po_grze.md  szukania ZESZYT T50 z 21–22.11 (gra na trafienie na pierwszej połówce po grze / po LOST-cie) — do nowej sesji
 analiza/MODELE.json         modele ze screenów (wybor = aktualnie polecany), bez zakładów
 analiza/narzedzia/pobierz.sh  pobranie repo z pulami / silnikami
 analiza/narzedzia/stan.py     raport stanu wszystkich modeli (MOJE: szukaj.py, ZESZYT: zeszyt.js)
