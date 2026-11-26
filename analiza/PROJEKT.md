@@ -220,7 +220,7 @@ analiza/narzedzia/kalibracja_pkt9.py  czy skala 9 pkt przewiduje (stare pule, za
 analiza/narzedzia/propozycje.py  propozycje z całych pul SZUKAJ (numba) + ZESZYT (zeszyt_skan.js)
 analiza/narzedzia/teraz.py       modele z pul z zakładem na najbliższym wierszu (--kroki, --za), duplikaty „≈” i ten sam Nr co MOJE
 analiza/narzedzia/najlepsze.py   🔎 Wyszukaj najlepsze (przycisk w MOJE → zadanie GitHuba w repo kody): k1–k3 do k3, k4–k6 do k6 → ocena → OCENY
-analiza/narzedzia/zeszyt_po_grze.js  ZESZYT T50 „pierwsza połówka po grze”: ranking / teraz / polost / razem / progresja (BRIEF_zeszyt_po_grze.md)
+analiza/narzedzia/zeszyt_po_grze.js  ZESZYT T50 „pierwsza połówka po grze”: ranking / teraz / polost / razem / zestawy / progresja (BRIEF_zeszyt_po_grze.md)
 analiza/narzedzia/zeszyt_skan.js  przegląd wszystkich układów ZESZYTU T50 / T60
 analiza/narzedzia/szukaj.py   silnik SZUKAJ (1:1) + MIX3 v14 + statystyki od kroku, najbliższy zakład
 analiza/narzedzia/zeszyt.js   ZESZYT T50 / T60 silnikami aplikacji: stan, plan kroków z Nr i stawkami

@@ -50,11 +50,27 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
    < 25% — 15. To tyle, ile daje sam przypadek przy ~120 grach na układ (najlepszy z 3 276 ≈ 3,5 odchylenia od 36%); u najlepszych wynik
    lepszy zwykle tylko w jednej połowie historii. „1x%” dla 3 wierszy nie istnieje.
 
+7. **„8 kroków na stronie” jako zestaw dający 8 wierszy** (22.11, druga sesja; interpretacja do potwierdzenia) — tryb `zestawy --karta 277L`:
+   460 układów na pierwszej próbie po grze na 277 L → 5,8 mln zestawów 2–3 układów z sumą dokładnie 8 wierszy (≥ 5 razy naraz w historii);
+   **bez przegranej progresji, gdy wszystkie były naraz na pierwszej próbie: 2,47 mln — z przypadku oczekiwane 2,74 mln** (2–4 układy: 92,6 mln
+   z 209 mln, oczekiwane 102 mln) → brak przewagi. Najlepsze (najwięcej razy naraz, 0 przegranych): 6·11·21 + 5·12·19 + 11·24·27 (26×; wiersze
+   5,6,11,12,19,21,24,27 = Nr 15 577 · 15 578 · 15 583 · 15 584 · 15 591 · 15 593 · 15 596 · 15 599), 6·11·21 + 6·19·24 + 5·12·18 (25×; wiersze
+   5,6,11,12,18,19,21,24 = Nr 15 577 … 15 596). U najlepszych wszystkie 8 wierszy puste w całej historii 7–10% połówek (teoria 6,6%).
+   Zestaw 7 układów z p. 5 przycięty do 8 kroków (bez w.27): Nr 15 575 · 15 578 · 15 583 · 15 584 · 15 590 · 15 591 · 15 593 · 15 596,
+   wszystkie puste 40/555 (7,2%); w 6 połówkach „wszystkie 7 naraz” wygrałby zawsze (najpóźniej krok 8).
+
+8. **Wynik 277 L** (kody do Nr 15 601, 26.11): zestaw 7 układów — środek na w.3 (Nr 15 575) = krok 1; z 7 układów 5 trafiło, trigger 12·18·27
+   i 6·12·19. 13·24·27 (po LOST-cie „zawsze trafienie”) — **trigger** (wzór się urwał); 1·9·13 trafienie w.1, 6·9·13 w.9. Zestawy 8 wierszy z p. 7 — krok 1.
+9. **Tabele „teraz pierwsza próba po grze”, T50 i T60** (26.11) — `teraz` (T50, karta 277 P, w.1 = Nr 15 601 już rozegrany) i `teraz --t60 --cel x1x|xx1
+   --min 60` (strony 441 / 442). Narzędzie liczy też ZESZYT T60 (`--t60`, strony po 30 wierszy, układy 3 wierszy, po 1 pustej stronie).
+   T50 (849 układów, zwykle bez triggera od razu 63,6%): najlepsze 3·16·18 (76%), 10·20·25, 6·10·25, 3·18·19 (75%). T60 x1x (390, zwykle 64,6%):
+   11·15·29 (80%), 5·11·15 (78%), 9·15·17, 20·23·29, 3·17·29 (76%); xx1 (580, zwykle 61,3%): 3·17·26 (78%), 15·18·24 (75%).
+
 ## Otwarte (następna sesja)
 
-- **Wynik karty 277 L** (Nr 15 573–15 600) dla zestawu 7 układów i dla 13·24·27 / 1·9·13 / 6·9·13 — sprawdzić, gdy w `stan.json` będą kody.
-- **„8 kroków na stronie”** — użytkownik prosił o „układy dające 8 kroków na stronie”; nie jest jasne, czy chodzi o zestaw układów, które razem
-  dają 8 wierszy do progresji (jak suma 9 wierszy wyżej), czy o coś innego — **zapytać**. Dla 8 wierszy: wszystkie puste ≈ 0,712⁸ ≈ 6,6%.
+- Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).
+- **„8 kroków na stronie”** — policzone jako zestaw układów z sumą 8 wierszy (p. 7); użytkownik ma potwierdzić, czy o to chodziło
+  (zapytany 22.11). Dla 8 wierszy: wszystkie puste ≈ 0,712⁸ ≈ 6,6%.
 - Ewentualnie: zestawy układów, które **teraz** razem są na pierwszej próbie po grze, z sumą wierszy ≤ 5–8 i historią „nigdy wszystkie trigger”.
 - Automat wyników (mecze → kody) — odłożony; zasady kodów T50 / T60 są w PROJEKT.md.
 
