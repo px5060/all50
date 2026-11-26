@@ -66,6 +66,41 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
    T50 (849 układów, zwykle bez triggera od razu 63,6%): najlepsze 3·16·18 (76%), 10·20·25, 6·10·25, 3·18·19 (75%). T60 x1x (390, zwykle 64,6%):
    11·15·29 (80%), 5·11·15 (78%), 9·15·17, 20·23·29, 3·17·29 (76%); xx1 (580, zwykle 61,3%): 3·17·26 (78%), 15·18·24 (75%).
 
+10. **Zestawy na 277 P** (kody do Nr 15 602, 26.11; w.1–2 już rozegrane) — `zestawy --karta 277P --wierszy 9|8`:
+    9 wierszy: 4·5·19 + 3·16·27 + 9·25·28 (razem 22×, nigdy wszystkie trigger; Nr 15 603 · 15 604 · 15 605 · 15 609 · 15 616 · 15 619 · 15 625 · 15 627 · 15 628);
+    14,9 mln zestawów, bez wspólnego triggera 10,6 mln (z przypadku 10,2 mln); `--max-ukl 4` przy 849 układach nie mieści się w 15 min.
+    8 wierszy: 17·19·25 + 16·19·20 + 4·6·14 (29×; Nr 15 604 · 15 606 · 15 614 · 15 616 · 15 617 · 15 619 · 15 620 · 15 625) i 3·16·27 + 3·19·28 + 4·5·9
+    (29×; = zestaw 9 wierszy bez w.25); 42 mln zestawów, bez wspólnego triggera 20,6 mln (z przypadku 19,3 mln). W 8 wierszach mieści się 46–55 układów
+    na pierwszej próbie po grze (narzędzie wypisuje je pod zestawem).
+    **Najwięcej układów naraz** (`zestawy --wierszy 8 --grupa`, zachłannie): ≥ 5× — 54 układy, ≥ 10× — 46, ≥ 15× — 34, **≥ 20× — 24 układy** (wiersze
+    3,4,5,9,14,19,20,25 = Nr 15 603 · 15 604 · 15 605 · 15 609 · 15 614 · 15 619 · 15 620 · 15 625; naraz 20×, wygrana najpóźniej k7), ≥ 25× — 19 układów
+    (wiersze B 3,4,5,9,16,19,27,28; wszystkie z w.3, naraz 26×). Wszystkie 8 wierszy puste w historii ok. 9,3% połówek (teoria 6,6%).
+
+11. **T60 x1x, strona 441, wiersze 18–30** (kody do Nr 13 217, 26.11) — `zestawy --t60 --cel x1x --karta 441 --min 60 --wierszy 8 --grupa`
+    (przy małej liczbie wierszy sprawdza wszystkie zestawy wierszy; xx1: na 441 brak układów na pierwszej próbie). Wiersze 18,20,22,23,25,27,29,30 =
+    Nr 13 218 · 13 220 · 13 222 · 13 223 · 13 225 · 13 227 · 13 229 · 13 230: 18 układów naraz 15× (wszystkie z w.20), 22 — 12×, 25 — 10×, 31 — 8×;
+    nigdy wszystkie trigger. Wszystkie 8 wierszy puste w historii 8,2% stron (teoria 6,8%).
+
+12. **Rozszerzenie grupy 24 (T50, 277 P) o układy z w.1–2** — tryb `rozszerz <24 układy> --tylko-rozegrane --min-razem 8`: z w.2 żaden nie jest po grze
+    (trafienie na 15 574 w 277 L → czekają); z w.1 i resztą w wierszach grupy 28 układów, z całą grupą naraz najwyżej 8×. Grupa 33 (24 + 1·3·14, 1·4·14,
+    1·5·14, 1·9·14, 1·9·19, 1·9·25, 1·14·19, 1·14·20, 1·14·25 — każdemu zostają 2 kroki): naraz 8×, nigdy wszystkie 8 wierszy puste, w 7 z 8 w.1 też był pusty.
+
+13. **Same układy z w.1 (T50, 277 P)** — `rozszerz --kroki 7|6`: po grze jest teraz 171 układów z w.1 (gra skończyła się środkiem na 15 573 = w.1
+    karty 277 L, stąd wszystkie naraz), w.1 na 277 P (15 601) pusty → każdemu zostają 2 kroki. 9 układów z p. 12 samych: naraz 11×, ale nadal 8 wierszy.
+    7 kroków: 21 układów (wszystkie pary z w.3,5,6,8,9,16,17 + w.1), naraz 21×, nigdy wszystkie puste, wygrana najpóźniej k4 (w.1 też pusty 18×).
+    6 kroków: 15 układów (pary z w.3,6,8,9,16,17), naraz 26×, nigdy wszystkie puste (w.1 też pusty 20×).
+
+14. **Po trafieniu T50 Nr 15 603 (w.3) i T60 Nr 13 218 (w.18)** (od użytkownika, przed wpisaniem w telefonie; liczone z `--dopisz 010`) — odpadają układy
+    z trafionym wierszem. T50 grupa 24: zostaje 18, ale na w.4,5,9,14,19,20,25 razem 21× i **2× wszystkie puste** → `rozszerz … --najw`: 21 układów (z 1·…)
+    naraz 12×, 22 — 10×, 26 — 8×, nigdy wszystkie puste (Nr 15 604 · 15 605 · 15 609 · 15 614 · 15 619 · 15 620 · 15 625). Grupy samych układów z w.1
+    (p. 13) bez w.3: 15 układów 28× z 4 przegranymi, 10 — 35× z 5 → odpadają. T60 grupa 18: zostaje 14 (wszystkie z w.20), naraz 16×, nigdy wszystkie
+    puste (Nr 13 220 · 13 222 · 13 223 · 13 225 · 13 227 · 13 229 · 13 230); grupa 25: zostaje 19, naraz 11×.
+
+15. **T60 str. 441 po w.18 — układy z rozegranymi wierszami (zostaje im 1–2 kroki)** — `rozszerz --t60 --cel x1x --min 60 --dopisz 010 --kroki K`
+    (grupy dowolnej wielkości): 254 takie układy po grze. 4 kroki: 16 układów naraz 15× (w.20,22,23,27 = Nr 13 220 · 13 222 · 13 223 · 13 227), 8 układów
+    20× (w.20,22,23,29); 5 kroków: 14 układów 15×; 6 kroków: 24 układy 12×; 7: 48 układów 8×; 8: brak. Grupa 14 (p. 14) + układy z rozegranymi wierszami
+    (`rozszerz <14> --tylko-rozegrane`): 18 układów 13×, 25 — 12×, 30 — 8×, nigdy wszystkie puste.
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).
