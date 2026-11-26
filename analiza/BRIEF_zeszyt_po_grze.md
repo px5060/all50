@@ -90,6 +90,12 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
     7 kroków: 21 układów (wszystkie pary z w.3,5,6,8,9,16,17 + w.1), naraz 21×, nigdy wszystkie puste, wygrana najpóźniej k4 (w.1 też pusty 18×).
     6 kroków: 15 układów (pary z w.3,6,8,9,16,17), naraz 26×, nigdy wszystkie puste (w.1 też pusty 20×).
 
+14. **Po trafieniu T50 Nr 15 603 (w.3) i T60 Nr 13 218 (w.18)** (od użytkownika, przed wpisaniem w telefonie; liczone z `--dopisz 010`) — odpadają układy
+    z trafionym wierszem. T50 grupa 24: zostaje 18, ale na w.4,5,9,14,19,20,25 razem 21× i **2× wszystkie puste** → `rozszerz … --najw`: 21 układów (z 1·…)
+    naraz 12×, 22 — 10×, 26 — 8×, nigdy wszystkie puste (Nr 15 604 · 15 605 · 15 609 · 15 614 · 15 619 · 15 620 · 15 625). Grupy samych układów z w.1
+    (p. 13) bez w.3: 15 układów 28× z 4 przegranymi, 10 — 35× z 5 → odpadają. T60 grupa 18: zostaje 14 (wszystkie z w.20), naraz 16×, nigdy wszystkie
+    puste (Nr 13 220 · 13 222 · 13 223 · 13 225 · 13 227 · 13 229 · 13 230); grupa 25: zostaje 19, naraz 11×.
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).

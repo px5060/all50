@@ -19,8 +19,9 @@
 //        --tylko-rozegrane: dokłada tylko układy z już rozegranymi wierszami
 //   node analiza/narzedzia/zeszyt_po_grze.js rozszerz --kroki 7 [--progi 5,8,10,12,15,20]
 //        same układy z już rozegranym wierszem (np. w.1) po grze: K wierszy do gry, największa grupa naraz ≥ T× i nigdy wszystkie K wierszy puste
+//   node analiza/narzedzia/zeszyt_po_grze.js rozszerz <układy> --najw [--kroki K] — to samo, ale tylko z podanych układów (np. po trafieniu bez tych z trafionym wierszem)
 //   node analiza/narzedzia/zeszyt_po_grze.js progresja [--kroki 5]                    sprawdzenie progresji 8·8·16·32·… na środek (od trafienia / sztywno w połówkach)
-//   opcje wspólne: --stan ../px5060/kody/stan.json · --t60 [--cel x1x|xx1] = ZESZYT T60 (strony po 30 wierszy, układy 3 wierszy, po 1 pustej stronie)
+//   opcje wspólne: --stan ../px5060/kody/stan.json · --dopisz 010,000 (kody spoza telefonu, tylko do liczenia) · --t60 [--cel x1x|xx1] = ZESZYT T60 (strony po 30 wierszy, układy 3 wierszy, po 1 pustej stronie)
 'use strict';
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const A = process.argv.slice(2), tryb = A[0], opt = (k, d) => { const i = A.indexOf('--' + k); return i < 0 ? d : A[i + 1]; }, flaga = k => A.includes('--' + k);
@@ -29,6 +30,7 @@ const T60 = flaga('t60'), TAB = T60 ? 't60' : 't50', CEL = T60 ? opt('cel', 'x1x
 const E = vm.runInNewContext(fs.readFileSync(path.join(D, 'zeszyt', T60 ? 'silnik60.js' : 'silnik.js'), 'utf8') + '\n;({buildBook, partsOf});', {});
 const d = JSON.parse(fs.readFileSync(STAN, 'utf8')), c = d[TAB].kody.match(/.{3}/g); let P = {}; try { P = JSON.parse((d.storage || {})['zeszyt_v1_poprawki_' + TAB] || '{}') || {}; } catch (e) {}
 for (const nr in P) if (+nr >= 1 && +nr <= c.length && /^\d{3}$/.test(P[nr])) c[nr - 1] = P[nr];   // poprawki kodów z ZESZYTU (jak liczy ZESZYT)
+if (opt('dopisz')) for (const x of opt('dopisz').split(',')) if (/^\d{3}$/.test(x)) c.push(x);   // --dopisz 010,000: kody jeszcze niewpisane w telefonie (tylko do tego liczenia)
 const n = c.length, B = E.buildBook(n + 60), POZ = CEL === 'xx1' ? 2 : 1, ST = [8, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], KURS = 3;
 const kw = row => [...row.pre, ...(row.nr ? [row.nr] : []), ...row.dop], hitK = x => c[x - 1][POZ] === '1';
 const norm = x => String(x).toUpperCase().replace(/STR\.?|\s/g, ''), pol = (k, p) => T60 ? `str. ${k}` : `${k} ${p ? 'P' : 'L'}`, pct = (a, b) => b ? `${a}/${b} (${(100 * a / b).toFixed(1)}%)` : '—';
@@ -179,14 +181,15 @@ if (tryb === 'ranking' || tryb === 'teraz') {
   const all = new Map();
   for (const w of trojki(1, WIERSZY)) { const R = przebieg(w, 9), T = R.teraz; if (!T || !T.pierwsza) continue; const S = statPoGrze(R);
     const F = new Uint8Array(NH); for (const h of R.H) if (h.pierwsza) F[HI.get(`${h.k}.${h.p}`)] = 1; all.set(w.join('.'), { R, S, F, T, m: w.reduce((a, r) => a | 1 << r, 0) }); }
-  if (opt('kroki')) {   // --kroki K: tylko układy z już rozegranymi wierszami (np. w.1); K wierszy do gry, największa grupa naraz ≥ T× i nigdy wszystkie K puste
-    const K = +opt('kroki'), progi = opt('progi', '5,8,10,12,15,20').split(',').map(Number), rowsOf = m => { const r = []; for (let i = 1; i <= WIERSZY; i++) if (m >> i & 1) r.push(i); return r; };
-    const k0 = [...all.values()].find(x => x.T.rozeg.length), [tk, tp] = k0 ? [k0.T.k, k0.T.p] : [0, 0], rows = B.cards[tk].parts[tp];
+  if (opt('kroki') || flaga('najw')) {   // --najw: tylko podane układy (np. po trafieniu odrzucone te z trafionym wierszem); --kroki K: tylko układy z już rozegranymi wierszami (np. w.1); K wierszy do gry, największa grupa naraz ≥ T× i nigdy wszystkie K puste
+    const G0n = G0.map(w => all.get(w.join('.'))).filter(Boolean), K0 = +opt('kroki') || 0, progi = opt('progi', '5,8,10,12,15,20').split(',').map(Number), rowsOf = m => { const r = []; for (let i = 1; i <= WIERSZY; i++) if (m >> i & 1) r.push(i); return r; };
+    const k0 = G0n[0] || [...all.values()].find(x => x.T.rozeg.length), [tk, tp] = k0 ? [k0.T.k, k0.T.p] : [0, 0], rows = B.cards[tk].parts[tp];
     let plM = 0; for (let r = 1; r <= rows.length; r++) if (rows[r - 1].nr && kw(rows[r - 1]).every(x => x <= n)) plM |= 1 << r;
-    const C2 = [...all.values()].filter(x => x.T.k === tk && x.T.p === tp && x.S.t >= min && (x.m & plM) && (x.m & ~plM)), fr = {};
+    if (G0.length && G0n.length < G0.length) console.log(`nie na pierwszej próbie po grze (pomijam): ${G0.filter(w => !all.get(w.join('.'))).map(w => w.join('·')).join(', ')}`);
+    const C2 = G0n.length ? G0n.filter(x => x.T.k === tk && x.T.p === tp && (x.m & ~plM)) : [...all.values()].filter(x => x.T.k === tk && x.T.p === tp && x.S.t >= min && (x.m & plM) && (x.m & ~plM)), fr = {};
     C2.forEach(x => rowsOf(x.m & ~plM).forEach(r => { fr[r] = (fr[r] || 0) + 1; }));
     const komb = (a, b) => { let r = 1; for (let i = 0; i < b; i++) r = r * (a - i) / (i + 1); return r; };
-    let RW = Object.keys(fr).map(Number).sort((a, b) => fr[b] - fr[a]); while (RW.length > K && komb(RW.length, K) > 5000) RW.pop();
+    let RW = Object.keys(fr).map(Number).sort((a, b) => fr[b] - fr[a]); const K = K0 || RW.length; while (RW.length > K && komb(RW.length, K) > 5000) RW.pop();
     const best = {}, SS = []; (function rek(od, m, ile) { if (ile === K) { SS.push(m); return; } for (let i = od; i < RW.length; i++) rek(i + 1, m | 1 << RW[i], ile + 1); })(0, 0, 0);
     for (const SMk of SS) { const S = rowsOf(SMk), cand = C2.filter(x => !((x.m & ~plM) & ~SMk)), nc = cand.length;
       if (nc < 2 || nc > 64 || cand.reduce((a, x) => a | (x.m & ~plM), 0) !== SMk) continue;
@@ -201,7 +204,7 @@ if (tryb === 'ranking' || tryb === 'teraz') {
           if (G.reduce((a, x) => a | (x.m & ~plM), 0) === SMk) { const I = [...Array(NH).keys()].filter(q => ((lo[q] & gl) >>> 0) === gl && ((hi[q] & gh) >>> 0) === gh);
             if (!I.some(q => loss[q])) for (const T of progi) if (I.length >= T && (!best[T] || G.length > best[T].G.length || (G.length === best[T].G.length && I.length > best[T].I.length))) best[T] = { S, SMk, G, I }; }
           let bh = -1, bv = -1; for (let q = 0; q < NH; q++) if (!loss[q] && !uz.has(q)) { const v = ile(gl, gh, q); if (v > bv) { bv = v; bh = q; } } if (bh < 0 || bv < 2) break; h = bh; } } }
-    console.log(`karta ${pol(tk, tp)}: rozegrane bez celu w.${rowsOf(plM).join(', w.')} · układy z rozegranym wierszem po grze: ${C2.length} · ${K} wierszy do gry (sprawdzone zestawy wierszy: ${SS.length}):`);
+    console.log(`karta ${pol(tk, tp)}: rozegrane w.${rowsOf(plM).join(', w.')} · ${G0n.length ? 'podane układy' : 'układy z rozegranym wierszem'} po grze: ${C2.length} · ${K} wierszy do gry (sprawdzone zestawy wierszy: ${SS.length}):`);
     for (const T of progi) { const b = best[T]; if (!b) { console.log(`  ≥ ${T}× naraz: brak`); continue; }
       const kroki = b.I.map(q => { const m = hitM[q] & b.SMk; return m ? b.S.findIndex(r => m >> r & 1) + 1 : 0; }), jak = b.I.filter(q => !(hitM[q] & plM & b.G.reduce((a, x) => a | x.m, 0))).length;
       console.log(`  ≥ ${T}× naraz: ${b.G.length} układów, naraz ${b.I.length}× (w.${rowsOf(plM & b.G.reduce((a, x) => a | x.m, 0)).join(',')} też pusty: ${jak}×), wygrana na krokach ${kroki.join(',')} · wiersze ${b.S.join(',')} · Nr ${b.S.map(r => kw(rows[r - 1]).join('+')).join(' · ')}`);
@@ -213,7 +216,7 @@ if (tryb === 'ranking' || tryb === 'teraz') {
   const plM = PL.reduce((a, r) => a | 1 << r, 0), U0 = g0.reduce((a, x) => a | x.m, 0), SM = U0 & ~plM, S = []; for (let r = 1; r <= WIERSZY; r++) if (SM >> r & 1) S.push(r);
   const loss = h => hitM[h] >= 0 && E.partsOf(HK[h][0])[HK[h][1]] >= S[S.length - 1] && !(hitM[h] & SM);
   let I = [...Array(NH).keys()].filter(h => g0.every(x => x.F[h]));
-  console.log(`karta ${pol(tk, tp)}: już rozegrane wiersze ${PL.join(',') || '—'} (bez celu) · grupa ${g0.length} układów, do gry wiersze ${S.join(',')} (Nr ${S.map(r => kw(rows[r - 1]).join('+')).join(' · ')}) · naraz ${I.length}×, przegrana ${I.filter(loss).length}×`);
+  console.log(`karta ${pol(tk, tp)}: już rozegrane wiersze ${PL.join(',') || '—'} · grupa ${g0.length} układów, do gry wiersze ${S.join(',')} (Nr ${S.map(r => kw(rows[r - 1]).join('+')).join(' · ')}) · naraz ${I.length}×, przegrana ${I.filter(loss).length}×`);
   const cand = [...all.values()].filter(x => x.T.k === tk && x.T.p === tp && x.S.t >= min && !g0.includes(x) && !(x.m & ~(SM | plM)) && (x.m & SM) && (!flaga('tylko-rozegrane') || (x.m & plM)));
   if (flaga('tylko-rozegrane')) console.log(`układy z rozegranymi wierszami (${PL.join(',')}) i resztą w wierszach grupy, na pierwszej próbie po grze: ${cand.length} · naraz z całą grupą: ${cand.map(x => ({ x, v: I.filter(h => x.F[h]).length })).sort((a, b) => b.v - a.v).map(o => `${o.x.R.w.join('·')} ${o.v}×`).join(', ')}`);
   const G = [...g0], dod = [];
