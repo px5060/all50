@@ -13,22 +13,23 @@
 //        ranking: najwięcej połówek w historii, na których wszystkie były naraz na pierwszej próbie i progresja nigdy nie przegrała
 //        (--max-ukl 4: ok. 200 mln zestawów, ok. 4 min; 3: ok. 6 mln, kilka sekund)
 //   node analiza/narzedzia/zeszyt_po_grze.js progresja [--kroki 5]                    sprawdzenie progresji 8·8·16·32·… na środek (od trafienia / sztywno w połówkach)
-//   opcje wspólne: --stan ../px5060/kody/stan.json
+//   opcje wspólne: --stan ../px5060/kody/stan.json · --t60 [--cel x1x|xx1] = ZESZYT T60 (strony po 30 wierszy, układy 3 wierszy, po 1 pustej stronie)
 'use strict';
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const A = process.argv.slice(2), tryb = A[0], opt = (k, d) => { const i = A.indexOf('--' + k); return i < 0 ? d : A[i + 1]; }, flaga = k => A.includes('--' + k);
 const D = process.env.PX5060 || path.join(__dirname, '..', '..', '..', 'px5060'), STAN = opt('stan', path.join(D, 'kody', 'stan.json'));
-const E = vm.runInNewContext(fs.readFileSync(path.join(D, 'zeszyt', 'silnik.js'), 'utf8') + '\n;({buildBook, partsOf});', {});
-const d = JSON.parse(fs.readFileSync(STAN, 'utf8')), c = d.t50.kody.match(/.{3}/g); let P = {}; try { P = JSON.parse((d.storage || {}).zeszyt_v1_poprawki_t50 || '{}') || {}; } catch (e) {}
+const T60 = flaga('t60'), TAB = T60 ? 't60' : 't50', CEL = T60 ? opt('cel', 'x1x') : 'x1x', WIERSZY = T60 ? 30 : 28;
+const E = vm.runInNewContext(fs.readFileSync(path.join(D, 'zeszyt', T60 ? 'silnik60.js' : 'silnik.js'), 'utf8') + '\n;({buildBook, partsOf});', {});
+const d = JSON.parse(fs.readFileSync(STAN, 'utf8')), c = d[TAB].kody.match(/.{3}/g); let P = {}; try { P = JSON.parse((d.storage || {})['zeszyt_v1_poprawki_' + TAB] || '{}') || {}; } catch (e) {}
 for (const nr in P) if (+nr >= 1 && +nr <= c.length && /^\d{3}$/.test(P[nr])) c[nr - 1] = P[nr];   // poprawki kodów z ZESZYTU (jak liczy ZESZYT)
-const n = c.length, B = E.buildBook(n + 60), POZ = 1, ST = [8, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], KURS = 3;
+const n = c.length, B = E.buildBook(n + 60), POZ = CEL === 'xx1' ? 2 : 1, ST = [8, 8, 16, 32, 64, 128, 256, 512, 1024, 2048], KURS = 3;
 const kw = row => [...row.pre, ...(row.nr ? [row.nr] : []), ...row.dop], hitK = x => c[x - 1][POZ] === '1';
-const pol = (k, p) => `${k} ${p ? 'P' : 'L'}`, pct = (a, b) => b ? `${a}/${b} (${(100 * a / b).toFixed(1)}%)` : '—';
+const norm = x => String(x).toUpperCase().replace(/STR\.?|\s/g, ''), pol = (k, p) => T60 ? `str. ${k}` : `${k} ${p ? 'P' : 'L'}`, pct = (a, b) => b ? `${a}/${b} (${(100 * a / b).toFixed(1)}%)` : '—';
 const trojki = (od, do_) => { const T = []; for (let a = od; a <= do_; a++) for (let b = a + 1; b <= do_; b++) for (let e = b + 1; e <= do_; e++) T.push([a, b, e]); return T; };
 // przebieg modelu: H = połówki {k, p, gra (w grze), pierwsza (pierwsza próba po grze), poLost (… po LOST-cie), hit (wiersz trafienia), krok};
 // teraz = połówka w toku {k, p, r (pierwszy nierozegrany wiersz), rozeg, pierwsza, poLost}
 function przebieg(w, L) {
-  const mx = Math.max(...w), H = []; let gra = null, nobs = 0, poGrze = false, poLost = false, gry = 0, lost = 0, ostLost = false, teraz = null;
+  const mx = Math.max(...w), H = [], sts = []; let gra = null, nobs = 0, poGrze = false, poLost = false, gry = 0, lost = 0, ostLost = false, teraz = null;
   scan: for (let k = 0; k < B.cards.length; k++) for (let p = 0; p < B.cards[k].parts.length; p++) {
     if (E.partsOf(k)[p] < mx) continue;
     const rows = B.cards[k].parts[p], rozeg = []; let hit = 0, krok = 0;
@@ -36,32 +37,32 @@ function przebieg(w, L) {
       if (row.nr > n) { teraz = { k, p, r, rozeg, pierwsza: poGrze && !gra, poLost: poLost && !gra, gra: !!gra }; break scan; }
       for (const x of kw(row)) { if (x > n) continue; if (gra) gra.st++; krok++; if (hitK(x)) { hit = r; break; } }
       rozeg.push(r); if (hit) break; }
-    if (gra) { H.push({ k, p, gra: true, hit }); if (hit) { gry++; ostLost = gra.st > L; if (ostLost) lost++; poGrze = true; poLost = ostLost; gra = null; nobs = 0; } continue; }
+    if (gra) { H.push({ k, p, gra: true, hit }); if (hit) { gry++; sts.push(gra.st); ostLost = gra.st > L; if (ostLost) lost++; poGrze = true; poLost = ostLost; gra = null; nobs = 0; } continue; }
     H.push({ k, p, pierwsza: poGrze, poLost, hit, krok }); poGrze = false; poLost = false;
     if (hit) { nobs = 0; continue; }
     if (++nobs === 1) { gra = { st: 0 }; nobs = 0; }
   }
-  return { w, L, H, gry, lost, ostLost, teraz };
+  return { w, L, H, gry, lost, ostLost, teraz, sts };
 }
 const statPoGrze = R => { const E1 = R.H.filter(h => h.pierwsza), t = E1.length, trig = E1.filter(h => !h.hit).length, h = t >> 1;
   return { t, trig, ud: t ? trig / t : 1, t1: E1.slice(0, h).filter(x => !x.hit).length, h, t2: E1.slice(h).filter(x => !x.hit).length, wg: R.w.map(r => E1.filter(x => x.hit === r).length) }; };
 const nrWierszy = (k, p, w) => w.map(r => `w.${r} Nr ${kw(B.cards[k].parts[p][r - 1]).join('+')}`).join(' · ');
 const stanT = R => !R.teraz ? '?' : R.teraz.pierwsza ? `TERAZ pierwsza próba po grze (karta ${pol(R.teraz.k, R.teraz.p)}${R.teraz.rozeg.length ? ', rozegrane ' + R.teraz.rozeg.join('·') : ''})` : R.teraz.gra ? 'w grze' : 'czeka na pustą trójkę';
 const pFreq = c.filter(x => x[POZ] === '1').length / n;
-console.log(`kody T50 do Nr ${n} · środek (2. cyfra) w ${(100 * pFreq).toFixed(1)}% kodów · zwykły trigger (3 puste wiersze) ≈ ${(100 * (1 - pFreq) ** 3).toFixed(0)}%`);
+console.log(`ZESZYT ${TAB.toUpperCase()} ${CEL}: kody do Nr ${n} · cel w ${(100 * pFreq).toFixed(1)}% kodów · zwykły trigger (3 puste wiersze) ≈ ${(100 * (1 - pFreq) ** 3).toFixed(0)}%`);
 
 if (tryb === 'ranking' || tryb === 'teraz') {
   const min = +opt('min', 80), top = +opt('top', 15), karta = opt('karta'), W = [];
-  for (const w of trojki(1, 28)) { const R = przebieg(w, 9), S = statPoGrze(R); if (S.t < min) continue;
-    if (tryb === 'teraz') { const T = R.teraz; if (!T || !T.pierwsza || T.rozeg.length || (karta && pol(T.k, T.p).replace(' ', '') !== karta.toUpperCase())) continue; }
+  for (const w of trojki(1, WIERSZY)) { const R = przebieg(w, 9), S = statPoGrze(R); if (S.t < min) continue;
+    if (tryb === 'teraz') { const T = R.teraz; if (!T || !T.pierwsza || T.rozeg.length || (karta && norm(pol(T.k, T.p)) !== norm(karta))) continue; }
     W.push({ R, S }); }
   W.sort((x, y) => x.S.ud - y.S.ud || y.S.t - x.S.t);
   const U = W.map(x => x.S.ud);
   console.log(`${tryb === 'teraz' ? 'pierwsza próba po grze teraz' : 'wszystkie układy'} (≥ ${min} gier): ${W.length} · średnio trigger od razu po grze ${(100 * U.reduce((a, b) => a + b, 0) / (U.length || 1)).toFixed(1)}% · najmniej ${U.length ? (100 * U[0]).toFixed(1) : '—'}% · < 20%: ${U.filter(x => x < 0.2).length} · < 25%: ${U.filter(x => x < 0.25).length}`);
-  for (const { R, S } of W.slice(0, top)) console.log(`  ${R.w.join('·').padEnd(9)} | gier ${R.gry}, LOST k9 ${R.lost} | trigger od razu po grze ${pct(S.trig, S.t)} · połowy historii ${S.t1}/${S.h} · ${S.t2}/${S.t - S.h} | trafienie w wierszu ${R.w.join('/')}: ${S.wg.join('/')} | ${stanT(R)}${tryb === 'teraz' ? ' | ' + nrWierszy(R.teraz.k, R.teraz.p, R.w) : ''}`);
+  for (const { R, S } of W.slice(0, top)) console.log(`  ${R.w.join('·').padEnd(9)} | gier ${R.gry}, LOST k9 ${R.lost} · k10 ${R.sts.filter(x => x > 10).length} | trigger od razu po grze ${pct(S.trig, S.t)} · połowy historii ${S.t1}/${S.h} · ${S.t2}/${S.t - S.h} | trafienie w wierszu ${R.w.join('/')}: ${S.wg.join('/')} | ${stanT(R)}${tryb === 'teraz' ? ' | ' + nrWierszy(R.teraz.k, R.teraz.p, R.w) : ''}`);
 } else if (tryb === 'polost') {
   const od = +opt('od', 12), do_ = +opt('do', 28), wsz = flaga('wszystkie'), maxL = +opt('max-lost', 99), best = {};
-  for (const w of trojki(1, 28)) for (const L of [9, 10]) {
+  for (const w of trojki(1, WIERSZY)) for (const L of [9, 10]) {
     const R = przebieg(w, L), T = R.teraz; if (!R.lost || R.lost > maxL || !R.ostLost || !T || !T.poLost) continue;
     const poL = R.H.filter(h => h.poLost); if (poL.some(h => !h.hit)) continue;   // po każdym wcześniejszym LOST-cie trafienie na pierwszej połówce
     const zostaje = w.filter(r => !T.rozeg.includes(r)); if (zostaje.some(r => r < od || r > do_) || w.filter(r => r >= od && r <= do_).length < (wsz ? 3 : 2)) continue;
@@ -97,14 +98,14 @@ if (tryb === 'ranking' || tryb === 'teraz') {
   const hitM = HK.map(([k, p]) => { const rows = B.cards[k].parts[p]; let m = 0, ok = true;
     rows.forEach((row, i) => { const X = kw(row); if (!row.nr || X.some(x => x > n)) { ok = false; return; } if (X.some(hitK)) m |= 1 << (i + 1); }); return ok ? m : -1; });
   const G = {};
-  for (const w of trojki(1, 28)) { const R = przebieg(w, 9), T = R.teraz; if (!T || !T.pierwsza || T.rozeg.length) continue;
-    const pk = pol(T.k, T.p).replace(' ', ''); if (karta && pk !== karta.toUpperCase()) continue; const S = statPoGrze(R); if (S.t < min) continue;
+  for (const w of trojki(1, WIERSZY)) { const R = przebieg(w, 9), T = R.teraz; if (!T || !T.pierwsza || T.rozeg.length) continue;
+    const pk = norm(pol(T.k, T.p)); if (karta && pk !== norm(karta)) continue; const S = statPoGrze(R); if (S.t < min) continue;
     const F = new Uint32Array(NW); for (const h of R.H) if (h.pierwsza) { const i = HI.get(`${h.k}.${h.p}`); F[i >> 5] |= 1 << (i & 31); }
     (G[pk] = G[pk] || { i: HI.get(`${T.k}.${T.p}`), C: [] }).C.push({ R, S, F, m: w.reduce((a, r) => a | 1 << r, 0) }); }
-  const pk = karta ? karta.toUpperCase() : Object.keys(G).sort((a, b) => G[a].i - G[b].i)[0];
+  const pk = karta ? norm(karta) : Object.keys(G).sort((a, b) => G[a].i - G[b].i)[0];
   if (!G[pk]) { console.log(`brak układów na pierwszej próbie po grze na karcie ${pk || '?'}`); process.exit(0); }
   const C = G[pk].C.sort((x, y) => x.S.ud - y.S.ud), [tk, tp] = HK[G[pk].i], Z = [];
-  const rowsOf = m => { const r = []; for (let i = 1; i <= 28; i++) if (m >> i & 1) r.push(i); return r; };
+  const rowsOf = m => { const r = []; for (let i = 1; i <= WIERSZY; i++) if (m >> i & 1) r.push(i); return r; };
   const buf = Array.from({ length: maxU + 1 }, () => new Uint32Array(NW)), sel = []; let wszZ = 0, oczek = 0, zeroN = 0, progZ = 0;
   const zapisz = (d, um) => {   // d = liczba układów; buf[d] = połówki, na których wszystkie były naraz na pierwszej próbie
     for (let a = 0; a < d; a++) { let u = 0; for (let b = 0; b < d; b++) if (b !== a) u |= C[sel[b]].m; if (!(C[sel[a]].m & ~u)) return; }
