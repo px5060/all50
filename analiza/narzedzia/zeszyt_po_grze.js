@@ -87,7 +87,7 @@ if (tryb === 'ranking' || tryb === 'teraz') {
     console.log(`  karta ${pol(kk, pp)}: trafienie ${S.filter(m => m.get(k).hit).length}/${M.length} · progresja wygrałaby na kroku ${i + 1} (w.${R9[i]})`); }
   const puste = K.filter(k => { const [kk, pp] = k.split('.').map(Number), rows = B.cards[kk].parts[pp]; return R9.every(r => kw(rows[r - 1]).every(x => !hitK(x))); });
   const idx = puste.map(k => K.indexOf(k)), gaps = idx.slice(1).map((x, i) => x - idx[i]);
-  console.log(`wszystkie ${R9.length} wierszy bez środka: ${pct(puste.length, K.length)} (teoria ${(100 * (1 - pFreq) ** R9.length).toFixed(1)}%) · ostatnio: karta ${puste.length ? puste[puste.length - 1].replace('.0', ' L').replace('.1', ' P') : '—'}, ${idx.length ? K.length - 1 - idx[idx.length - 1] : '—'} połówek temu · odstęp średnio ${gaps.length ? (gaps.reduce((a, b) => a + b, 0) / gaps.length).toFixed(1) : '—'}, najdłuższy ${gaps.length ? Math.max(...gaps) : '—'}, najkrótszy ${gaps.length ? Math.min(...gaps) : '—'}`);
+  console.log(`wszystkie ${R9.length} wierszy bez środka: ${pct(puste.length, K.length)} (teoria ${(100 * (1 - pFreq) ** R9.length).toFixed(1)}%) · ostatnio: ${puste.length ? pol(...puste[puste.length - 1].split('.').map(Number)) : '—'}, ${idx.length ? K.length - 1 - idx[idx.length - 1] : '—'} połówek temu · odstęp średnio ${gaps.length ? (gaps.reduce((a, b) => a + b, 0) / gaps.length).toFixed(1) : '—'}, najdłuższy ${gaps.length ? Math.max(...gaps) : '—'}, najkrótszy ${gaps.length ? Math.min(...gaps) : '—'}`);
   for (const prog of [M.length - 2, M.length - 1].filter(x => x >= 2)) { const Kp = K.filter(k => S.filter(m => m.get(k).pierwsza).length >= prog);
     console.log(`co najmniej ${prog} z ${M.length} naraz na pierwszej próbie: ${Kp.length} razy · wszystkie z nich trigger: ${Kp.filter(k => S.filter(m => m.get(k).pierwsza).every(m => !m.get(k).hit)).length}`); }
 } else if (tryb === 'zestawy') {
@@ -128,7 +128,9 @@ if (tryb === 'ranking' || tryb === 'teraz') {
     // NARAZ na pierwszej próbie po grze ≥ T razy i nigdy wszystkie nie dostały triggera (= wszystkie wiersze puste). Heurystyka: zachłannie po połówkach.
     const ileZ = +opt('z', 1500), progi = (opt('progi', '5,10,15,20,25')).split(',').map(Number), NH = HK.length, best = {};
     Z.sort((x, y) => y.razem.length - x.razem.length);
-    const SU = [...new Set(Z.slice(0, ileZ).map(z => z.um))];
+    let SU = [...new Set(Z.slice(0, ileZ).map(z => z.um))];
+    { const RW = rowsOf(C.reduce((a, x) => a | x.m, 0)), komb = (n_, k_) => { let r = 1; for (let i = 0; i < k_; i++) r = r * (n_ - i) / (i + 1); return r; };
+      if (komb(RW.length, Wn) <= 20000) { SU = []; const rek = (od, m, ile) => { if (ile === Wn) { SU.push(m); return; } for (let i = od; i < RW.length; i++) rek(i + 1, m | 1 << RW[i], ile + 1); }; rek(0, 0, 0); } }   // mało wierszy (np. T60 18–30): wszystkie zestawy wierszy
     for (const um of SU) {
       const W = rowsOf(um), mxr = W[W.length - 1], cand = C.filter(x => !(x.m & ~um)), nc = cand.length; if (nc < 2 || nc > 64) continue;
       const lo = new Uint32Array(NH), hi = new Uint32Array(NH), loss = new Uint8Array(NH);
@@ -145,7 +147,7 @@ if (tryb === 'ranking' || tryb === 'teraz') {
               best[T] = { um, G: G.map(j => cand[j]), I, nc }; }
           let bh = -1, bv = -1; for (let q = 0; q < NH; q++) if (!loss[q] && !uzyte.has(q)) { const v = ile(gl, gh, q); if (v > bv) { bv = v; bh = q; } }
           if (bh < 0 || bv < 2) break; h = bh; } } }
-    console.log(`karta ${pk}: ${Wn} wierszy, największa grupa układów naraz na pierwszej próbie po grze i nigdy wszystkie trigger (wiersze z ${SU.length} najlepszych zestawów):`);
+    console.log(`karta ${pk}: ${Wn} wierszy, największa grupa układów naraz na pierwszej próbie po grze i nigdy wszystkie trigger (sprawdzone zestawy wierszy: ${SU.length}):`);
     for (const T of progi) { const b = best[T]; if (!b) { console.log(`  ≥ ${T}× naraz: brak`); continue; } const W = rowsOf(b.um);
       const kroki = b.I.map(i => { const h = hitM[i] & b.um; return h ? W.findIndex(r => h >> r & 1) + 1 : 0; });
       console.log(`  ≥ ${T}× naraz: ${b.G.length} układów (z ${b.nc} w tych wierszach), naraz ${b.I.length}×, wygrana na krokach ${kroki.join(',')} · wiersze ${W.join(',')} · Nr ${W.map(r => kw(B.cards[tk].parts[tp][r - 1]).join('+')).join(' · ')}`);

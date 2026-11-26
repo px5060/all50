@@ -76,6 +76,11 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
     3,4,5,9,14,19,20,25 = Nr 15 603 · 15 604 · 15 605 · 15 609 · 15 614 · 15 619 · 15 620 · 15 625; naraz 20×, wygrana najpóźniej k7), ≥ 25× — 19 układów
     (wiersze B 3,4,5,9,16,19,27,28; wszystkie z w.3, naraz 26×). Wszystkie 8 wierszy puste w historii ok. 9,3% połówek (teoria 6,6%).
 
+11. **T60 x1x, strona 441, wiersze 18–30** (kody do Nr 13 217, 26.11) — `zestawy --t60 --cel x1x --karta 441 --min 60 --wierszy 8 --grupa`
+    (przy małej liczbie wierszy sprawdza wszystkie zestawy wierszy; xx1: na 441 brak układów na pierwszej próbie). Wiersze 18,20,22,23,25,27,29,30 =
+    Nr 13 218 · 13 220 · 13 222 · 13 223 · 13 225 · 13 227 · 13 229 · 13 230: 18 układów naraz 15× (wszystkie z w.20), 22 — 12×, 25 — 10×, 31 — 8×;
+    nigdy wszystkie trigger. Wszystkie 8 wierszy puste w historii 8,2% stron (teoria 6,8%).
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).
