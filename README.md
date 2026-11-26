@@ -32,6 +32,8 @@ i wspólny ekran **GRA** dla wszystkich modeli z appek Test50:
     1T/200/2T — odliczanie do zakładu; 2-SLOT — sloty 1 i 2 po BUILDUP; TRÓJKA — wiersz decyzji po SPRAWDŹ (i SPRAWDŹ po 1. trafieniu).
     Gdy trzeba czekać na kod (szukanie pary, BUILDUP), w opisie ostatniego wiersza (Stan/Rola) jest „DALEJ: …” — co musi się wydarzyć.
   - 2-SLOT: w kolumnie GRA zaznaczone są kroki gry (krok n/8, stawka, pudło / WIN) w oknie po START.
+    Krok teraz (1.24.0): w statystykach modelu „Stan teraz” (okno w grze · krok gry n/8 · stawka albo „bez okna — następne okno od k1”),
+    a na karcie pola `krok` / `stawka` / `okno` — czyta je MOJE. „krok n/offset” przed START to odliczanie WIN-ów, nie krok gry.
   - **Dotknięcie wiersza zakładu** (albo wiersza TRIGGER / czekania) w widoku modelu podświetla cały łańcuch, jak w SZUKAJ / BUST:
     STEP (żółty), TRIGGER (niebieski), czekanie (przerywany), następny / START (pomarańczowy), kroki gry (przerywany pomarańczowy),
     WIN (zielony) / przegrana (czerwony), z opisem nad tabelą. Ponowne dotknięcie zamyka.
