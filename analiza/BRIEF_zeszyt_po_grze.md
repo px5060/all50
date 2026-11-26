@@ -96,6 +96,11 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
     (p. 13) bez w.3: 15 układów 28× z 4 przegranymi, 10 — 35× z 5 → odpadają. T60 grupa 18: zostaje 14 (wszystkie z w.20), naraz 16×, nigdy wszystkie
     puste (Nr 13 220 · 13 222 · 13 223 · 13 225 · 13 227 · 13 229 · 13 230); grupa 25: zostaje 19, naraz 11×.
 
+15. **T60 str. 441 po w.18 — układy z rozegranymi wierszami (zostaje im 1–2 kroki)** — `rozszerz --t60 --cel x1x --min 60 --dopisz 010 --kroki K`
+    (grupy dowolnej wielkości): 254 takie układy po grze. 4 kroki: 16 układów naraz 15× (w.20,22,23,27 = Nr 13 220 · 13 222 · 13 223 · 13 227), 8 układów
+    20× (w.20,22,23,29); 5 kroków: 14 układów 15×; 6 kroków: 24 układy 12×; 7: 48 układów 8×; 8: brak. Grupa 14 (p. 14) + układy z rozegranymi wierszami
+    (`rozszerz <14> --tylko-rozegrane`): 18 układów 13×, 25 — 12×, 30 — 8×, nigdy wszystkie puste.
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).

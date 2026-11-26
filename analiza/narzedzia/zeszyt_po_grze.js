@@ -189,21 +189,21 @@ if (tryb === 'ranking' || tryb === 'teraz') {
     const C2 = G0n.length ? G0n.filter(x => x.T.k === tk && x.T.p === tp && (x.m & ~plM)) : [...all.values()].filter(x => x.T.k === tk && x.T.p === tp && x.S.t >= min && (x.m & plM) && (x.m & ~plM)), fr = {};
     C2.forEach(x => rowsOf(x.m & ~plM).forEach(r => { fr[r] = (fr[r] || 0) + 1; }));
     const komb = (a, b) => { let r = 1; for (let i = 0; i < b; i++) r = r * (a - i) / (i + 1); return r; };
-    let RW = Object.keys(fr).map(Number).sort((a, b) => fr[b] - fr[a]); const K = K0 || RW.length; while (RW.length > K && komb(RW.length, K) > 5000) RW.pop();
+    let RW = Object.keys(fr).map(Number).sort((a, b) => fr[b] - fr[a]); const K = K0 || RW.length; while (RW.length > K && komb(RW.length, K) > +opt('max-zest', 1000)) RW.pop();
     const best = {}, SS = []; (function rek(od, m, ile) { if (ile === K) { SS.push(m); return; } for (let i = od; i < RW.length; i++) rek(i + 1, m | 1 << RW[i], ile + 1); })(0, 0, 0);
+    const bc = x => { x -= (x >>> 1) & 0x55555555; x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); return (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; };
     for (const SMk of SS) { const S = rowsOf(SMk), cand = C2.filter(x => !((x.m & ~plM) & ~SMk)), nc = cand.length;
-      if (nc < 2 || nc > 64 || cand.reduce((a, x) => a | (x.m & ~plM), 0) !== SMk) continue;
-      const lo = new Uint32Array(NH), hi = new Uint32Array(NH), loss = new Uint8Array(NH);
-      cand.forEach((x, j) => { for (let h = 0; h < NH; h++) if (x.F[h]) { if (j < 32) lo[h] |= 1 << j; else hi[h] |= 1 << (j - 32); } });
+      if (nc < 2 || cand.reduce((a, x) => a | (x.m & ~plM), 0) !== SMk) continue;
+      const NW2 = (nc + 31) >> 5, col = Array.from({ length: NH }, () => new Uint32Array(NW2)), loss = new Uint8Array(NH), full = new Uint32Array(NW2);
+      cand.forEach((x, j) => { full[j >> 5] |= 1 << (j & 31); for (let h = 0; h < NH; h++) if (x.F[h]) col[h][j >> 5] |= 1 << (j & 31); });
       for (let h = 0; h < NH; h++) loss[h] = hitM[h] >= 0 && E.partsOf(HK[h][0])[HK[h][1]] >= S[S.length - 1] && !(hitM[h] & SMk) ? 1 : 0;
-      const bc = x => { x -= (x >>> 1) & 0x55555555; x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); return (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24; };
-      const L0 = (nc >= 32 ? 0xFFFFFFFF : (1 << nc) - 1) >>> 0, H0 = (nc > 32 ? (nc >= 64 ? 0xFFFFFFFF : (1 << (nc - 32)) - 1) : 0) >>> 0, ile = (gl, gh, h) => bc((gl & lo[h]) >>> 0) + bc((gh & hi[h]) >>> 0);
-      for (const h0 of [...Array(NH).keys()].filter(h => !loss[h]).sort((a, b) => ile(L0, H0, b) - ile(L0, H0, a)).slice(0, 15)) { let gl = L0, gh = H0, h = h0; const uz = new Set();
-        while (true) { gl = (gl & lo[h]) >>> 0; gh = (gh & hi[h]) >>> 0; uz.add(h); if (bc(gl) + bc(gh) < 2) break;
-          const G = cand.filter((x, j) => j < 32 ? gl >> j & 1 : gh >> (j - 32) & 1);
-          if (G.reduce((a, x) => a | (x.m & ~plM), 0) === SMk) { const I = [...Array(NH).keys()].filter(q => ((lo[q] & gl) >>> 0) === gl && ((hi[q] & gh) >>> 0) === gh);
+      const ile = (g, h) => { let v = 0; const cc = col[h]; for (let w = 0; w < NW2; w++) v += bc((g[w] & cc[w]) >>> 0); return v; };
+      for (const h0 of [...Array(NH).keys()].filter(h => !loss[h]).sort((a, b) => ile(full, b) - ile(full, a)).slice(0, 10)) { const g = full.slice(); let h = h0; const uz = new Set();
+        while (true) { for (let w = 0; w < NW2; w++) g[w] &= col[h][w]; uz.add(h); let size = 0; for (let w = 0; w < NW2; w++) size += bc(g[w]); if (size < 2) break;
+          const G = cand.filter((x, j) => g[j >> 5] >> (j & 31) & 1);
+          if (G.reduce((a, x) => a | (x.m & ~plM), 0) === SMk) { const I = [...Array(NH).keys()].filter(q => { for (let w = 0; w < NW2; w++) if (((col[q][w] & g[w]) >>> 0) !== g[w]) return false; return true; });
             if (!I.some(q => loss[q])) for (const T of progi) if (I.length >= T && (!best[T] || G.length > best[T].G.length || (G.length === best[T].G.length && I.length > best[T].I.length))) best[T] = { S, SMk, G, I }; }
-          let bh = -1, bv = -1; for (let q = 0; q < NH; q++) if (!loss[q] && !uz.has(q)) { const v = ile(gl, gh, q); if (v > bv) { bv = v; bh = q; } } if (bh < 0 || bv < 2) break; h = bh; } } }
+          let bh = -1, bv = -1; for (let q = 0; q < NH; q++) if (!loss[q] && !uz.has(q)) { const v = ile(g, q); if (v > bv) { bv = v; bh = q; } } if (bh < 0 || bv < 2) break; h = bh; } } }
     console.log(`karta ${pol(tk, tp)}: rozegrane w.${rowsOf(plM).join(', w.')} · ${G0n.length ? 'podane układy' : 'układy z rozegranym wierszem'} po grze: ${C2.length} · ${K} wierszy do gry (sprawdzone zestawy wierszy: ${SS.length}):`);
     for (const T of progi) { const b = best[T]; if (!b) { console.log(`  ≥ ${T}× naraz: brak`); continue; }
       const kroki = b.I.map(q => { const m = hitM[q] & b.SMk; return m ? b.S.findIndex(r => m >> r & 1) + 1 : 0; }), jak = b.I.filter(q => !(hitM[q] & plM & b.G.reduce((a, x) => a | x.m, 0))).length;
