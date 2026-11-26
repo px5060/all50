@@ -76,12 +76,20 @@
     return (C.play[key] = out);
   }
   const FC_BET = 'background:#FF6600;color:#fff', FC_COND = 'background:#FFF2CC;color:#7F6000', FC_LOSS = 'background:#FF6666;color:#fff';
+  // T50 RAZEM 1.24.0 (prośba użytkownika): krok teraz wprost — dla MOJE (pole krok / stawka / okno na karcie) i w statystykach („Stan teraz”).
+  // Okno po START w grze → krok gry = K bazy + pozycja slotu (jak prognoza fc); bez okna (albo K > 8 — LOSS przy najbliższym WIN bazy) → następne okno od k1.
+  // Uwaga: „krok n/offset” na karcie przed START to odliczanie WIN-ów do START, nie krok gry.
+  function krokTeraz(s, m) {
+    const E = both()[s], two = E.two, ws = E.models[m.name].windows.filter(w => w.started), n = two.K + (two.phase === 'SLOT2' ? 2 : 1), tn = ws.map(w => '#' + w.tn).join(', ');
+    if (ws.length && n <= MAX_KROKI) return { krok: n, stawka: STAWKI[n], okno: true, txt: `okno w grze (trig${tn}) · krok gry ${n}/${MAX_KROKI} · ${STAWKI[n]} zł${two.phase === 'WAITING' ? ' · po x1x (BUILDUP)' : ''}` };
+    return { krok: 1, stawka: STAWKI[1], okno: false, txt: ws.length ? `okno trig${tn}: K>${MAX_KROKI} — LOSS przy najbliższym WIN bazy, potem okno od k1 · ${STAWKI[1]} zł` : `bez okna w grze — następne okno od k1 · ${STAWKI[1]} zł` };
+  }
   const A = {
     stats: mi => {
       const { s, m } = pm(mi), E = both()[s], st = statsFor(E, m.name), two = E.two;
       return [['Ocena (pkt z 9)', window.__ocenaGames(gamesOf(s, m.name), codes.length, ST2, 3)], ['Strategia', NAME[s]], ['Trigger', `WIN bazy z K=${m.K} · START po ${m.offset} WIN`], ['Triggery', st.trig]]
         .concat(window.T50Stat.brief(gamesOf(s, m.name), codes.length, ST2, 3))
-        .concat(s === 'A' ? [['Ignorowane triggery', st.ign]] : []).concat([['Okna otwarte', st.open], ['Baza teraz', `${two.phase} · K=${two.K}`]]);
+        .concat(s === 'A' ? [['Ignorowane triggery', st.ign]] : []).concat([['Okna otwarte', st.open], ['Stan teraz', krokTeraz(s, m).txt], ['Baza teraz', `${two.phase} · K=${two.K}`]]);
     },
     win: () => 'x1x',   // kod, który daje WIN zakładu
     // prognoza po START: najkrótsza droga bazy 2-slot (x1x = BUILDUP → slot 1 → slot 2)
@@ -164,8 +172,8 @@
       if (trigNext(E, s, m)) L.push({ p: 3, txt: `trigger jeśli wpadnie x1x (WIN K=${m.K})`, sub: `start po ${m.offset} WIN-ach` });
       if (!L.length) L.push({ p: 6, txt: `brak · trigger przy WIN K=${m.K}`, sub: `off +${m.offset} · baza ${two.phase}, K=${two.K}` });
       L.sort((a, b) => a.p - b.p);
-      const st = statsFor(E, m.name);
-      return { id: m.name, mid: `${s}·${m.name}`, rule: `${s} · K${m.K} · off +${m.offset}`, lines: L,
+      const st = statsFor(E, m.name), kt = krokTeraz(s, m);
+      return { id: m.name, mid: `${s}·${m.name}`, rule: `${s} · K${m.K} · off +${m.offset}`, lines: L, krok: kt.krok, stawka: kt.stawka, okno: kt.okno,
         meta: [`${st.trig} trig · ${st.games} gier · W ${st.win} · L ${st.loss}${s === 'A' ? ` · IGN ${st.ign}` : ''}`, `WR ${st.wr.toFixed(1)}%`],
         go: er => goFn(`${s}:${m.name}`, er), stats: () => A.stats(ML().findIndex(x => x.id === `${s}·${m.name}`)) };
     });
