@@ -81,6 +81,10 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
     Nr 13 218 · 13 220 · 13 222 · 13 223 · 13 225 · 13 227 · 13 229 · 13 230: 18 układów naraz 15× (wszystkie z w.20), 22 — 12×, 25 — 10×, 31 — 8×;
     nigdy wszystkie trigger. Wszystkie 8 wierszy puste w historii 8,2% stron (teoria 6,8%).
 
+12. **Rozszerzenie grupy 24 (T50, 277 P) o układy z w.1–2** — tryb `rozszerz <24 układy> --tylko-rozegrane --min-razem 8`: z w.2 żaden nie jest po grze
+    (trafienie na 15 574 w 277 L → czekają); z w.1 i resztą w wierszach grupy 28 układów, z całą grupą naraz najwyżej 8×. Grupa 33 (24 + 1·3·14, 1·4·14,
+    1·5·14, 1·9·14, 1·9·19, 1·9·25, 1·14·19, 1·14·20, 1·14·25 — każdemu zostają 2 kroki): naraz 8×, nigdy wszystkie 8 wierszy puste, w 7 z 8 w.1 też był pusty.
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).

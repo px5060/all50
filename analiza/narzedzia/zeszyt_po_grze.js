@@ -14,6 +14,9 @@
 //        (--max-ukl 4: ok. 200 mln zestawów, ok. 4 min; 3: ok. 6 mln, kilka sekund)
 //        --grupa [--progi 5,10,15,20] [--z 1500]: w wierszach najlepszych zestawów największa grupa układów, które były naraz na pierwszej próbie
 //        po grze ≥ T razy i nigdy wszystkie trigger (zachłannie po połówkach historii; wynik osobno dla każdego progu T)
+//   node analiza/narzedzia/zeszyt_po_grze.js rozszerz 5.14.19 5.9.19 … [--min-razem 5]
+//        grupa + kolejne układy na pierwszej próbie po grze na tej samej połówce (też z już rozegranymi wierszami bez celu, np. w.1–2: zostaje 1–2 kroki);
+//        --tylko-rozegrane: dokłada tylko układy z już rozegranymi wierszami
 //   node analiza/narzedzia/zeszyt_po_grze.js progresja [--kroki 5]                    sprawdzenie progresji 8·8·16·32·… na środek (od trafienia / sztywno w połówkach)
 //   opcje wspólne: --stan ../px5060/kody/stan.json · --t60 [--cel x1x|xx1] = ZESZYT T60 (strony po 30 wierszy, układy 3 wierszy, po 1 pustej stronie)
 'use strict';
@@ -164,6 +167,37 @@ if (tryb === 'ranking' || tryb === 'teraz') {
     console.log(`      Nr: ${W.map(r => kw(B.cards[tk].parts[tp][r - 1]).join('+')).join(' · ')} · ostatnio naraz: ${z.razem.slice(-3).map(i => pol(...HK[i])).join(', ')}`);
     const wew = C.filter(x => !(x.m & ~z.um));   // wszystkie układy na pierwszej próbie po grze, których wiersze mieszczą się w tych samych wierszach
     console.log(`      w tych ${Wn} wierszach teraz na 1. próbie po grze: ${wew.length} układów (≥ ${min} gier): ${wew.map(x => x.R.w.join('·')).join(', ')}`); }
+} else if (tryb === 'rozszerz') {
+  // grupa układów (np. z zestawy --grupa) + inne układy, które TEŻ są teraz na pierwszej próbie po grze na tej samej połówce — także te, którym
+  // część wierszy już padła bez celu (np. w.1–2): zostaje im 1–2 kroki. Przegrana = wszystkie jeszcze nierozegrane wiersze grupy puste.
+  const G0 = A.slice(1).filter(x => /^\d+([.·]\d+){2}$/.test(x)).map(x => x.split(/[.·]/).map(Number).sort((a, b) => a - b)), min = +opt('min', 80), minR = +opt('min-razem', 5);
+  const HI = new Map(), HK = []; for (let k = 0; k < B.cards.length; k++) for (let p = 0; p < B.cards[k].parts.length; p++) { HI.set(`${k}.${p}`, HK.length); HK.push([k, p]); }
+  const NH = HK.length, hitM = HK.map(([k, p]) => { const rows = B.cards[k].parts[p]; let m = 0, ok = true;
+    rows.forEach((row, i) => { const X = kw(row); if (!row.nr || X.some(x => x > n)) { ok = false; return; } if (X.some(hitK)) m |= 1 << (i + 1); }); return ok ? m : -1; });
+  const all = new Map();
+  for (const w of trojki(1, WIERSZY)) { const R = przebieg(w, 9), T = R.teraz; if (!T || !T.pierwsza) continue; const S = statPoGrze(R);
+    const F = new Uint8Array(NH); for (const h of R.H) if (h.pierwsza) F[HI.get(`${h.k}.${h.p}`)] = 1; all.set(w.join('.'), { R, S, F, T, m: w.reduce((a, r) => a | 1 << r, 0) }); }
+  const g0 = G0.map(w => all.get(w.join('.'))); if (!g0.length || g0.some(x => !x)) { console.log('podaj układy grupy, które teraz są na pierwszej próbie po grze'); process.exit(1); }
+  const [tk, tp] = [g0[0].T.k, g0[0].T.p], rows = B.cards[tk].parts[tp], PL = []; for (let r = 1; r <= rows.length; r++) if (rows[r - 1].nr && kw(rows[r - 1]).every(x => x <= n)) PL.push(r);
+  const plM = PL.reduce((a, r) => a | 1 << r, 0), U0 = g0.reduce((a, x) => a | x.m, 0), SM = U0 & ~plM, S = []; for (let r = 1; r <= WIERSZY; r++) if (SM >> r & 1) S.push(r);
+  const loss = h => hitM[h] >= 0 && E.partsOf(HK[h][0])[HK[h][1]] >= S[S.length - 1] && !(hitM[h] & SM);
+  let I = [...Array(NH).keys()].filter(h => g0.every(x => x.F[h]));
+  console.log(`karta ${pol(tk, tp)}: już rozegrane wiersze ${PL.join(',') || '—'} (bez celu) · grupa ${g0.length} układów, do gry wiersze ${S.join(',')} (Nr ${S.map(r => kw(rows[r - 1]).join('+')).join(' · ')}) · naraz ${I.length}×, przegrana ${I.filter(loss).length}×`);
+  const cand = [...all.values()].filter(x => x.T.k === tk && x.T.p === tp && x.S.t >= min && !g0.includes(x) && !(x.m & ~(SM | plM)) && (x.m & SM) && (!flaga('tylko-rozegrane') || (x.m & plM)));
+  if (flaga('tylko-rozegrane')) console.log(`układy z rozegranymi wierszami (${PL.join(',')}) i resztą w wierszach grupy, na pierwszej próbie po grze: ${cand.length} · naraz z całą grupą: ${cand.map(x => ({ x, v: I.filter(h => x.F[h]).length })).sort((a, b) => b.v - a.v).map(o => `${o.x.R.w.join('·')} ${o.v}×`).join(', ')}`);
+  const G = [...g0], dod = [];
+  while (true) { let b = null, bv = -1; for (const x of cand) if (!G.includes(x)) { const v = I.filter(h => x.F[h]).length; if (v > bv || (v === bv && b && (x.m & plM) && !(b.m & plM))) { bv = v; b = x; } }
+    if (!b || bv < minR) break; G.push(b); I = I.filter(h => b.F[h]); dod.push({ x: b, razem: I.length }); }
+  const nowe = dod.filter(d => d.x.m & plM);
+  console.log(`dołożone układy (zachłannie, dopóki naraz ≥ ${minR}×): ${dod.length}, w tym z już rozegranymi wierszami ${nowe.length}`);
+  for (const d of dod) { const zost = d.x.R.w.filter(r => SM >> r & 1);
+    console.log(`  + ${d.x.R.w.join('·').padEnd(9)} | ${d.x.m & plM ? `rozegrane ${d.x.R.w.filter(r => plM >> r & 1).join('·')}, zostaje ${zost.length} ${zost.length === 1 ? 'krok' : 'kroki'} (w.${zost.join(', w.')})` : 'cały na wierszach grupy'} | trigger po grze ${(100 * d.x.S.ud).toFixed(0)}% · grupa ${g0.length + dod.indexOf(d) + 1} układów naraz ${d.razem}×`); }
+  const W = S, kroki = I.map(h => { const m = hitM[h] & SM; return m ? W.findIndex(r => m >> r & 1) + 1 : 0; });
+  console.log(`cała grupa ${G.length} układów: naraz ${I.length}× (${I.map(h => pol(...HK[h])).join(', ')}) · przegrana (wszystkie wiersze ${S.join(',')} puste) ${kroki.filter(k => !k).length}× · wygrana na krokach ${kroki.join(',')}`);
+  const jakTeraz = I.filter(h => !(hitM[h] & plM & G.reduce((a, x) => a | x.m, 0)));
+  console.log(`  z tego połówek, na których rozegrane wiersze (${PL.filter(r => G.some(x => x.m >> r & 1)).join(',')}) też były puste, jak teraz: ${jakTeraz.length}`);
+  const pozostale = cand.filter(x => !G.includes(x) && (x.m & plM)).map(x => ({ x, v: I.filter(h => x.F[h]).length })).sort((a, b) => b.v - a.v);
+  console.log(`inne układy z rozegranymi wierszami na tej połówce (nie weszły): ${pozostale.length}${pozostale.length ? ' · np. ' + pozostale.slice(0, 8).map(o => `${o.x.R.w.join('·')} (naraz z całą grupą ${o.v}×)`).join(', ') : ''}`);
 } else if (tryb === 'progresja') {
   const kroki = +opt('kroki', 5), seria = nrs => { let post = 0; for (let i = 0; i < nrs.length; i++) { post += ST[i]; if (hitK(nrs[i])) return { k: i + 1, bil: KURS * ST[i] - post, post }; } return { k: 0, bil: -post, post }; };
   const rap = (nazwa, S) => { const w = S.filter(s => s.k).length, bil = S.reduce((a, s) => a + s.bil, 0), post = S.reduce((a, s) => a + s.post, 0); console.log(`${nazwa}: serii ${S.length} · wygranych ${pct(w, S.length)} · bilans ${bil} zł (${(100 * bil / post).toFixed(1)}% postawionych ${post} zł)`); };
