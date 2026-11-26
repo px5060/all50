@@ -66,6 +66,13 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
    T50 (849 układów, zwykle bez triggera od razu 63,6%): najlepsze 3·16·18 (76%), 10·20·25, 6·10·25, 3·18·19 (75%). T60 x1x (390, zwykle 64,6%):
    11·15·29 (80%), 5·11·15 (78%), 9·15·17, 20·23·29, 3·17·29 (76%); xx1 (580, zwykle 61,3%): 3·17·26 (78%), 15·18·24 (75%).
 
+10. **Zestawy na 277 P** (kody do Nr 15 602, 26.11; w.1–2 już rozegrane) — `zestawy --karta 277P --wierszy 9|8`:
+    9 wierszy: 4·5·19 + 3·16·27 + 9·25·28 (razem 22×, nigdy wszystkie trigger; Nr 15 603 · 15 604 · 15 605 · 15 609 · 15 616 · 15 619 · 15 625 · 15 627 · 15 628);
+    14,9 mln zestawów, bez wspólnego triggera 10,6 mln (z przypadku 10,2 mln); `--max-ukl 4` przy 849 układach nie mieści się w 15 min.
+    8 wierszy: 17·19·25 + 16·19·20 + 4·6·14 (29×; Nr 15 604 · 15 606 · 15 614 · 15 616 · 15 617 · 15 619 · 15 620 · 15 625) i 3·16·27 + 3·19·28 + 4·5·9
+    (29×; = zestaw 9 wierszy bez w.25); 42 mln zestawów, bez wspólnego triggera 20,6 mln (z przypadku 19,3 mln). W 8 wierszach mieści się 46–55 układów
+    na pierwszej próbie po grze (narzędzie wypisuje je pod zestawem).
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).

@@ -128,7 +128,9 @@ if (tryb === 'ranking' || tryb === 'teraz') {
   console.log(`  bez przegranej progresji, gdy wszystkie były naraz na pierwszej próbie: ${zeroN} (z samego przypadku oczekiwane ok. ${oczek.toFixed(0)}) · wszystkie ${Wn} wierszy puste: teoria ${(100 * (1 - pFreq) ** Wn).toFixed(1)}%`);
   for (const z of Z) { const W = rowsOf(z.um);
     console.log(`  ${z.sel.map(i => C[i].R.w.join('·')).join(' + ').padEnd(30)} | wiersze ${W.join(',')} | naraz na 1. próbie ${z.razem.length}×, progresja przegrana ${z.przeg}×, wygrana na krokach ${z.kroki.filter(x => x).join(',')} | wszystkie ${Wn} puste w historii ${pct(z.puste, z.wsz)} | trigger po grze: ${z.sel.map(i => (100 * C[i].S.ud).toFixed(0) + '%').join(' / ')}`);
-    console.log(`      Nr: ${W.map(r => kw(B.cards[tk].parts[tp][r - 1]).join('+')).join(' · ')} · ostatnio naraz: ${z.razem.slice(-3).map(i => pol(...HK[i])).join(', ')}`); }
+    console.log(`      Nr: ${W.map(r => kw(B.cards[tk].parts[tp][r - 1]).join('+')).join(' · ')} · ostatnio naraz: ${z.razem.slice(-3).map(i => pol(...HK[i])).join(', ')}`);
+    const wew = C.filter(x => !(x.m & ~z.um));   // wszystkie układy na pierwszej próbie po grze, których wiersze mieszczą się w tych samych wierszach
+    console.log(`      w tych ${Wn} wierszach teraz na 1. próbie po grze: ${wew.length} układów (≥ ${min} gier): ${wew.map(x => x.R.w.join('·')).join(', ')}`); }
 } else if (tryb === 'progresja') {
   const kroki = +opt('kroki', 5), seria = nrs => { let post = 0; for (let i = 0; i < nrs.length; i++) { post += ST[i]; if (hitK(nrs[i])) return { k: i + 1, bil: KURS * ST[i] - post, post }; } return { k: 0, bil: -post, post }; };
   const rap = (nazwa, S) => { const w = S.filter(s => s.k).length, bil = S.reduce((a, s) => a + s.bil, 0), post = S.reduce((a, s) => a + s.post, 0); console.log(`${nazwa}: serii ${S.length} · wygranych ${pct(w, S.length)} · bilans ${bil} zł (${(100 * bil / post).toFixed(1)}% postawionych ${post} zł)`); };
