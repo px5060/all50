@@ -85,6 +85,11 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
     (trafienie na 15 574 w 277 L → czekają); z w.1 i resztą w wierszach grupy 28 układów, z całą grupą naraz najwyżej 8×. Grupa 33 (24 + 1·3·14, 1·4·14,
     1·5·14, 1·9·14, 1·9·19, 1·9·25, 1·14·19, 1·14·20, 1·14·25 — każdemu zostają 2 kroki): naraz 8×, nigdy wszystkie 8 wierszy puste, w 7 z 8 w.1 też był pusty.
 
+13. **Same układy z w.1 (T50, 277 P)** — `rozszerz --kroki 7|6`: po grze jest teraz 171 układów z w.1 (gra skończyła się środkiem na 15 573 = w.1
+    karty 277 L, stąd wszystkie naraz), w.1 na 277 P (15 601) pusty → każdemu zostają 2 kroki. 9 układów z p. 12 samych: naraz 11×, ale nadal 8 wierszy.
+    7 kroków: 21 układów (wszystkie pary z w.3,5,6,8,9,16,17 + w.1), naraz 21×, nigdy wszystkie puste, wygrana najpóźniej k4 (w.1 też pusty 18×).
+    6 kroków: 15 układów (pary z w.3,6,8,9,16,17), naraz 26×, nigdy wszystkie puste (w.1 też pusty 20×).
+
 ## Otwarte (następna sesja)
 
 - Wynik tabel z p. 9 (karta 277 P, strony 441 / 442 T60).
