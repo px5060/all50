@@ -12,6 +12,8 @@
 //        zestawy układów, które TERAZ są razem na pierwszej próbie po grze i dają dokładnie N wierszy (progresja N kroków na połówce);
 //        ranking: najwięcej połówek w historii, na których wszystkie były naraz na pierwszej próbie i progresja nigdy nie przegrała
 //        (--max-ukl 4: ok. 200 mln zestawów, ok. 4 min; 3: ok. 6 mln, kilka sekund)
+//        --grupa [--progi 5,10,15,20] [--z 1500]: w wierszach najlepszych zestawów największa grupa układów, które były naraz na pierwszej próbie
+//        po grze ≥ T razy i nigdy wszystkie trigger (zachłannie po połówkach historii; wynik osobno dla każdego progu T)
 //   node analiza/narzedzia/zeszyt_po_grze.js progresja [--kroki 5]                    sprawdzenie progresji 8·8·16·32·… na środek (od trafienia / sztywno w połówkach)
 //   opcje wspólne: --stan ../px5060/kody/stan.json · --t60 [--cel x1x|xx1] = ZESZYT T60 (strony po 30 wierszy, układy 3 wierszy, po 1 pustej stronie)
 'use strict';
@@ -121,6 +123,35 @@ if (tryb === 'ranking' || tryb === 'teraz') {
       if (cnt < minRazem) continue; sel[d] = i;
       if (bu === Wn) { if (d >= 1) zapisz(d + 1, u); } else if (d + 1 < maxU) dfs(i + 1, d + 1, u); } };
   dfs(0, 0, 0);
+  if (flaga('grupa')) {
+    // --grupa: dla wierszy najlepszych zestawów (--z) największa grupa układów z tych wierszy (razem dokładnie te wiersze), które w historii były
+    // NARAZ na pierwszej próbie po grze ≥ T razy i nigdy wszystkie nie dostały triggera (= wszystkie wiersze puste). Heurystyka: zachłannie po połówkach.
+    const ileZ = +opt('z', 1500), progi = (opt('progi', '5,10,15,20,25')).split(',').map(Number), NH = HK.length, best = {};
+    Z.sort((x, y) => y.razem.length - x.razem.length);
+    const SU = [...new Set(Z.slice(0, ileZ).map(z => z.um))];
+    for (const um of SU) {
+      const W = rowsOf(um), mxr = W[W.length - 1], cand = C.filter(x => !(x.m & ~um)), nc = cand.length; if (nc < 2 || nc > 64) continue;
+      const lo = new Uint32Array(NH), hi = new Uint32Array(NH), loss = new Uint8Array(NH);
+      cand.forEach((x, j) => { for (let w = 0; w < NW; w++) { let b = x.F[w]; while (b) { const t = 31 - Math.clz32(b & -b); b &= b - 1; const h = 32 * w + t; if (j < 32) lo[h] |= 1 << j; else hi[h] |= 1 << (j - 32); } } });
+      for (let h = 0; h < NH; h++) loss[h] = hitM[h] >= 0 && E.partsOf(HK[h][0])[HK[h][1]] >= mxr && !(hitM[h] & um) ? 1 : 0;
+      const L0 = (nc >= 32 ? 0xFFFFFFFF : (1 << nc) - 1) >>> 0, H0 = (nc > 32 ? (nc >= 64 ? 0xFFFFFFFF : (1 << (nc - 32)) - 1) : 0) >>> 0;
+      const ile = (gl, gh, h) => bc((gl & lo[h]) >>> 0) + bc((gh & hi[h]) >>> 0);
+      const starty = [...Array(NH).keys()].filter(h => !loss[h]).sort((a, b) => ile(L0, H0, b) - ile(L0, H0, a)).slice(0, 15);
+      for (const h0 of starty) { let gl = L0, gh = H0, h = h0; const uzyte = new Set();
+        while (true) { gl = (gl & lo[h]) >>> 0; gh = (gh & hi[h]) >>> 0; uzyte.add(h); const size = bc(gl) + bc(gh); if (size < 2) break;
+          let un = 0; const G = []; for (let j = 0; j < nc; j++) if (j < 32 ? gl >> j & 1 : gh >> (j - 32) & 1) { un |= cand[j].m; G.push(j); }
+          if (un === um) { const I = []; let przeg = 0; for (let q = 0; q < NH; q++) if (((lo[q] & gl) >>> 0) === gl && ((hi[q] & gh) >>> 0) === gh) { I.push(q); if (loss[q]) przeg++; }
+            if (!przeg) for (const T of progi) if (I.length >= T && (!best[T] || size > best[T].G.length || (size === best[T].G.length && I.length > best[T].I.length)))
+              best[T] = { um, G: G.map(j => cand[j]), I, nc }; }
+          let bh = -1, bv = -1; for (let q = 0; q < NH; q++) if (!loss[q] && !uzyte.has(q)) { const v = ile(gl, gh, q); if (v > bv) { bv = v; bh = q; } }
+          if (bh < 0 || bv < 2) break; h = bh; } } }
+    console.log(`karta ${pk}: ${Wn} wierszy, największa grupa układów naraz na pierwszej próbie po grze i nigdy wszystkie trigger (wiersze z ${SU.length} najlepszych zestawów):`);
+    for (const T of progi) { const b = best[T]; if (!b) { console.log(`  ≥ ${T}× naraz: brak`); continue; } const W = rowsOf(b.um);
+      const kroki = b.I.map(i => { const h = hitM[i] & b.um; return h ? W.findIndex(r => h >> r & 1) + 1 : 0; });
+      console.log(`  ≥ ${T}× naraz: ${b.G.length} układów (z ${b.nc} w tych wierszach), naraz ${b.I.length}×, wygrana na krokach ${kroki.join(',')} · wiersze ${W.join(',')} · Nr ${W.map(r => kw(B.cards[tk].parts[tp][r - 1]).join('+')).join(' · ')}`);
+      console.log(`      układy: ${b.G.map(x => x.R.w.join('·')).join(', ')} · połówki naraz: ${b.I.map(i => pol(...HK[i])).join(', ')}`); }
+    process.exit(0);
+  }
   for (const z of Z) z.ud = z.sel.reduce((a, i) => a + C[i].S.ud, 0) / z.sel.length;
   Z.sort((x, y) => y.razem.length - x.razem.length || x.ud - y.ud); Z.length = Math.min(Z.length, top);
   for (const z of Z) { const W = rowsOf(z.um), pe = hitM.filter((m, i) => m >= 0 && E.partsOf(HK[i][0])[HK[i][1]] >= W[W.length - 1]); z.puste = pe.filter(m => !(m & z.um)).length; z.wsz = pe.length; }

@@ -72,6 +72,9 @@ Brief do nowej sesji. Kontynuacja szukań układów ZESZYTU T50, w których zami
     8 wierszy: 17·19·25 + 16·19·20 + 4·6·14 (29×; Nr 15 604 · 15 606 · 15 614 · 15 616 · 15 617 · 15 619 · 15 620 · 15 625) i 3·16·27 + 3·19·28 + 4·5·9
     (29×; = zestaw 9 wierszy bez w.25); 42 mln zestawów, bez wspólnego triggera 20,6 mln (z przypadku 19,3 mln). W 8 wierszach mieści się 46–55 układów
     na pierwszej próbie po grze (narzędzie wypisuje je pod zestawem).
+    **Najwięcej układów naraz** (`zestawy --wierszy 8 --grupa`, zachłannie): ≥ 5× — 54 układy, ≥ 10× — 46, ≥ 15× — 34, **≥ 20× — 24 układy** (wiersze
+    3,4,5,9,14,19,20,25 = Nr 15 603 · 15 604 · 15 605 · 15 609 · 15 614 · 15 619 · 15 620 · 15 625; naraz 20×, wygrana najpóźniej k7), ≥ 25× — 19 układów
+    (wiersze B 3,4,5,9,16,19,27,28; wszystkie z w.3, naraz 26×). Wszystkie 8 wierszy puste w historii ok. 9,3% połówek (teoria 6,6%).
 
 ## Otwarte (następna sesja)
 
